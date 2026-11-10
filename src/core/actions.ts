@@ -8,6 +8,8 @@ export type PlaceError =
   | 'occupied'
   /** The very same path type is already there; nothing to do. */
   | 'same'
+  /** Not available yet, or a one-of-a-kind building that already stands. */
+  | 'locked'
   | 'noGold'
   | 'noMaterials'
   | 'noBuildPoints';
@@ -59,6 +61,23 @@ export function canPlace(
   return { ok: true, tiles };
 }
 
+/** Why a building cannot be chosen at the moment. */
+export type Lock =
+  { kind: 'pop'; value: number } | { kind: 'requires'; def: string } | { kind: 'unique' };
+
+export function lockOf(state: GameState, def: BuildingDef): Lock | null {
+  if (def.unlockPop && state.peakPop < def.unlockPop) return { kind: 'pop', value: def.unlockPop };
+  const all = Object.values(state.buildings);
+  if (def.requires) {
+    const needed = def.requires;
+    if (!all.some((b) => b.def === needed && !b.construction)) {
+      return { kind: 'requires', def: needed };
+    }
+  }
+  if (def.unique && all.some((b) => b.def === def.id)) return { kind: 'unique' };
+  return null;
+}
+
 /** The first thing the town is short of for building `def`, if any. */
 export function affordError(state: GameState, def: BuildingDef): PlaceError | null {
   if (state.buildPoints < def.buildPoints) return 'noBuildPoints';
@@ -86,6 +105,7 @@ export function placeBuilding(
 ): PlaceResult {
   const check = canPlace(state, defs, def, x, y, rot);
   if (!check.ok) return check;
+  if (lockOf(state, def)) return { ok: false, reason: 'locked' };
   const short = affordError(state, def);
   if (short) return { ok: false, reason: short };
 
@@ -102,6 +122,7 @@ export function placeBuilding(
   for (const t of check.tiles) occupancy[indexOf(base.width, t.x, t.y)] = id;
   const building: Building = { id, def: def.id, x, y, w, h, rot };
   if (def.category === 'housing') building.house = { level: 1, pop: 0, lacking: 0 };
+  if (def.construction) building.construction = def.construction.turns;
   return {
     ok: true,
     state: {
@@ -131,6 +152,40 @@ export function demolish(
   if (!target) return state;
   const refund = Math.floor((defs[target.def]?.cost ?? 0) * refundShare);
   return { ...removeBuilding(state, target), gold: state.gold + refund };
+}
+
+export function repairCost(def: BuildingDef, repairShare: number): number {
+  return Math.ceil(def.cost * repairShare);
+}
+
+export type RepairResult =
+  { ok: true; state: GameState } | { ok: false; reason: 'nothing' | 'noGold' | 'noBuildPoints' };
+
+/** Restores a fire-damaged building at (x, y) for gold and one build point. */
+export function repair(
+  state: GameState,
+  defs: Defs,
+  repairShare: number,
+  x: number,
+  y: number,
+): RepairResult {
+  const target = buildingAt(state, x, y);
+  const def = target && defs[target.def];
+  if (!target?.damaged || !def) return { ok: false, reason: 'nothing' };
+  if (state.buildPoints < 1) return { ok: false, reason: 'noBuildPoints' };
+  const cost = repairCost(def, repairShare);
+  if (state.gold < cost) return { ok: false, reason: 'noGold' };
+  const fixed = { ...target };
+  delete fixed.damaged;
+  return {
+    ok: true,
+    state: {
+      ...state,
+      buildings: { ...state.buildings, [target.id]: fixed },
+      gold: state.gold - cost,
+      buildPoints: state.buildPoints - 1,
+    },
+  };
 }
 
 export interface TileCounts {

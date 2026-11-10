@@ -5,7 +5,7 @@ Der Platz innerhalb der Stadtmauer ist von Anfang an begrenzt – die Kunst lieg
 
 **Spielen:** https://philwegdata.github.io/Nienburg/
 
-Stand: Phase 2 – die Stadt lässt sich Runde für Runde aufbauen: Gold, Nahrung, Baumaterial, Einwohner und Wohnhäuser, die bis zum Fachwerkhaus aufsteigen. Der Spielstand wird im Browser gespeichert.
+Stand: Phase 3 – zwei Städte (Nienburg und Carcassonne) mit je drei Sterne-Zielen, der vollständige Gebäudekatalog, fünf Wohnhaus-Stufen, Wohnlage, Handwerk und Waren. Die Grafik ist noch Platzhalter (Phase 4).
 
 ## Lokal starten
 

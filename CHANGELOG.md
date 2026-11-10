@@ -41,3 +41,34 @@
   - Abriss gibt die Hälfte des Goldes zurück und kostet keine Baupunkte.
   - Ist die Stadtkasse leer, gleicht der Landesherr aus; das wird gezählt, hat aber noch keine Folgen.
   - Die Zahlen in `src/data/` sind ein erster Wurf; das eigentliche Balancing ist Phase 6.
+
+## Phase 3 – Vollständiger Gebäudekatalog und zwei Karten
+
+- 30 Gebäude in fünf Kategorien; neue Gebäude werden mit wachsender Einwohnerzahl freigeschaltet,
+  einige erst mit einem Rathaus
+- Wohnhaus-Stufen 4 (Bürgerhaus) und 5 (Patrizierhaus); Nachbarhäuser ab Stufe 4 wachsen zusammen
+- Wohnlage: Grün, Plätze und Kirchen heben sie, Gerberei, Schmiede und Schenke senken sie;
+  eingezwängte Häuser bekommen einen Abzug
+- Handwerk: Weberei, Schmiede und Brauerei stellen Waren her, die Markthalle verteilt sie, das
+  Zunfthaus verstärkt angrenzende Werkstätten; Überschuss wird verkauft
+- Brände: Ein ungeschütztes Gebäude kann rußgeschwärzt werden und ist bis zur Reparatur außer
+  Betrieb. Nichts wird zerstört, und in den ersten zwei Jahren brennt es nie.
+- Kathedrale als Bauprojekt über acht Runden
+- Ansichten für jede Versorgung und für die Wohnlage (Auswahlfeld oder Tasten 1–9, 0 für normal);
+  beim Platzieren zeigt die Karte die Reichweite eines Dienstgebäudes
+- Zweite Karte Carcassonne (411 Felder, doppelter Mauerring, Burg als festes Bauwerk)
+- Drei Sterne-Ziele pro Stadt, Stadtauswahl, ein Spielstand pro Stadt; alte Spielstände werden
+  übernommen
+- Entscheidungen:
+  - „Eingezwängt“ heißt: weniger als zwei offene Seiten. Der Plan sah „auf allen vier Seiten
+    zugebaut“ vor, das kann aber kein Haus mit Weganschluss je sein.
+  - Wohnlage zählt gleichartige Gebäude höchstens zweimal pro Feld, damit zehn Bäume kein
+    Patrizierviertel ergeben.
+  - Die Bäckerei erzeugt einfach zusätzliche Nahrung; die Zisterne hat nur eine große
+    Reichweite und keinen eigenen Brandschutz-Bonus.
+  - Waren sind stadtweit vorrätig; ein Haus braucht die Markthalle in Reichweite und genug
+    Vorrat einer oder zweier Sorten.
+  - Die Prognose bleibt in der Kopfleiste (Veränderung pro Runde neben jedem Wert) statt in
+    einem eigenen Panel.
+  - Die Ansicht „Wegdistanz“ ist durch die Reichweiten-Vorschau beim Platzieren ersetzt.
+  - Zuschüsse des Landesherrn schmälern die Sterne noch nicht.

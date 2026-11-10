@@ -1,4 +1,13 @@
-export type Terrain = 'outside' | 'water' | 'rock' | 'wall' | 'tower' | 'gate' | 'buildable';
+export type Terrain =
+  | 'outside'
+  | 'water'
+  | 'rock'
+  | 'wall'
+  | 'tower'
+  | 'gate'
+  /** A fixed historic building that takes up room and cannot be changed. */
+  | 'landmark'
+  | 'buildable';
 
 export type Lang = 'de' | 'en';
 export type Localized = Record<Lang, string>;
@@ -14,18 +23,66 @@ export interface CityDef {
   buildableRange: [min: number, max: number];
   /** One string per row, see CITY_LEGEND in core/city.ts. */
   map: string[];
+  /** Exactly three goals, one star each. */
+  goals: [Goal, Goal, Goal];
 }
 
-export type BuildingCategory = 'path' | 'housing' | 'water' | 'food' | 'faith' | 'safety' | 'admin';
+export type Goal =
+  | { kind: 'population'; value: number }
+  /** At least `count` houses of `level` or higher. */
+  | { kind: 'houses'; level: number; count: number }
+  /** A finished, undamaged building of this kind. */
+  | { kind: 'building'; def: string };
+
+export type Good = 'cloth' | 'tools' | 'beer';
+export const GOODS: readonly Good[] = ['cloth', 'tools', 'beer'];
+
+export type BuildingCategory =
+  | 'path'
+  | 'housing'
+  | 'water'
+  | 'food'
+  | 'faith'
+  | 'safety'
+  | 'health'
+  | 'culture'
+  | 'craft'
+  | 'admin'
+  | 'green';
 
 /** How a tool behaves when the pointer is dragged across the map. */
 export type DragMode = 'none' | 'line' | 'rect';
 
 /** Things a service building hands out to houses within reach. */
-export type ServiceKind = 'water' | 'food' | 'faith' | 'fire';
+export type ServiceKind =
+  | 'water'
+  | 'food'
+  | 'faith'
+  | 'fire'
+  | 'order'
+  | 'health'
+  | 'fun'
+  | 'education'
+  /** Reach of a market hall, which hands out craft goods. */
+  | 'goods';
+export const SERVICES: readonly ServiceKind[] = [
+  'water',
+  'food',
+  'faith',
+  'fire',
+  'order',
+  'health',
+  'fun',
+  'education',
+  'goods',
+];
 
-/** What a house can require: a path next to it, or a service. */
-export type Need = 'road' | ServiceKind;
+/**
+ * What a house can require: a path next to it, a service, one or two kinds of craft goods,
+ * or a pleasant (appeal1) or fine (appeal2) neighbourhood.
+ */
+export type Need =
+  'road' | Exclude<ServiceKind, 'goods'> | 'goods1' | 'goods2' | 'appeal1' | 'appeal2';
 
 export interface BuildingDef {
   id: string;
@@ -43,10 +100,34 @@ export interface BuildingDef {
   upkeep: number;
   /** Workers needed to operate; without them the building is idle. */
   workers: number;
-  /** Service handed out along the path network, with its reach in steps. */
-  service?: { kind: ServiceKind; range: number };
+  /** Services handed out along the path network, each with its reach in steps. */
+  services?: { kind: ServiceKind; range: number }[];
   /** Only operates next to a plaza tile. */
   needsPlaza?: boolean;
+  /** Only operates within reach of a well or cistern. */
+  needsWater?: boolean;
+  /** Effect on the appeal of every tile within `radius` tiles of the footprint. */
+  appeal?: { value: number; radius: number };
+  /** Craft goods made per turn while operating. */
+  produces?: { good: Good; amount: number };
+  /** Gold or food made per turn while operating. */
+  yields?: { gold?: number; food?: number };
+  /** Raises production and yields of workshops that touch it by this share. */
+  guildBoost?: number;
+  /** How likely the building is to catch fire when no fire watch covers it. */
+  fireRisk?: number;
+  /** Only one per town. */
+  unique?: boolean;
+  /** Available once the town has ever had this many inhabitants. */
+  unlockPop?: number;
+  /** Available once a building of this kind stands. */
+  requires?: string;
+  /** Built over several turns; each turn costs this much until it is done. */
+  construction?: { turns: number; gold: number; materials: number };
+  /** Extra build points per turn while operating. */
+  buildPointsBonus?: number;
+  /** Extra share of taxes while operating. */
+  taxBonus?: number;
   /** Extra storage capacity. */
   storage?: { food?: number; materials?: number };
   /** Extra goods per turn while connected to a gate by paths. */
@@ -75,6 +156,10 @@ export interface Building {
   rot: Rotation;
   /** Present on house plots only. */
   house?: HouseData;
+  /** Turns of construction left; absent once finished. */
+  construction?: number;
+  /** Blackened by a fire; out of use until repaired. */
+  damaged?: boolean;
 }
 
 export interface HousingLevel {
@@ -88,6 +173,19 @@ export interface HousingLevel {
 
 export interface Balance {
   start: { gold: number; food: number; materials: number };
+  /** Extra capacity of two merged house plots, as a share of one plot. */
+  mergeBonus: number;
+  /** Lowest level at which neighbouring houses grow together. */
+  mergeLevel: number;
+  goodsPerHead: number;
+  goodsCap: number;
+  /** Gold per unit of craft goods that no longer fits into storage. */
+  goodsPrice: number;
+  /** Appeal needed for appeal1 and appeal2, stacking limit per building kind, light malus. */
+  appeal: { pleasant: number; fine: number; stack: number; boxedIn: number };
+  fire: { perRisk: number; maxChance: number; summerFactor: number; quietTurns: number };
+  /** Share of the building cost charged for repairs. */
+  repairShare: number;
   buildPointsPerTurn: number;
   /** Share of the building cost returned on demolition. */
   demolishRefund: number;
@@ -119,9 +217,18 @@ export type HintKind =
   | 'noFood'
   | 'noFaith'
   | 'noFire'
+  | 'noOrder'
+  | 'noHealth'
+  | 'noFun'
+  | 'noEducation'
+  | 'noGoods'
+  | 'noAppeal'
   | 'unstaffed'
   | 'noAccess'
   | 'needsPlaza'
+  | 'needsWater'
+  | 'damaged'
+  | 'stalled'
   | 'hungry';
 
 /** Something the player may want to look at; (x, y) points to one example on the map. */
@@ -149,12 +256,27 @@ export interface TurnReport {
   popAfter: number;
   upgraded: number;
   downgraded: number;
+  merged: number;
+  /** Gold from tanneries and the like, plus surplus goods sold. */
+  tradeIncome: number;
+  /** Gold spent on ongoing construction. */
+  constructionCost: number;
+  /** Kinds of craft goods houses could get this turn. */
+  goodsTypes: number;
+  /** A building that caught fire this turn. */
+  fire: { def: string; x: number; y: number } | null;
+  /** Buildings finished this turn. */
+  completed: string[];
+  /** Buildings newly available. */
+  unlocked: string[];
+  /** Indices of goals reached this turn. */
+  newStars: number[];
   hints: Hint[];
 }
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 1;
+  version: 2;
   cityId: string;
   width: number;
   height: number;
@@ -170,6 +292,11 @@ export interface GameState {
   gold: number;
   food: number;
   materials: number;
+  goods: Record<Good, number>;
+  /** Most inhabitants the town ever had; unlocks buildings. */
+  peakPop: number;
+  /** Which of the city's three goals have been reached. */
+  stars: [boolean, boolean, boolean];
   /** Building capacity left this turn. */
   buildPoints: number;
   /** How often the sovereign had to cover an empty treasury. */

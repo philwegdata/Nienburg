@@ -12,17 +12,24 @@ export function cityFrom(map: string[], range: [number, number] = [1, 1000]): Ci
     blurb: { de: '', en: '' },
     difficulty: 1,
     buildableRange: range,
+    goals: [
+      { kind: 'population', value: 10 },
+      { kind: 'houses', level: 2, count: 2 },
+      { kind: 'building', def: 'chapel' },
+    ],
     map,
   };
 }
 
-/** A new game with plenty of everything, so tests are not about affordability by accident. */
+/** A new game with plenty of everything, so tests are not about affordability or unlocks by accident. */
 export function richGame(map: string[]): GameState {
   return {
     ...newGame(cityFrom(map), 1, RULES.balance),
     gold: 100000,
     materials: 100000,
     buildPoints: 100000,
+    // Everything is unlocked.
+    peakPop: 100000,
   };
 }
 

@@ -51,7 +51,7 @@ export function planBuild(
     if (placed.ok) {
       plan.result = placed.state;
       plan.anchors.push(c);
-    } else if (fit.ok && !plan.shortOf) {
+    } else if (fit.ok && !plan.shortOf && placed.reason !== 'locked') {
       plan.shortOf = placed.reason;
     }
   }

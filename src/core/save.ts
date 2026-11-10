@@ -1,7 +1,7 @@
 import type { GameState } from './types';
 
 /** Version of the save format written by this build. */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 interface SaveFile {
   saveVersion: number;
@@ -12,7 +12,23 @@ interface SaveFile {
  * Upgrades from version N to N + 1. Add an entry whenever GameState changes shape,
  * and bump SAVE_VERSION.
  */
-const MIGRATIONS: Record<number, (old: unknown) => unknown> = {};
+const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
+  // 1 → 2: craft goods, unlocks by peak population, stars.
+  1: (old) => {
+    const s = old as Record<string, unknown> & {
+      buildings?: Record<string, { house?: { pop?: number } }>;
+    };
+    let pop = 0;
+    for (const b of Object.values(s.buildings ?? {})) pop += b.house?.pop ?? 0;
+    return {
+      ...s,
+      version: 2,
+      goods: { cloth: 0, tools: 0, beer: 0 },
+      peakPop: pop,
+      stars: [false, false, false],
+    };
+  },
+};
 
 export function serialize(state: GameState): string {
   const file: SaveFile = { saveVersion: SAVE_VERSION, state };
@@ -27,6 +43,7 @@ function looksLikeState(value: unknown): value is GameState {
   if (typeof s.cityId !== 'string' || typeof s.buildings !== 'object' || s.buildings === null) {
     return false;
   }
+  if (typeof s.goods !== 'object' || s.goods === null || !Array.isArray(s.stars)) return false;
   const size = (s.width as number) * (s.height as number);
   return (
     Array.isArray(s.terrain) &&

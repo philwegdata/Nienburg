@@ -11,6 +11,11 @@ export const nienburg: CityDef = {
   },
   difficulty: 1,
   buildableRange: [300, 400],
+  goals: [
+    { kind: 'population', value: 150 },
+    { kind: 'houses', level: 4, count: 10 },
+    { kind: 'houses', level: 5, count: 10 },
+  ],
   map: [
     '~~~~                          ',
     '~~~~                          ',

@@ -1,70 +1,88 @@
-import { buildingAt, countTiles } from '../core/actions';
-import { newGame } from '../core/city';
+import { buildingAt, countTiles, lockOf, repair, repairCost } from '../core/actions';
+import { newGame, parseCity } from '../core/city';
+import { goalProgress } from '../core/goals';
 import { inBounds, indexOf } from '../core/grid';
 import { commitDemolish, planBuild, planDemolish, type BuildPlan } from '../core/planning';
-import { deserialize, serialize } from '../core/save';
-import { analyze, missingNeeds, type Analysis } from '../core/sim/analyze';
+import { analyze, houseCapacity, missingNeeds, type Analysis } from '../core/sim/analyze';
+import { adjacentPaths, pathDistances } from '../core/sim/coverage';
 import { endTurn, forecast, seasonOf, yearOf } from '../core/sim/turn';
-import type { Building, CityDef, GameState, Point, Rotation, TurnReport } from '../core/types';
+import {
+  GOODS,
+  SERVICES,
+  type Building,
+  type BuildingDef,
+  type CityDef,
+  type GameState,
+  type Goal,
+  type Lang,
+  type Need,
+  type Point,
+  type Rotation,
+  type ServiceKind,
+  type TurnReport,
+} from '../core/types';
 import { BUILD_MENU, BUILDINGS, type BuildingId } from '../data/buildings';
 import { fill, plural, type Strings } from '../data/i18n';
 import { RULES } from '../data/rules';
 import { fitCamera, gridToWorld, pickTile, zoomAt, type Camera } from '../render/iso';
 import { render, type Overlay } from '../render/renderer';
+import { adoptLegacySave, bestStars, lastCity, loadGame, saveGame } from './storage';
 
-type Tool = { kind: 'select' } | { kind: 'demolish' } | { kind: 'build'; def: BuildingId };
+type Tool =
+  | { kind: 'select' }
+  | { kind: 'demolish' }
+  | { kind: 'repair' }
+  | { kind: 'build'; def: BuildingId };
+
+type View = 'normal' | 'appeal' | ServiceKind;
+type Group = 'basics' | 'supply' | 'services' | 'craft' | 'green';
+
+const GROUPS: readonly Group[] = ['basics', 'supply', 'services', 'craft', 'green'];
+const GROUP_OF: Record<BuildingDef['category'], Group> = {
+  path: 'basics',
+  housing: 'basics',
+  water: 'supply',
+  food: 'supply',
+  faith: 'services',
+  safety: 'services',
+  health: 'services',
+  culture: 'services',
+  craft: 'craft',
+  admin: 'craft',
+  green: 'green',
+};
 
 /** Pointer movement below this many CSS pixels still counts as a click. */
 const CLICK_SLOP = 6;
-const SAVE_KEY = 'nienburg.save';
 
-const SWATCH: Record<BuildingId, string> = {
-  alley: '#b89f76',
-  street: '#a7a096',
-  plaza: '#cfc8b8',
-  house: '#a4573b',
-  well: '#6f9db8',
-  stall: '#d2b955',
-  granary: '#d6caac',
-  chapel: '#5f6c76',
-  firewatch: '#96392c',
-  warehouse: '#8c7250',
+const SHADE = {
+  reach: 'rgba(70, 120, 190, 0.38)',
+  good: 'rgba(96, 160, 72, 0.6)',
+  bad: 'rgba(196, 72, 56, 0.6)',
 };
 
 export interface Elements {
   canvas: HTMLCanvasElement;
+  tabs: HTMLElement;
   tools: HTMLElement;
   hint: HTMLElement;
   info: HTMLElement;
   resources: HTMLElement;
   date: HTMLElement;
+  menu: HTMLButtonElement;
   undo: HTMLButtonElement;
   end: HTMLButtonElement;
-  newGame: HTMLButtonElement;
+  view: HTMLSelectElement;
+  viewLabel: HTMLElement;
   report: HTMLDialogElement;
+  goals: HTMLDialogElement;
+  cities: HTMLDialogElement;
 }
 
 type Gesture =
   | { kind: 'pan'; last: Point; moved: number; clickSelects: boolean; cancelsTool: boolean }
   | { kind: 'paint'; from: Point }
   | { kind: 'pinch'; dist: number; mid: Point };
-
-function loadSave(cityIds: string[]): GameState | null {
-  try {
-    const text = localStorage.getItem(SAVE_KEY);
-    return text ? deserialize(text, cityIds) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeSave(state: GameState): void {
-  try {
-    localStorage.setItem(SAVE_KEY, serialize(state));
-  } catch {
-    // Storage may be unavailable (private mode, quota); the game still works without it.
-  }
-}
 
 function node<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -77,30 +95,49 @@ function node<K extends keyof HTMLElementTagNameMap>(
   return n;
 }
 
-export function startApp(el: Elements, city: CityDef, t: Strings): void {
+function button(text: string, onClick: () => void, cls?: string): HTMLButtonElement {
+  const b = node('button', text, cls);
+  b.type = 'button';
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+const starText = (stars: readonly boolean[]) => stars.map((s) => (s ? '★' : '☆')).join('');
+
+export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, lang: Lang): void {
   const ctx = el.canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D is not supported');
+  adoptLegacySave();
 
-  const fresh = () => newGame(city, Date.now(), RULES.balance);
+  const fresh = (def: CityDef) => newGame(def, Date.now(), RULES.balance);
+  const remembered = cities.find((c) => c.id === lastCity());
 
-  let state: GameState = loadSave([city.id]) ?? fresh();
+  let city: CityDef = remembered ?? cities[0]!;
+  let state: GameState = loadGame(city.id) ?? fresh(city);
   /** States from earlier in this turn, for undo. */
   let history: GameState[] = [];
   let analysis: Analysis = analyze(state, RULES);
-  let outlook: TurnReport = forecast(state, RULES);
+  let outlook: TurnReport = forecast(state, RULES, city.goals);
   let warnings = new Set<number>();
+  let viewShade = new Map<number, string>();
+  let rangeShade = new Map<number, string>();
 
   let cam: Camera = { x: 0, y: 0, zoom: 1 };
   let tool: Tool = { kind: 'select' };
+  let group: Group = 'basics';
+  let view: View = 'normal';
   let rot: Rotation = 0;
   let selected: Point | null = null;
   let hover: Point | null = null;
   let gesture: Gesture | null = null;
   let plan: BuildPlan | null = null;
   let demolition: Point[] | null = null;
-  let view = { w: 0, h: 0, dpr: 1 };
+  let screen = { w: 0, h: 0, dpr: 1 };
   let dirty = false;
   const pointers = new Map<number, Point>();
+
+  const needCtx = () => ({ hungry: outlook.hungry, goodsTypes: outlook.goodsTypes });
+  const nameOf = (defId: string) => t.building[defId as BuildingId] ?? defId;
 
   // ---------- drawing ----------
 
@@ -109,12 +146,13 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     dirty = true;
     requestAnimationFrame(() => {
       dirty = false;
-      const overlay: Overlay = { warnings, preview: [], highlight: null };
+      const shade = rangeShade.size > 0 ? new Map([...viewShade, ...rangeShade]) : viewShade;
+      const overlay: Overlay = { warnings, preview: [], highlight: null, shade };
       if (plan) overlay.preview = plan.tiles;
       else if (demolition) overlay.preview = demolition.map((p) => ({ ...p, ok: false }));
       if (tool.kind === 'select') overlay.highlight = selected;
       else if (!plan && !demolition) overlay.highlight = hover;
-      render(ctx!, state, cam, view.w, view.h, view.dpr, overlay, (id) => {
+      render(ctx!, state, cam, screen.w, screen.h, screen.dpr, overlay, (id) => {
         return BUILDINGS[id]?.category === 'path';
       });
     });
@@ -123,17 +161,17 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
   function resize(first = false): void {
     const rect = el.canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const centreBefore = { x: view.w / 2, y: view.h / 2 };
-    view = { w: rect.width, h: rect.height, dpr };
+    const centreBefore = { x: screen.w / 2, y: screen.h / 2 };
+    screen = { w: rect.width, h: rect.height, dpr };
     el.canvas.width = Math.round(rect.width * dpr);
     el.canvas.height = Math.round(rect.height * dpr);
-    if (first) cam = fitCamera(state.width, state.height, view.w, view.h);
+    if (first) cam = fitCamera(state.width, state.height, screen.w, screen.h);
     else {
       // Keep whatever was in the middle of the screen in the middle.
       cam = {
         ...cam,
-        x: cam.x + view.w / 2 - centreBefore.x,
-        y: cam.y + view.h / 2 - centreBefore.y,
+        x: cam.x + screen.w / 2 - centreBefore.x,
+        y: cam.y + screen.h / 2 - centreBefore.y,
       };
     }
     requestDraw();
@@ -141,25 +179,58 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
 
   function centreOn(p: Point): void {
     const w = gridToWorld(p.x + 0.5, p.y + 0.5);
-    cam = { ...cam, x: view.w / 2 - w.x * cam.zoom, y: view.h / 2 - w.y * cam.zoom };
+    cam = { ...cam, x: screen.w / 2 - w.x * cam.zoom, y: screen.h / 2 - w.y * cam.zoom };
   }
 
   // ---------- state ----------
 
+  /** Colours for the chosen view: who is served, and where the neighbourhood is nice. */
+  function computeViewShade(): Map<number, string> {
+    const shade = new Map<number, string>();
+    if (view === 'normal') return shade;
+    if (view === 'appeal') {
+      state.terrain.forEach((terrain, i) => {
+        if (terrain !== 'buildable') return;
+        const value = analysis.appeal[i]!;
+        if (value === 0) return;
+        const alpha = Math.min(0.65, 0.18 * Math.abs(value)).toFixed(2);
+        shade.set(i, value > 0 ? `rgba(70, 150, 60, ${alpha})` : `rgba(190, 70, 50, ${alpha})`);
+      });
+      return shade;
+    }
+    for (const i of analysis.reach[view]) shade.set(i, SHADE.reach);
+    for (const b of Object.values(state.buildings)) {
+      const def = BUILDINGS[b.def];
+      const cares =
+        b.house !== undefined ||
+        (view === 'fire' && (def?.fireRisk ?? 0) > 0) ||
+        (view === 'water' && def?.needsWater);
+      if (!cares) continue;
+      const color = analysis.covered[view].has(b.id) ? SHADE.good : SHADE.bad;
+      for (let dy = 0; dy < b.h; dy++) {
+        for (let dx = 0; dx < b.w; dx++) shade.set(indexOf(state.width, b.x + dx, b.y + dy), color);
+      }
+    }
+    return shade;
+  }
+
   /** Recomputes everything derived from the state and refreshes all panels. */
   function refresh(): void {
     analysis = analyze(state, RULES);
-    outlook = forecast(state, RULES);
-    warnings = new Set(analysis.idle.keys());
+    outlook = forecast(state, RULES, city.goals);
+    warnings = new Set<number>();
+    for (const [id, reason] of analysis.idle) if (reason !== 'construction') warnings.add(id);
     for (const b of Object.values(state.buildings)) {
       if (!b.house) continue;
-      if (missingNeeds(RULES, analysis, b.id, b.house.level, outlook.hungry).length > 0) {
-        warnings.add(b.id);
-      }
+      const missing = missingNeeds(RULES, analysis, b.id, b.house.level, needCtx());
+      if (b.damaged || missing.length > 0) warnings.add(b.id);
     }
+    viewShade = computeViewShade();
     updateResources();
     updateInfo();
+    updateLocks();
     el.undo.disabled = history.length === 0;
+    el.menu.textContent = `${starText(state.stars)} ${city.name[lang]}`;
     requestDraw();
   }
 
@@ -168,7 +239,7 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     if (next === state) return;
     history.push(state);
     state = next;
-    writeSave(state);
+    saveGame(state);
     refresh();
   }
 
@@ -176,20 +247,29 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     const previous = history.pop();
     if (!previous) return;
     state = previous;
-    plan = null;
-    demolition = null;
-    writeSave(state);
+    clearPreview();
+    saveGame(state);
     refresh();
   }
 
   function finishTurn(): void {
-    state = endTurn(state, RULES);
+    state = endTurn(state, RULES, city.goals);
     history = [];
-    plan = null;
-    demolition = null;
-    writeSave(state);
+    clearPreview();
+    saveGame(state);
     refresh();
     if (state.lastReport) showReport(state.lastReport);
+  }
+
+  function openCity(def: CityDef, restart: boolean): void {
+    city = def;
+    state = (restart ? null : loadGame(def.id)) ?? fresh(def);
+    history = [];
+    selected = null;
+    saveGame(state);
+    setTool({ kind: 'select' });
+    cam = fitCamera(state.width, state.height, screen.w, screen.h);
+    refresh();
   }
 
   // ---------- panels ----------
@@ -205,8 +285,10 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
       }
       return c;
     };
-    el.resources.replaceChildren(
-      chip(t.res.gold, String(state.gold), outlook.taxes - outlook.upkeep),
+    const goldDelta =
+      outlook.taxes + outlook.tradeIncome - outlook.upkeep - outlook.constructionCost;
+    const chips = [
+      chip(t.res.gold, String(state.gold), goldDelta),
       chip(
         t.res.food,
         `${state.food}/${analysis.foodCap}`,
@@ -220,27 +302,57 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
       chip(t.res.population, String(analysis.population), outlook.popAfter - outlook.popBefore),
       chip(t.res.buildPoints, String(state.buildPoints)),
       chip(t.res.free, `${tiles.free}/${tiles.buildable}`),
-    );
-    el.date.textContent = `${t.season[seasonOf(state.turn)]}, ${t.year} ${yearOf(state.turn)}`;
+    ];
+    // Craft goods only matter once the first workshops can be built.
+    if (GOODS.some((g) => state.goods[g] > 0 || analysis.production[g] > 0)) {
+      for (const g of GOODS) {
+        chips.push(
+          chip(t.good[g], String(state.goods[g]), analysis.production[g] - analysis.goodsDemand),
+        );
+      }
+    }
+    const date = `${t.season[seasonOf(state.turn)]}, ${t.year} ${yearOf(state.turn)}`;
+    el.date.textContent = date;
+    // On narrow screens the title bar has no room for the date, so it leads the chips instead.
+    el.resources.replaceChildren(node('span', date, 'chip narrow-only'), ...chips);
   }
 
-  function describeDef(id: BuildingId, add: (tag: 'p', text: string, cls?: string) => void): void {
+  type Add = (tag: 'h2' | 'p', text: string, cls?: string) => void;
+
+  function describeDef(id: BuildingId, add: Add): void {
     const def = BUILDINGS[id]!;
     const parts: string[] = [];
     if (def.upkeep > 0) parts.push(`${t.upkeep}: ${def.upkeep} ${t.res.gold} ${t.perTurn}`);
     if (def.workers > 0) parts.push(`${t.workers}: ${def.workers}`);
-    if (def.service) parts.push(`${t.range}: ${def.service.range}`);
+    const range = def.services?.[0]?.range;
+    if (range && range < 100) parts.push(`${t.range}: ${range}`);
+    if (def.produces) {
+      parts.push(`${t.makes}: ${def.produces.amount} ${t.good[def.produces.good]} ${t.perTurn}`);
+    }
+    if (def.yields?.gold) parts.push(`${t.makes}: ${def.yields.gold} ${t.res.gold} ${t.perTurn}`);
+    if (def.yields?.food) parts.push(`${t.makes}: ${def.yields.food} ${t.res.food} ${t.perTurn}`);
+    if (def.appeal) {
+      const sign = def.appeal.value > 0 ? '+' : '−';
+      parts.push(`${t.appealEffect}: ${sign}${Math.abs(def.appeal.value)}`);
+    }
     if (def.size.w * def.size.h > 1) parts.push(`${t.size}: ${def.size.w}×${def.size.h}`);
     if (parts.length > 0) add('p', parts.join(' · '), 'meta');
   }
 
-  function describeHouse(b: Building, add: (tag: 'p', text: string, cls?: string) => void): void {
+  function describeHouse(b: Building, add: Add): void {
     const house = b.house!;
-    const level = RULES.housing[house.level - 1]!;
-    add('p', `${t.inhabitants}: ${house.pop} / ${level.capacity}`);
-    const names = (needs: string[]) =>
-      needs.map((n) => t.need[n as keyof typeof t.need]).join(', ');
-    const now = missingNeeds(RULES, analysis, b.id, house.level, outlook.hungry);
+    add('p', `${t.inhabitants}: ${house.pop} / ${houseCapacity(RULES, b, house.level)}`);
+    add('p', `${t.appeal}: ${analysis.houseAppeal.get(b.id) ?? 0}`, 'meta');
+    if (analysis.boxedIn.has(b.id)) add('p', t.boxedIn, 'meta');
+    if (b.damaged) {
+      add(
+        'p',
+        fill(t.idle.damaged, { n: repairCost(BUILDINGS.house!, RULES.balance.repairShare) }),
+        'warn',
+      );
+    }
+    const names = (needs: Need[]) => needs.map((n) => t.need[n]).join(', ');
+    const now = missingNeeds(RULES, analysis, b.id, house.level, needCtx());
     if (now.length > 0) {
       add('p', `${t.needsNow}: ${names(now)}`, 'warn');
       if (house.level > 1) add('p', t.declineSoon, 'meta');
@@ -251,24 +363,40 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
       add('p', t.topLevel, 'good');
       return;
     }
-    const next = missingNeeds(RULES, analysis, b.id, house.level + 1, outlook.hungry);
+    const next = missingNeeds(RULES, analysis, b.id, house.level + 1, needCtx());
     if (next.length === 0) add('p', t.readyToRise, 'good');
     else add('p', `${t.needsForNext}: ${names(next)}`);
   }
 
+  function lockText(def: BuildingDef): string | null {
+    const lock = lockOf(state, def);
+    if (!lock) return null;
+    if (lock.kind === 'pop') return fill(t.lock.pop, { n: lock.value });
+    if (lock.kind === 'requires') return fill(t.lock.requires, { name: nameOf(lock.def) });
+    return t.lock.unique;
+  }
+
   function updateInfo(): void {
     el.info.replaceChildren();
-    const add = (tag: 'h2' | 'p', text: string, cls?: string) => {
-      el.info.append(node(tag, text, cls));
-    };
+    const add: Add = (tag, text, cls) => el.info.append(node(tag, text, cls));
     if (tool.kind === 'build') {
       const def = BUILDINGS[tool.def]!;
       add('h2', t.building[tool.def]);
       add('p', t.buildingInfo[tool.def]);
+      const locked = lockText(def);
+      if (locked) add('p', locked, 'warn');
       const cost = [`${def.cost} ${t.res.gold}`];
       if (def.materials > 0) cost.push(`${def.materials} ${t.res.materials}`);
       cost.push(`${def.buildPoints} ${t.res.buildPoints}`);
       add('p', `${t.costs}: ${cost.join(' · ')}`);
+      if (def.construction) {
+        const c = def.construction;
+        add(
+          'p',
+          `${c.turns} × ${c.gold} ${t.res.gold} · ${c.materials} ${t.res.materials} ${t.perTurn}`,
+          'meta',
+        );
+      }
       describeDef(tool.def, add);
       return;
     }
@@ -284,28 +412,39 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     }
     if (b) {
       const id = b.def as BuildingId;
+      const def = BUILDINGS[id]!;
       add('h2', t.building[id]);
       add('p', t.buildingInfo[id]);
-      if (BUILDINGS[id]!.category !== 'path') {
-        const idle = analysis.idle.get(b.id);
-        if (idle) add('p', t.idle[idle], 'warn');
-        else add('p', t.working, 'good');
-      }
+      const idle = analysis.idle.get(b.id);
+      if (idle === 'construction') add('p', fill(t.idle.construction, { n: b.construction ?? 0 }));
+      else if (idle === 'damaged') {
+        add('p', fill(t.idle.damaged, { n: repairCost(def, RULES.balance.repairShare) }), 'warn');
+      } else if (idle) add('p', t.idle[idle], 'warn');
+      else if (def.workers > 0 || def.services) add('p', t.working, 'good');
       describeDef(id, add);
       return;
     }
-    const terrain = state.terrain[indexOf(state.width, selected.x, selected.y)]!;
+    const i = indexOf(state.width, selected.x, selected.y);
+    const terrain = state.terrain[i]!;
     add('h2', t.terrain[terrain]);
-    if (terrain === 'buildable') add('p', t.infoFree);
+    if (terrain === 'buildable') {
+      add('p', t.infoFree);
+      add('p', `${t.appeal}: ${analysis.appeal[i] ?? 0}`, 'meta');
+    }
+  }
+
+  function showShortage(reason: string | null | undefined): boolean {
+    const known = reason === 'noGold' || reason === 'noMaterials' || reason === 'noBuildPoints';
+    el.hint.classList.toggle('warn', known);
+    if (known) el.hint.textContent = t.shortOf[reason];
+    return known;
   }
 
   function updateHint(): void {
-    const shortOf = plan?.shortOf;
-    el.hint.classList.toggle('warn', Boolean(shortOf));
-    if (shortOf === 'noGold' || shortOf === 'noMaterials' || shortOf === 'noBuildPoints') {
-      el.hint.textContent = t.shortOf[shortOf];
-    } else if (tool.kind === 'select') el.hint.textContent = t.hintSelect;
+    if (showShortage(plan?.shortOf)) return;
+    if (tool.kind === 'select') el.hint.textContent = t.hintSelect;
     else if (tool.kind === 'demolish') el.hint.textContent = t.hintDemolish;
+    else if (tool.kind === 'repair') el.hint.textContent = t.hintRepair;
     else {
       const drag = BUILDINGS[tool.def]!.drag;
       el.hint.textContent =
@@ -313,15 +452,34 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     }
   }
 
+  function goalText(goal: Goal): string {
+    if (goal.kind === 'population') return fill(t.goal.population, { n: goal.value });
+    if (goal.kind === 'houses') {
+      const level = t.houseLevel[goal.level - 1] ?? String(goal.level);
+      return fill(t.goal.houses, { n: goal.count, level });
+    }
+    return fill(t.goal.building, { name: nameOf(goal.def) });
+  }
+
   function showReport(r: TurnReport): void {
     const list = node('ul');
-    const line = (text: string) => list.append(node('li', text));
+    const line = (text: string, cls?: string) => list.append(node('li', text, cls));
+    for (const i of r.newStars) {
+      line(`★ ${fill(t.report.star, { goal: goalText(city.goals[i]!) })}`, 'news');
+    }
+    for (const def of r.completed) line(fill(t.report.completed, { name: nameOf(def) }), 'news');
+    if (r.unlocked.length > 0) {
+      line(fill(t.report.unlocked, { names: r.unlocked.map(nameOf).join(', ') }), 'news');
+    }
     line(fill(t.report.population, { a: r.popBefore, b: r.popAfter }));
     line(fill(t.report.gold, { a: r.taxes, b: r.upkeep }));
+    if (r.tradeIncome > 0) line(fill(t.report.trade, { n: r.tradeIncome }));
+    if (r.constructionCost > 0) line(fill(t.report.construction, { n: r.constructionCost }));
     line(fill(t.report.food, { a: r.foodDelivered, b: r.foodEaten }));
     line(fill(t.report.materials, { a: r.materialsDelivered }));
     if (r.upgraded > 0) line(plural(t.report.upgraded, r.upgraded));
     if (r.downgraded > 0) line(plural(t.report.downgraded, r.downgraded));
+    if (r.merged > 0) line(plural(t.report.merged, r.merged));
     if (r.subsidy) line(t.report.subsidy);
 
     const title = fill(t.report.title, {
@@ -330,20 +488,22 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     });
     el.report.replaceChildren(node('h2', title), list);
 
-    if (r.hints.length > 0) {
+    const jump = (p: Point) => {
+      el.report.close();
+      setTool({ kind: 'select' });
+      selected = { x: p.x, y: p.y };
+      centreOn(selected);
+      updateInfo();
+      requestDraw();
+    };
+    if (r.hints.length > 0 || r.fire) {
       const hints = node('div', undefined, 'hints');
+      if (r.fire) {
+        const fire = r.fire;
+        hints.append(button(fill(t.report.fire, { name: nameOf(fire.def) }), () => jump(fire)));
+      }
       for (const h of r.hints) {
-        const button = node('button', plural(t.hint[h.kind], h.count));
-        button.type = 'button';
-        button.addEventListener('click', () => {
-          el.report.close();
-          setTool({ kind: 'select' });
-          selected = { x: h.x, y: h.y };
-          centreOn(selected);
-          updateInfo();
-          requestDraw();
-        });
-        hints.append(button);
+        hints.append(button(plural(t.hint[h.kind], h.count), () => jump(h)));
       }
       el.report.append(node('h3', t.report.hintsTitle), hints);
     } else {
@@ -351,29 +511,113 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     }
 
     const actions = node('div', undefined, 'actions');
-    const ok = node('button', t.continue, 'primary');
-    ok.type = 'button';
-    ok.addEventListener('click', () => el.report.close());
+    const ok = button(t.continue, () => el.report.close(), 'primary');
     actions.append(ok);
     el.report.append(actions);
     el.report.showModal();
     ok.focus();
   }
 
-  const buttons: { tool: Tool; node: HTMLButtonElement }[] = [];
+  function showGoals(): void {
+    el.goals.replaceChildren(
+      node('h2', city.name[lang]),
+      node('p', city.region[lang], 'sub'),
+      node('h3', t.goals),
+    );
+    city.goals.forEach((goal, i) => {
+      const row = node('div', undefined, 'goal');
+      const progress = goalProgress(state, goal);
+      row.append(
+        node('span', state.stars[i] ? '★' : '☆', 'star'),
+        node('span', goalText(goal)),
+        node('span', `${progress.current} / ${progress.target}`, 'progress'),
+      );
+      el.goals.append(row);
+    });
+    const actions = node('div', undefined, 'actions');
+    actions.append(
+      button(t.restart, () => {
+        if (!window.confirm(t.restartConfirm)) return;
+        el.goals.close();
+        openCity(city, true);
+      }),
+      button(t.cities, () => {
+        el.goals.close();
+        showCities();
+      }),
+      button(t.close, () => el.goals.close(), 'primary'),
+    );
+    el.goals.append(actions);
+    el.goals.showModal();
+  }
+
+  function showCities(): void {
+    const grid = node('div', undefined, 'cities');
+    for (const def of cities) {
+      const card = node('div', undefined, 'city');
+      const saved = loadGame(def.id);
+      const tiles = parseCity(def).terrain.filter((x) => x === 'buildable').length;
+      card.append(
+        node('h3', def.name[lang]),
+        node('p', def.region[lang], 'meta'),
+        node('p', def.blurb[lang]),
+        node(
+          'p',
+          `${t.difficulty}: ${'●'.repeat(def.difficulty)}${'○'.repeat(3 - def.difficulty)} · ${fill(t.tilesInside, { n: tiles })}`,
+          'meta',
+        ),
+        node('p', starText(bestStars(def.id)), 'stars'),
+        button(
+          saved ? t.resume : t.play,
+          () => {
+            el.cities.close();
+            openCity(def, false);
+          },
+          def.id === city.id ? 'primary' : undefined,
+        ),
+      );
+      grid.append(card);
+    }
+    el.cities.replaceChildren(node('h2', t.chooseCity), grid);
+    el.cities.showModal();
+  }
+
+  // ---------- toolbar ----------
+
+  const toolButtons: { tool: Tool; node: HTMLButtonElement }[] = [];
+  const tabButtons = new Map<Group, HTMLButtonElement>();
   let rotateButton: HTMLButtonElement;
 
   function sameTool(a: Tool, b: Tool): boolean {
     return a.kind === b.kind && (a.kind !== 'build' || a.def === (b as typeof a).def);
   }
 
+  function updateLocks(): void {
+    for (const b of toolButtons) {
+      if (b.tool.kind !== 'build') continue;
+      b.node.classList.toggle('locked', lockOf(state, BUILDINGS[b.tool.def]!) !== null);
+    }
+  }
+
+  function showGroup(next: Group): void {
+    group = next;
+    for (const [g, tab] of tabButtons) tab.setAttribute('aria-pressed', String(g === group));
+    for (const b of toolButtons) {
+      if (b.tool.kind !== 'build') continue;
+      b.node.hidden = GROUP_OF[BUILDINGS[b.tool.def]!.category] !== group;
+    }
+  }
+
   function setTool(next: Tool): void {
     tool = next;
     rot = 0;
+    hover = null;
     plan = null;
     demolition = null;
-    hover = null;
-    for (const b of buttons) b.node.setAttribute('aria-pressed', String(sameTool(b.tool, tool)));
+    rangeShade = new Map();
+    for (const b of toolButtons) {
+      b.node.setAttribute('aria-pressed', String(sameTool(b.tool, tool)));
+    }
     const rotatable =
       tool.kind === 'build' && BUILDINGS[tool.def]!.size.w !== BUILDINGS[tool.def]!.size.h;
     rotateButton.hidden = !rotatable;
@@ -391,29 +635,44 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
   }
 
   function buildToolbar(): void {
-    const addButton = (label: string, target: Tool, swatch?: string) => {
-      const button = node('button');
-      button.type = 'button';
-      if (swatch) {
-        const s = node('span', undefined, 'swatch');
-        s.style.background = swatch;
-        button.append(s);
-      }
-      button.append(label);
-      button.addEventListener('click', () => setTool(target));
-      el.tools.append(button);
-      buttons.push({ tool: target, node: button });
+    const toolButton = (label: string, target: Tool, parent: HTMLElement) => {
+      const b = button(label, () => setTool(target));
+      parent.append(b);
+      toolButtons.push({ tool: target, node: b });
     };
-    el.tools.setAttribute('aria-label', t.buildMenu);
-    addButton(t.toolSelect, { kind: 'select' });
-    el.tools.append(node('span', undefined, 'sep'));
-    for (const id of BUILD_MENU) addButton(t.building[id], { kind: 'build', def: id }, SWATCH[id]);
-    el.tools.append(node('span', undefined, 'sep'));
-    addButton(t.toolDemolish, { kind: 'demolish' });
-    rotateButton = node('button', t.rotate);
-    rotateButton.type = 'button';
-    rotateButton.addEventListener('click', rotate);
+    el.tabs.setAttribute('aria-label', t.buildMenu);
+    toolButton(t.toolSelect, { kind: 'select' }, el.tabs);
+    el.tabs.append(node('span', undefined, 'sep'));
+    for (const g of GROUPS) {
+      const tab = button(t.category[g], () => showGroup(g));
+      tabButtons.set(g, tab);
+      el.tabs.append(tab);
+    }
+    el.tabs.append(node('span', undefined, 'sep'));
+    toolButton(t.toolRepair, { kind: 'repair' }, el.tabs);
+    toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
+
+    for (const id of BUILD_MENU) toolButton(t.building[id], { kind: 'build', def: id }, el.tools);
+    rotateButton = button(t.rotate, rotate);
     el.tools.append(rotateButton);
+
+    el.viewLabel.textContent = t.view;
+    const option = (value: View, label: string) => {
+      const o = node('option', label);
+      o.value = value;
+      el.view.append(o);
+    };
+    option('normal', t.viewNormal);
+    option('appeal', t.viewAppeal);
+    for (const kind of SERVICES) option(kind, t.viewService[kind]);
+    el.view.addEventListener('change', () => setView(el.view.value as View));
+  }
+
+  function setView(next: View): void {
+    view = next;
+    el.view.value = next;
+    viewShade = computeViewShade();
+    requestDraw();
   }
 
   // ---------- map interaction ----------
@@ -423,11 +682,29 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
+  /** Where the services of a building about to be placed would reach. */
+  function computeRange(built: BuildPlan, def: BuildingDef): Map<number, string> {
+    const shade = new Map<number, string>();
+    const anchor = built.anchors[0];
+    if (!def.services || built.anchors.length !== 1 || !anchor) return shade;
+    const placed = buildingAt(built.result, anchor.x, anchor.y);
+    if (!placed) return shade;
+    const range = Math.max(...def.services.map((s) => s.range));
+    const sources = adjacentPaths(built.result, RULES, placed);
+    for (const i of pathDistances(built.result, RULES, sources, range).keys()) {
+      shade.set(i, SHADE.reach);
+    }
+    return shade;
+  }
+
   function refreshPreview(from: Point, to: Point): void {
     plan = null;
     demolition = null;
+    rangeShade = new Map();
     if (tool.kind === 'build') {
-      plan = planBuild(state, BUILDINGS, BUILDINGS[tool.def]!, from, to, rot);
+      const def = BUILDINGS[tool.def]!;
+      plan = planBuild(state, BUILDINGS, def, from, to, rot);
+      rangeShade = computeRange(plan, def);
     } else if (tool.kind === 'demolish') {
       demolition = planDemolish(state, from, to);
     }
@@ -437,18 +714,27 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
   function clearPreview(): void {
     plan = null;
     demolition = null;
+    rangeShade = new Map();
     updateHint();
   }
 
-  function commit(): void {
+  /** Carries out the pending gesture; returns what the town was short of, if anything. */
+  function commit(at: Point): string | null {
     const built = tool.kind === 'build' ? plan : null;
     const razed = tool.kind === 'demolish' ? demolition : null;
+    let shortOf: string | null = built?.shortOf ?? null;
     plan = null;
     demolition = null;
+    rangeShade = new Map();
     if (built) change(built.result);
     else if (razed) {
       change(commitDemolish(state, BUILDINGS, RULES.balance.demolishRefund, razed));
+    } else if (tool.kind === 'repair') {
+      const result = repair(state, BUILDINGS, RULES.balance.repairShare, at.x, at.y);
+      if (result.ok) change(result.state);
+      else shortOf = result.reason;
     }
+    return shortOf;
   }
 
   function startPinch(): void {
@@ -535,18 +821,16 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
       if (cancelled) {
         clearPreview();
       } else {
-        // Keep a "cannot afford" message visible after the attempt.
-        const shortOf = plan?.shortOf ?? null;
-        commit();
-        if (e.pointerType === 'mouse') {
-          hover = pickTile(cam, pos.x, pos.y);
+        const at = pickTile(cam, pos.x, pos.y);
+        const shortOf = commit(at);
+        if (e.pointerType === 'mouse' && tool.kind !== 'repair') {
+          hover = at;
           refreshPreview(hover, hover);
-        } else if (shortOf && shortOf !== 'notBuildable' && shortOf !== 'occupied') {
-          el.hint.classList.add('warn');
-          el.hint.textContent = t.shortOf[shortOf as keyof typeof t.shortOf];
         } else {
           updateHint();
         }
+        // Keep a "cannot afford" message visible after the attempt.
+        if (shortOf) showShortage(shortOf);
       }
     } else if (g?.kind === 'pan' && !cancelled && g.moved <= CLICK_SLOP) {
       if (g.cancelsTool) setTool({ kind: 'select' });
@@ -579,25 +863,33 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
     { passive: false },
   );
 
+  const dialogOpen = () => el.report.open || el.goals.open || el.cities.open;
+
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
-      if (e.key.toLowerCase() === 'z' && !el.report.open) {
+      if (e.key.toLowerCase() === 'z' && !dialogOpen()) {
         e.preventDefault();
         undo();
       }
       return;
     }
-    if (e.altKey || el.report.open) return;
+    if (e.altKey || dialogOpen() || e.target === el.view) return;
     const step = 48;
     const key = e.key.toLowerCase();
+    if (key >= '0' && key <= '9') {
+      // 1–9 pick a view, 0 returns to the normal one.
+      const options = [...el.view.options].map((o) => o.value as View);
+      setView(options[Number(key)] ?? 'normal');
+      return;
+    }
     if (key === 'r') rotate();
     else if (key === 'escape') setTool({ kind: 'select' });
     else if (key === 'arrowleft' || key === 'a') cam = { ...cam, x: cam.x + step };
     else if (key === 'arrowright' || key === 'd') cam = { ...cam, x: cam.x - step };
     else if (key === 'arrowup' || key === 'w') cam = { ...cam, y: cam.y + step };
     else if (key === 'arrowdown' || key === 's') cam = { ...cam, y: cam.y - step };
-    else if (key === '+' || key === '=') cam = zoomAt(cam, view.w / 2, view.h / 2, 1.2);
-    else if (key === '-') cam = zoomAt(cam, view.w / 2, view.h / 2, 1 / 1.2);
+    else if (key === '+' || key === '=') cam = zoomAt(cam, screen.w / 2, screen.h / 2, 1.2);
+    else if (key === '-') cam = zoomAt(cam, screen.w / 2, screen.h / 2, 1 / 1.2);
     else return;
     requestDraw();
   });
@@ -608,20 +900,13 @@ export function startApp(el: Elements, city: CityDef, t: Strings): void {
   el.undo.addEventListener('click', undo);
   el.end.textContent = t.endTurn;
   el.end.addEventListener('click', finishTurn);
-  el.newGame.textContent = t.newGame;
-  el.newGame.addEventListener('click', () => {
-    if (!window.confirm(t.newGameConfirm)) return;
-    state = fresh();
-    history = [];
-    selected = null;
-    writeSave(state);
-    setTool({ kind: 'select' });
-    cam = fitCamera(state.width, state.height, view.w, view.h);
-    refresh();
-  });
+  el.menu.addEventListener('click', showGoals);
 
   buildToolbar();
+  showGroup('basics');
   setTool({ kind: 'select' });
   resize(true);
   refresh();
+  // First visit: let the player pick a town.
+  if (!remembered) showCities();
 }

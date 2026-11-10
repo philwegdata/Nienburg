@@ -10,6 +10,7 @@ const MAP = [
   '#....................#',
   '#....................#',
   '#....................#',
+  '#....................#',
   '######################',
 ];
 
@@ -19,29 +20,33 @@ const turns = (state: GameState, n: number): GameState => {
   return next;
 };
 
-const houseAt = (state: GameState, x: number, y = 1): HouseData => buildingAt(state, x, y)!.house!;
+const houseAt = (state: GameState, x: number, y = 2): HouseData => buildingAt(state, x, y)!.house!;
 
 function setHouse(state: GameState, x: number, house: HouseData): GameState {
-  const b = buildingAt(state, x, 1)!;
+  const b = buildingAt(state, x, 2)!;
   return { ...state, buildings: { ...state.buildings, [b.id]: { ...b, house } } };
 }
 
-/** Street along y = 2, ten houses above it at x 1..10. */
+/**
+ * Street along y = 3, ten houses above it at x 1..10, and a row of trees behind them so the
+ * houses are neither boxed in nor short of a pleasant neighbourhood.
+ */
 function street(): GameState {
-  let state = fillWith(richGame(MAP), 'street', 1, 2, 20, 2);
-  state = fillWith(state, 'house', 1, 1, 10, 1);
+  let state = fillWith(richGame(MAP), 'street', 1, 3, 20, 3);
+  state = fillWith(state, 'house', 1, 2, 10, 2);
+  state = fillWith(state, 'tree', 1, 1, 10, 1);
   return state;
 }
 
 /** The street plus well, market stall on a plaza, chapel and fire watch, all within reach. */
 function fullService(): GameState {
   let state = street();
-  state = put(state, 'well', 1, 3);
-  state = put(state, 'well', 7, 3);
-  state = put(state, 'plaza', 3, 3);
-  state = put(state, 'stall', 4, 3);
-  state = put(state, 'chapel', 5, 3, 1);
-  state = put(state, 'firewatch', 8, 3);
+  state = put(state, 'well', 1, 4);
+  state = put(state, 'well', 7, 4);
+  state = put(state, 'plaza', 3, 4);
+  state = put(state, 'stall', 4, 4);
+  state = put(state, 'chapel', 5, 4, 1);
+  state = put(state, 'firewatch', 8, 4);
   return state;
 }
 
@@ -82,9 +87,9 @@ describe('moving in', () => {
   });
 
   it('leaves houses without a path empty and says so', () => {
-    const state = endTurn(put(richGame(MAP), 'house', 10, 3), RULES);
-    expect(houseAt(state, 10, 3).pop).toBe(0);
-    expect(state.lastReport?.hints).toEqual([{ kind: 'noRoad', count: 1, x: 10, y: 3 }]);
+    const state = endTurn(put(richGame(MAP), 'house', 10, 4), RULES);
+    expect(houseAt(state, 10, 4).pop).toBe(0);
+    expect(state.lastReport?.hints).toEqual([{ kind: 'noRoad', count: 1, x: 10, y: 4 }]);
   });
 });
 
@@ -114,15 +119,20 @@ describe('housing levels', () => {
     state = endTurn(state, RULES);
     expect(houseAt(state, 2).level).toBe(3);
     state = turns(state, 5);
+    // Half-timbered and full; the next level would take a tavern, a bath house and goods.
     expect(houseAt(state, 2)).toEqual({ level: 3, pop: 11, lacking: 0 });
-    expect(state.lastReport?.hints).toEqual([]);
+    expect(state.lastReport?.hints.map((h) => h.kind).sort()).toEqual([
+      'noFun',
+      'noGoods',
+      'noHealth',
+    ]);
   });
 
   it('declines only after the grace period, one level at a time', () => {
     let state = turns(fullService(), 10);
     expect(houseAt(state, 2).level).toBe(3);
     // Tear down the chapel: faith is gone.
-    const chapel = buildingAt(state, 5, 3)!;
+    const chapel = buildingAt(state, 5, 4)!;
     const buildings = { ...state.buildings };
     delete buildings[chapel.id];
     state = {
@@ -199,7 +209,7 @@ describe('materials', () => {
 describe('treasury', () => {
   it('collects taxes per inhabitant and pays upkeep for every building', () => {
     let state = { ...street(), gold: 100 };
-    state = put(state, 'well', 1, 3); // upkeep 2
+    state = put(state, 'well', 1, 4); // upkeep 2
     state = { ...setHouse(state, 1, { level: 1, pop: 4, lacking: 0 }), gold: 100 };
     const after = endTurn(state, RULES);
     // Nine new houses get 2 people each, the first stays at 4: 22 × 0.15 = 3.3 → 3.

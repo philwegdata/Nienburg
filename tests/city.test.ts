@@ -12,6 +12,11 @@ function city(map: string[], range: [number, number] = [1, 100]): CityDef {
     blurb: { de: '', en: '' },
     difficulty: 1,
     buildableRange: range,
+    goals: [
+      { kind: 'population', value: 1 },
+      { kind: 'population', value: 2 },
+      { kind: 'population', value: 3 },
+    ],
     map,
   };
 }
@@ -21,6 +26,7 @@ describe('parseCity', () => {
     const parsed = parseCity(city(['#G#', '#.#', '~^ ']));
     expect(parsed.width).toBe(3);
     expect(parsed.height).toBe(3);
+    expect(parseCity(city(['C'])).terrain).toEqual(['landmark']);
     expect(parsed.terrain).toEqual([
       'wall',
       'gate',

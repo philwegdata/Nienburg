@@ -20,15 +20,18 @@ function row(id: BuildingId, x0: number, x1: number, y: number): Order[] {
 const BUILD_ORDER: Order[] = [
   ...row('street', 7, 16, 12),
   ...row('house', 8, 12, 11),
+  ...row('tree', 8, 12, 10),
   ['well', 10, 13],
   ...row('street', 17, 27, 12),
   ['plaza', 13, 13],
   ['stall', 14, 13],
   ...row('house', 13, 19, 11),
+  ...row('tree', 13, 19, 10),
   ['well', 17, 13],
   ['firewatch', 15, 13],
   ['chapel', 12, 13],
   ...row('house', 20, 26, 11),
+  ...row('tree', 20, 26, 10),
   ['well', 23, 13],
   ['plaza', 21, 13],
   ['stall', 22, 13],
@@ -41,23 +44,26 @@ function play(turns: number): GameState {
   for (let turn = 0; turn < turns; turn++) {
     while (next < BUILD_ORDER.length) {
       const [id, x, y] = BUILD_ORDER[next]!;
+      // Keep a small reserve so upkeep never empties the treasury.
+      if (state.gold - BUILDINGS[id]!.cost < 40) break;
       const result = placeBuilding(state, BUILDINGS, BUILDINGS[id]!, x, y);
       if (!result.ok) {
-        // Only running short may hold the bot up; a bad spot would be a bug in the script.
-        expect(['noGold', 'noMaterials', 'noBuildPoints']).toContain(result.reason);
+        // Only running short, or waiting for a building to unlock, may hold the bot up;
+        // a bad spot would be a bug in the script.
+        expect(['noGold', 'noMaterials', 'noBuildPoints', 'locked']).toContain(result.reason);
         break;
       }
       state = result.state;
       next++;
     }
-    state = endTurn(state, RULES);
+    state = endTurn(state, RULES, nienburg.goals);
   }
   expect(next).toBe(BUILD_ORDER.length);
   return state;
 }
 
 function levels(state: GameState): number[] {
-  const counts = [0, 0, 0];
+  const counts = RULES.housing.map(() => 0);
   for (const b of Object.values(state.buildings)) {
     if (b.house) counts[b.house.level - 1]!++;
   }
@@ -68,12 +74,12 @@ describe('scripted playthrough on Nienburg', () => {
   it('grows from huts to half-timbered houses within 20 turns', () => {
     const state = play(20);
     expect(state.turn).toBe(20);
-    expect(levels(state)).toEqual([0, 3, 16]);
+    expect(levels(state)).toEqual([0, 3, 16, 0, 0]);
     expect(population(state)).toBe(197);
     expect(state.subsidies).toBe(0);
     // The three houses furthest east are out of the chapel's reach and stay clay houses.
     expect({ gold: state.gold, food: state.food, materials: state.materials }).toEqual({
-      gold: 572,
+      gold: 433,
       food: 40,
       materials: 80,
     });

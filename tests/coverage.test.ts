@@ -89,7 +89,8 @@ describe('analyze', () => {
     const a = analyze(state, RULES);
     expect(a.idle.get(buildingAt(state, 5, 3)!.id)).toBe('noAccess');
     expect(a.access.has(buildingAt(state, 5, 2)!.id)).toBe(false);
-    expect(missingNeeds(RULES, a, buildingAt(state, 5, 2)!.id, 1, false)).toEqual(['road']);
+    const ctx = { hungry: false, goodsTypes: 0 };
+    expect(missingNeeds(RULES, a, buildingAt(state, 5, 2)!.id, 1, ctx)).toEqual(['road']);
   });
 
   it('needs workers for staffed buildings, oldest building first', () => {

@@ -16,10 +16,9 @@
   <body>
     <header class="topbar">
       <div class="titlebar">
-        <h1>Nienburg</h1>
+        <button id="menu" type="button" class="menu"></button>
         <p id="date" class="date"></p>
         <span class="spacer"></span>
-        <button id="new" type="button" class="quiet"></button>
         <button id="undo" type="button"></button>
         <button id="end" type="button" class="primary"></button>
       </div>
@@ -30,10 +29,19 @@
       <aside id="info" class="info" aria-live="polite"></aside>
     </main>
     <footer class="toolbar">
-      <p id="hint" class="hint"></p>
+      <div class="hintrow">
+        <p id="hint" class="hint"></p>
+        <label class="view"
+          ><span id="viewLabel"></span>
+          <select id="view"></select
+        ></label>
+      </div>
+      <div id="tabs" class="tools tabs" role="toolbar"></div>
       <div id="tools" class="tools" role="toolbar"></div>
     </footer>
-    <dialog id="report" class="report"></dialog>
+    <dialog id="report" class="sheet"></dialog>
+    <dialog id="goals" class="sheet"></dialog>
+    <dialog id="cities" class="sheet wide"></dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

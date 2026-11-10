@@ -9,6 +9,7 @@ export const CITY_LEGEND: Readonly<Record<string, Terrain>> = {
   '#': 'wall',
   T: 'tower',
   G: 'gate',
+  C: 'landmark',
   '.': 'buildable',
 };
 
@@ -78,7 +79,7 @@ export function validateCity(def: CityDef): string[] {
 export function newGame(def: CityDef, seed: number, balance: Balance): GameState {
   const { width, height, terrain } = parseCity(def);
   return {
-    version: 1,
+    version: 2,
     cityId: def.id,
     width,
     height,
@@ -91,6 +92,9 @@ export function newGame(def: CityDef, seed: number, balance: Balance): GameState
     gold: balance.start.gold,
     food: balance.start.food,
     materials: balance.start.materials,
+    goods: { cloth: 0, tools: 0, beer: 0 },
+    peakPop: 0,
+    stars: [false, false, false],
     buildPoints: balance.buildPointsPerTurn,
     subsidies: 0,
     lastReport: null,

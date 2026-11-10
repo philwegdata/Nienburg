@@ -108,6 +108,10 @@ button.quiet {
   font-variant-numeric: tabular-nums;
 }
 
+.narrow-only {
+  display: none;
+}
+
 .chip b {
   font-weight: 700;
 }
@@ -222,7 +226,7 @@ main {
   border-radius: 3px;
 }
 
-.report {
+.sheet {
   width: min(26rem, calc(100% - 2rem));
   max-height: calc(100% - 2rem);
   padding: 1rem 1.2rem;
@@ -232,60 +236,174 @@ main {
   border-radius: 8px;
 }
 
-.report::backdrop {
+.sheet.wide {
+  width: min(40rem, calc(100% - 2rem));
+}
+
+.sheet::backdrop {
   background: rgba(59, 42, 32, 0.45);
 }
 
-.report h2 {
+.sheet h2 {
   margin: 0 0 0.6rem;
   font-size: 1.2rem;
 }
 
-.report h3 {
+.sheet h3 {
   margin: 0.9rem 0 0.3rem;
   font-size: 1rem;
 }
 
-.report ul {
+.sheet ul {
   margin: 0;
   padding-left: 1.1rem;
 }
 
-.report li {
+.sheet li {
   margin: 0.15rem 0;
 }
 
-.report .hints {
+.sheet .news {
+  font-weight: 700;
+  color: var(--moss);
+}
+
+.sheet .hints {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
 
-.report .hints button {
+.sheet .hints button {
   text-align: left;
 }
 
-.report .actions {
+.sheet .actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 0.5rem;
   margin-top: 1rem;
+}
+
+.sheet .sub {
+  margin: -0.4rem 0 0.6rem;
+  font-style: italic;
+}
+
+.goal {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  margin: 0.35rem 0;
+}
+
+.goal .star,
+.stars {
+  color: var(--roof);
+  letter-spacing: 0.1em;
+}
+
+.goal .progress {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cities {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.8rem;
+}
+
+.city {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.city h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.city p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.city .meta {
+  opacity: 0.8;
+  font-size: 0.82rem;
+}
+
+.city button {
+  margin-top: auto;
+}
+
+.menu {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.hintrow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.75rem 0;
+}
+
+.hintrow .hint {
+  flex: 1;
+  padding: 0;
+}
+
+.view {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.view select {
+  font: inherit;
+  color: inherit;
+  background: var(--parchment);
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  padding: 0.15rem 0.3rem;
+}
+
+.tools.tabs {
+  padding-bottom: 0;
+}
+
+.tools.tabs button {
+  min-height: 36px;
+  font-size: 0.9rem;
+}
+
+.tools button.locked {
+  border-style: dashed;
+  opacity: 0.55;
 }
 
 @media (max-width: 640px) {
   .titlebar {
     gap: 0.3rem;
   }
-  .titlebar h1 {
-    display: none;
-  }
   .titlebar button {
     padding: 0.2rem 0.5rem;
     font-size: 0.9rem;
   }
   .date {
-    font-size: 0.9rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: none;
+  }
+  .narrow-only {
+    display: inline;
+    font-style: italic;
   }
   .chips {
     font-size: 0.82rem;

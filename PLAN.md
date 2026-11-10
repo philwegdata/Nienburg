@@ -288,15 +288,15 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 3 – Vollständiger Gebäudekatalog und zwei Karten
 
-- [ ] Alle Gebäude aus 2.4, Freischaltung über Meilensteine
-- [ ] Wohnhaus-Stufen 4–5, Zusammenwachsen von Parzellen
-- [ ] Wohnqualität inkl. Gestank, Lärm, Licht-Regel (+Tests)
-- [ ] Warenproduktion und -verteilung, Zunfthaus-Bonus
-- [ ] Brandrisiko, „rußgeschwärzt", Reparatur
-- [ ] Mehrrunden-Bauprojekt Kathedrale
-- [ ] Overlays 1–6 und Live-Reichweite beim Platzieren
-- [ ] Prognose-Panel (`forecast.ts` nutzt dieselbe Logik wie `endTurn`, auf einer Kopie des States)
-- [ ] Karten Nienburg (final) und Carcassonne, Sterne-Ziele, Stadtauswahl-Bildschirm
+- [x] Alle Gebäude aus 2.4, Freischaltung über Meilensteine
+- [x] Wohnhaus-Stufen 4–5, Zusammenwachsen von Parzellen
+- [x] Wohnqualität inkl. Gestank, Lärm, Licht-Regel (+Tests)
+- [x] Warenproduktion und -verteilung, Zunfthaus-Bonus
+- [x] Brandrisiko, „rußgeschwärzt", Reparatur
+- [x] Mehrrunden-Bauprojekt Kathedrale
+- [x] Overlays 1–6 und Live-Reichweite beim Platzieren
+- [x] Prognose-Panel (`forecast.ts` nutzt dieselbe Logik wie `endTurn`, auf einer Kopie des States)
+- [x] Karten Nienburg (final) und Carcassonne, Sterne-Ziele, Stadtauswahl-Bildschirm
 
 **Abnahme:** Beide Karten sind bis zu 3 Sternen durchspielbar. Für jedes Haus zeigt das Infopanel exakt, was zum Aufstieg fehlt.
 
