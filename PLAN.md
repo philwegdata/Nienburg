@@ -13,17 +13,17 @@ abarbeiten kann. Jede Phase endet mit einem spielbaren, deploybaren Stand und ha
 
 ## 1. Leitplanken (gelten für alle Phasen)
 
-| Thema | Entscheidung |
-|---|---|
-| Genre | Städtebau mit Versorgungs-/Wohnhaus-Aufstiegs-Mechanik, eigenständiges Spiel (keine Nachbildung eines bestehenden Titels: eigene Grafik, eigene Namen, eigene Regeln) |
-| Stimmung | Cozy. Kein Krieg, keine Gegner, kein Game Over. Rückschläge sind mild und reparierbar. |
-| Zeit | Rundenbasiert: 1 Runde = 1 Jahreszeit, 4 Runden = 1 Jahr |
-| Platz | Feste Stadtmaske pro Karte, nicht erweiterbar. Wachstum nur durch Umbau, Aufstocken, bessere Anordnung. |
-| Plattform | Browser (Desktop + Tablet/Handy), rein statisch, kein Backend |
-| Hosting | GitHub Pages, automatisches Deployment per GitHub Actions |
-| Sprache | Deutsch und Englisch (i18n von Anfang an), Code und Kommentare auf Englisch |
-| Grafik | Selbst gezeichnet per Code (Canvas), keine fremden Assets → keine Lizenzfragen |
-| Speichern | `localStorage` (Autosave pro Runde) + Export/Import als JSON-Datei |
+| Thema     | Entscheidung                                                                                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Genre     | Städtebau mit Versorgungs-/Wohnhaus-Aufstiegs-Mechanik, eigenständiges Spiel (keine Nachbildung eines bestehenden Titels: eigene Grafik, eigene Namen, eigene Regeln) |
+| Stimmung  | Cozy. Kein Krieg, keine Gegner, kein Game Over. Rückschläge sind mild und reparierbar.                                                                                |
+| Zeit      | Rundenbasiert: 1 Runde = 1 Jahreszeit, 4 Runden = 1 Jahr                                                                                                              |
+| Platz     | Feste Stadtmaske pro Karte, nicht erweiterbar. Wachstum nur durch Umbau, Aufstocken, bessere Anordnung.                                                               |
+| Plattform | Browser (Desktop + Tablet/Handy), rein statisch, kein Backend                                                                                                         |
+| Hosting   | GitHub Pages, automatisches Deployment per GitHub Actions                                                                                                             |
+| Sprache   | Deutsch und Englisch (i18n von Anfang an), Code und Kommentare auf Englisch                                                                                           |
+| Grafik    | Selbst gezeichnet per Code (Canvas), keine fremden Assets → keine Lizenzfragen                                                                                        |
+| Speichern | `localStorage` (Autosave pro Runde) + Export/Import als JSON-Datei                                                                                                    |
 
 ### Tech-Stack
 
@@ -95,13 +95,13 @@ Regeln dazu:
 
 ### 2.2 Ressourcen (bewusst wenige)
 
-| Ressource | Quelle | Verwendung |
-|---|---|---|
-| Gold | Steuern, Markt, Handel | Bau, Unterhalt |
-| Nahrung | Lieferung durch Tore (Umland), Bäckerei veredelt | Einwohner |
-| Baumaterial (Holz/Stein zusammengefasst) | Lieferung durch Tore, Lagerhaus | Bau, Aufstocken |
-| Waren (Tuch, Werkzeug, Bier) | Werkstätten | höhere Hausstufen, Handel |
-| Einwohner / Arbeitskräfte | Wohnhäuser | Betrieb aller Gebäude |
+| Ressource                                | Quelle                                           | Verwendung                |
+| ---------------------------------------- | ------------------------------------------------ | ------------------------- |
+| Gold                                     | Steuern, Markt, Handel                           | Bau, Unterhalt            |
+| Nahrung                                  | Lieferung durch Tore (Umland), Bäckerei veredelt | Einwohner                 |
+| Baumaterial (Holz/Stein zusammengefasst) | Lieferung durch Tore, Lagerhaus                  | Bau, Aufstocken           |
+| Waren (Tuch, Werkzeug, Bier)             | Werkstätten                                      | höhere Hausstufen, Handel |
+| Einwohner / Arbeitskräfte                | Wohnhäuser                                       | Betrieb aller Gebäude     |
 
 Das **Umland ist abstrahiert**: Felder und Wälder liegen außerhalb der Mauer und werden nicht bebaut.
 Jedes **Stadttor** hat eine Lieferkapazität pro Runde; Lagerhäuser und Kornspeicher in Tornähe
@@ -110,7 +110,7 @@ erhöhen, wie viel davon in der Stadt ankommt. Damit bleibt der gesamte Bauplatz
 ### 2.3 Versorgung über das Wegenetz
 
 Statt umherlaufender Figuren (schwer vorhersagbar) gilt eine **deterministische Wegdistanz**:
-Ein Dienstgebäude versorgt alle Gebäude, die über Wege innerhalb von *n* Schritten erreichbar sind.
+Ein Dienstgebäude versorgt alle Gebäude, die über Wege innerhalb von _n_ Schritten erreichbar sind.
 
 - **Gasse** (1 Feld, billig): zählt als Weg, aber Feuerwehr/Markt-Reichweite durch Gassen kostet doppelt.
 - **Straße** (1 Feld, teurer, gepflastert): volle Reichweite, leichter Bonus auf Wohnqualität.
@@ -121,31 +121,31 @@ Der Kernkonflikt: Wege kosten wertvollen Platz, aber ohne Wege keine Versorgung.
 
 ### 2.4 Gebäude (erste Fassung, datengetrieben in `data/buildings.ts`)
 
-| Kategorie | Gebäude | Größe | Wirkung |
-|---|---|---|---|
-| Wohnen | Wohnparzelle | 1×1 | entwickelt sich selbst über Stufen (s. 2.5) |
-| Wasser | Brunnen | 1×1 | Wasser, kleine Reichweite |
-| Wasser | Zisterne | 2×2 | Wasser, große Reichweite, stärkt Brandschutz |
-| Nahrung | Marktstand | 1×1 | verteilt Nahrung, kleine Reichweite; nur auf Platz |
-| Nahrung | Markthalle | 3×2 | verteilt Nahrung + Waren, große Reichweite |
-| Nahrung | Bäckerei | 1×2 | macht aus Nahrung mehr Nahrung, leichte Brandgefahr |
-| Nahrung | Kornspeicher | 2×2 | Nahrungsvorrat für den Winter |
-| Sicherheit | Brandwache | 1×1 | senkt Brandrisiko in Reichweite |
-| Sicherheit | Nachtwächterhaus | 1×1 | Ordnung, Voraussetzung für höhere Hausstufen |
-| Glaube | Kapelle | 1×2 | Glaube, kleine Reichweite |
-| Glaube | Pfarrkirche | 2×3 | Glaube, große Reichweite |
-| Glaube | Kathedrale | 4×5 | stadtweit, Mehrrunden-Bauprojekt, Endziel mancher Karten |
-| Gesundheit | Badehaus | 2×2 | Gesundheit, braucht Wasser |
-| Gesundheit | Spital | 2×3 | Gesundheit, große Reichweite |
-| Kultur | Schenke | 1×2 | Unterhaltung, etwas Lärm |
-| Kultur | Schule | 2×2 | Bildung |
-| Handwerk | Weberei, Schmiede, Brauerei | 2×2 | produzieren Waren |
-| Handwerk | Gerberei | 2×2 | viel Gold, starker Gestank (Malus Wohnqualität) |
-| Handwerk | Zunfthaus | 2×3 | verstärkt angrenzende Werkstätten |
-| Verwaltung | Rathaus | 3×3 | 1× pro Stadt, Steuern, schaltet Gebäude frei |
-| Verwaltung | Lagerhaus | 2×2 | Tor-Lieferungen, Materiallager |
-| Verwaltung | Bauhütte | 2×2 | +Baupunkte |
-| Grün | Garten, Baum, Stadtbrunnen (Zier) | 1×1 | Wohnqualität |
+| Kategorie  | Gebäude                           | Größe | Wirkung                                                  |
+| ---------- | --------------------------------- | ----- | -------------------------------------------------------- |
+| Wohnen     | Wohnparzelle                      | 1×1   | entwickelt sich selbst über Stufen (s. 2.5)              |
+| Wasser     | Brunnen                           | 1×1   | Wasser, kleine Reichweite                                |
+| Wasser     | Zisterne                          | 2×2   | Wasser, große Reichweite, stärkt Brandschutz             |
+| Nahrung    | Marktstand                        | 1×1   | verteilt Nahrung, kleine Reichweite; nur auf Platz       |
+| Nahrung    | Markthalle                        | 3×2   | verteilt Nahrung + Waren, große Reichweite               |
+| Nahrung    | Bäckerei                          | 1×2   | macht aus Nahrung mehr Nahrung, leichte Brandgefahr      |
+| Nahrung    | Kornspeicher                      | 2×2   | Nahrungsvorrat für den Winter                            |
+| Sicherheit | Brandwache                        | 1×1   | senkt Brandrisiko in Reichweite                          |
+| Sicherheit | Nachtwächterhaus                  | 1×1   | Ordnung, Voraussetzung für höhere Hausstufen             |
+| Glaube     | Kapelle                           | 1×2   | Glaube, kleine Reichweite                                |
+| Glaube     | Pfarrkirche                       | 2×3   | Glaube, große Reichweite                                 |
+| Glaube     | Kathedrale                        | 4×5   | stadtweit, Mehrrunden-Bauprojekt, Endziel mancher Karten |
+| Gesundheit | Badehaus                          | 2×2   | Gesundheit, braucht Wasser                               |
+| Gesundheit | Spital                            | 2×3   | Gesundheit, große Reichweite                             |
+| Kultur     | Schenke                           | 1×2   | Unterhaltung, etwas Lärm                                 |
+| Kultur     | Schule                            | 2×2   | Bildung                                                  |
+| Handwerk   | Weberei, Schmiede, Brauerei       | 2×2   | produzieren Waren                                        |
+| Handwerk   | Gerberei                          | 2×2   | viel Gold, starker Gestank (Malus Wohnqualität)          |
+| Handwerk   | Zunfthaus                         | 2×3   | verstärkt angrenzende Werkstätten                        |
+| Verwaltung | Rathaus                           | 3×3   | 1× pro Stadt, Steuern, schaltet Gebäude frei             |
+| Verwaltung | Lagerhaus                         | 2×2   | Tor-Lieferungen, Materiallager                           |
+| Verwaltung | Bauhütte                          | 2×2   | +Baupunkte                                               |
+| Grün       | Garten, Baum, Stadtbrunnen (Zier) | 1×1   | Wohnqualität                                             |
 
 Gebäude werden **über Meilensteine freigeschaltet** (Einwohnerzahl), damit der Einstieg überschaubar bleibt.
 
@@ -153,13 +153,13 @@ Gebäude werden **über Meilensteine freigeschaltet** (Einwohnerzahl), damit der
 
 Wohnparzellen steigen automatisch auf, wenn Anforderungen erfüllt sind, und ab, wenn sie zwei Runden lang fehlen (Schonfrist = cozy).
 
-| Stufe | Name | Einw. | Braucht |
-|---|---|---|---|
-| 1 | Hütte | 4 | Weganschluss |
-| 2 | Lehmhaus | 7 | + Wasser, Nahrung |
-| 3 | Fachwerkhaus | 11 | + Glaube, Brandschutz, Wohnqualität ≥ mittel |
-| 4 | Bürgerhaus | 16 | + Unterhaltung, Gesundheit, Waren (1 Sorte) |
-| 5 | Patrizierhaus | 22 | + Bildung, Ordnung, Waren (2 Sorten), Wohnqualität ≥ hoch |
+| Stufe | Name          | Einw. | Braucht                                                   |
+| ----- | ------------- | ----- | --------------------------------------------------------- |
+| 1     | Hütte         | 4     | Weganschluss                                              |
+| 2     | Lehmhaus      | 7     | + Wasser, Nahrung                                         |
+| 3     | Fachwerkhaus  | 11    | + Glaube, Brandschutz, Wohnqualität ≥ mittel              |
+| 4     | Bürgerhaus    | 16    | + Unterhaltung, Gesundheit, Waren (1 Sorte)               |
+| 5     | Patrizierhaus | 22    | + Bildung, Ordnung, Waren (2 Sorten), Wohnqualität ≥ hoch |
 
 Besonderheiten, die das „Enge"-Thema tragen:
 
@@ -207,18 +207,18 @@ export const carcassonne: CityDef = {
 
 Ein Validierungstest prüft jede Karte: rechteckig, mind. 1 Tor, alle baubaren Felder vom Tor erreichbar, Feldanzahl im Zielbereich.
 
-| # | Stadt | Besonderheit des Grundrisses | Baubare Felder (Ziel) |
-|---|---|---|---|
-| 1 | **Nienburg** (Weser, Deutschland) | Tutorial-Karte: kompakte Stadt am Fluss, ein Flussufer als Grenze, 2 Tore, Hafenbonus | ~350 |
-| 2 | **Carcassonne** (Frankreich) | Oval auf dem Hügel, Burg als festes Landmark nimmt Platz weg, 2 Tore | ~420 |
-| 3 | **Dubrovnik** (Kroatien) | Lange Hauptachse, Meer auf drei Seiten, Hafentor mit viel Handel | ~400 |
-| 4 | **Mont-Saint-Michel** (Frankreich) | Winzig, kreisförmig, Höhenstufen; Abtei in der Mitte vorgegeben, 1 Tor | ~220 |
-| 5 | **Brügge** (Belgien) | Kanäle zerschneiden die Fläche; Brücken als eigenes Bauteil | ~450 |
-| 6 | **San Gimignano** (Italien) | Schmaler Grat; Sonderbau Geschlechterturm (1×1, sehr hoch) | ~300 |
-| 7 | **Fès** (Marokko) | Verwinkelte Medina, unregelmäßige Form, Gerberviertel als Thema | ~480 |
-| 8 | **Pingyao** (China) | Fast quadratische Mauer, strenges Raster, 6 Tore | ~500 |
-| 9 | **Bhaktapur** (Nepal) | Mehrere vorgegebene Tempelplätze, die nicht überbaut werden dürfen | ~380 |
-| 10 | **Cusco** (Peru) | Hanglage mit Terrassen, zwei Flüsse als Begrenzung | ~400 |
+| #   | Stadt                              | Besonderheit des Grundrisses                                                          | Baubare Felder (Ziel) |
+| --- | ---------------------------------- | ------------------------------------------------------------------------------------- | --------------------- |
+| 1   | **Nienburg** (Weser, Deutschland)  | Tutorial-Karte: kompakte Stadt am Fluss, ein Flussufer als Grenze, 2 Tore, Hafenbonus | ~350                  |
+| 2   | **Carcassonne** (Frankreich)       | Oval auf dem Hügel, Burg als festes Landmark nimmt Platz weg, 2 Tore                  | ~420                  |
+| 3   | **Dubrovnik** (Kroatien)           | Lange Hauptachse, Meer auf drei Seiten, Hafentor mit viel Handel                      | ~400                  |
+| 4   | **Mont-Saint-Michel** (Frankreich) | Winzig, kreisförmig, Höhenstufen; Abtei in der Mitte vorgegeben, 1 Tor                | ~220                  |
+| 5   | **Brügge** (Belgien)               | Kanäle zerschneiden die Fläche; Brücken als eigenes Bauteil                           | ~450                  |
+| 6   | **San Gimignano** (Italien)        | Schmaler Grat; Sonderbau Geschlechterturm (1×1, sehr hoch)                            | ~300                  |
+| 7   | **Fès** (Marokko)                  | Verwinkelte Medina, unregelmäßige Form, Gerberviertel als Thema                       | ~480                  |
+| 8   | **Pingyao** (China)                | Fast quadratische Mauer, strenges Raster, 6 Tore                                      | ~500                  |
+| 9   | **Bhaktapur** (Nepal)              | Mehrere vorgegebene Tempelplätze, die nicht überbaut werden dürfen                    | ~380                  |
+| 10  | **Cusco** (Peru)                   | Hanglage mit Terrassen, zwei Flüsse als Begrenzung                                    | ~400                  |
 
 Phase 3 liefert Karten 1–2, Phase 7 den Rest. Regionale Karten bekommen eine eigene Farbpalette
 (Dachfarbe, Mauerstein, Boden) und 1–2 umbenannte/optisch angepasste Gebäude (z. B. Tempel statt Kirche),
@@ -250,13 +250,13 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 0 – Projektgerüst und Deployment
 
-- [ ] Vite + TypeScript (strict) aufsetzen, ESLint, Prettier, Vitest
-- [ ] Ordnerstruktur aus Abschnitt 1 anlegen
-- [ ] `vite.config.ts` mit `base: '/Nienburg/'` (Repo-Name!)
-- [ ] `.github/workflows/deploy.yml`: bei Push auf `main` → `npm ci`, lint, test, build, Deployment mit `actions/upload-pages-artifact` + `actions/deploy-pages`
-- [ ] `.github/workflows/ci.yml`: lint + test + build für Pull Requests
-- [ ] `README.md` (Was ist das, lokal starten, Link zum Spiel), `CLAUDE.md` (Architekturregeln aus Abschnitt 1, Befehle), `LICENSE`
-- [ ] Startseite zeigt Titel „Nienburg" und ein leeres Canvas
+- [x] Vite + TypeScript (strict) aufsetzen, ESLint, Prettier, Vitest
+- [x] Ordnerstruktur aus Abschnitt 1 anlegen
+- [x] `vite.config.ts` mit `base: '/Nienburg/'` (Repo-Name!)
+- [x] `.github/workflows/deploy.yml`: bei Push auf `main` → `npm ci`, lint, test, build, Deployment mit `actions/upload-pages-artifact` + `actions/deploy-pages`
+- [x] `.github/workflows/ci.yml`: lint + test + build für Pull Requests
+- [x] `README.md` (Was ist das, lokal starten, Link zum Spiel), `CLAUDE.md` (Architekturregeln aus Abschnitt 1, Befehle), `LICENSE`
+- [x] Startseite zeigt Titel „Nienburg" und ein leeres Canvas
 
 **Abnahme:** `npm run dev`, `npm test`, `npm run build` laufen. Nach Merge auf `main` ist die Seite unter `https://<user>.github.io/Nienburg/` erreichbar.
 **Manueller Schritt für den Repo-Besitzer:** Settings → Pages → Source: „GitHub Actions". (GitHub Pages für private Repos erfordert einen bezahlten Plan; sonst Repo öffentlich machen.)
@@ -371,11 +371,11 @@ Fotomodus · weitere Städte aus der Community · Musik.
 
 Solange der Besitzer nichts anderes entscheidet, gilt die Vorgabe.
 
-| Frage | Vorgabe |
-|---|---|
-| Isometrisch oder Draufsicht? | Isometrisch 2:1; `render/` ist austauschbar gekapselt |
-| Baupunkte pro Runde als Limit? | Ja, Start 3. Falls es sich im Test zäh anfühlt: nur Gold als Limit |
-| Lizenz | MIT |
-| Repo öffentlich (für kostenloses GitHub Pages)? | Ja |
-| Ton/Musik | Erst nach 1.0, nur dezente Geräusche in Phase 5 optional |
-| Kirche auf nicht-europäischen Karten | Neutrale Kategorie „Glaube" mit regionalem Gebäudenamen und eigener Optik |
+| Frage                                           | Vorgabe                                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Isometrisch oder Draufsicht?                    | Isometrisch 2:1; `render/` ist austauschbar gekapselt                     |
+| Baupunkte pro Runde als Limit?                  | Ja, Start 3. Falls es sich im Test zäh anfühlt: nur Gold als Limit        |
+| Lizenz                                          | MIT                                                                       |
+| Repo öffentlich (für kostenloses GitHub Pages)? | Ja                                                                        |
+| Ton/Musik                                       | Erst nach 1.0, nur dezente Geräusche in Phase 5 optional                  |
+| Kirche auf nicht-europäischen Karten            | Neutrale Kategorie „Glaube" mit regionalem Gebäudenamen und eigener Optik |
