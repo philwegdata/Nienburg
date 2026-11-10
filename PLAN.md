@@ -302,11 +302,11 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 4 – Grafik und Atmosphäre
 
-- [ ] Prozedurale Gebäude-Sprites für alle Gebäude und Hausstufen, Varianten per Seed, Sprite-Cache
-- [ ] Mauern, Türme, Tore, Wasser, Umland außerhalb der Mauer (Felder, Wald – nur Kulisse)
-- [ ] Jahreszeiten-Paletten, Rauch, Fahnen, Fensterlichter (mit `prefers-reduced-motion`-Abschaltung)
-- [ ] Einheitliches UI-Design (Pergament-/Holz-Anmutung per CSS), Icons als Inline-SVG
-- [ ] Rendering-Performance: nur sichtbare Felder zeichnen, statische Ebene cachen; Ziel 60 fps auf Mittelklasse-Handy
+- [x] Prozedurale Gebäude-Sprites für alle Gebäude und Hausstufen, Varianten per Seed, Sprite-Cache
+- [x] Mauern, Türme, Tore, Wasser, Umland außerhalb der Mauer (Felder, Wald – nur Kulisse)
+- [x] Jahreszeiten-Paletten, Rauch, Fahnen, Fensterlichter (mit `prefers-reduced-motion`-Abschaltung)
+- [x] Einheitliches UI-Design (Pergament-/Holz-Anmutung per CSS), Icons als Inline-SVG
+- [x] Rendering-Performance: nur sichtbare Felder zeichnen, statische Ebene cachen; Ziel 60 fps auf Mittelklasse-Handy
 
 **Abnahme:** Screenshots beider Karten in allen vier Jahreszeiten sehen stimmig aus; kein Platzhalter mehr sichtbar.
 

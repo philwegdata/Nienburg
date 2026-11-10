@@ -25,7 +25,8 @@ import { BUILD_MENU, BUILDINGS, type BuildingId } from '../data/buildings';
 import { fill, plural, type Strings } from '../data/i18n';
 import { RULES } from '../data/rules';
 import { fitCamera, gridToWorld, pickTile, zoomAt, type Camera } from '../render/iso';
-import { render, type Overlay } from '../render/renderer';
+import { buildingIcon, Scene, type Overlay } from '../render/renderer';
+import { icon, type IconName } from './icons';
 import { adoptLegacySave, bestStars, lastCity, loadGame, saveGame } from './storage';
 
 type Tool =
@@ -135,6 +136,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   let screen = { w: 0, h: 0, dpr: 1 };
   let dirty = false;
   const pointers = new Map<number, Point>();
+  const scene = new Scene((id) => BUILDINGS[id]?.category === 'path');
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const needCtx = () => ({ hungry: outlook.hungry, goodsTypes: outlook.goodsTypes });
   const nameOf = (defId: string) => t.building[defId as BuildingId] ?? defId;
@@ -152,11 +155,16 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       else if (demolition) overlay.preview = demolition.map((p) => ({ ...p, ok: false }));
       if (tool.kind === 'select') overlay.highlight = selected;
       else if (!plan && !demolition) overlay.highlight = hover;
-      render(ctx!, state, cam, screen.w, screen.h, screen.dpr, overlay, (id) => {
-        return BUILDINGS[id]?.category === 'path';
-      });
+      // With reduced motion the picture stands still: smoke and flags are drawn, but frozen.
+      const time = calm.matches ? 0 : performance.now() / 1000;
+      scene.render(ctx!, state, cam, screen, overlay, time);
     });
   }
+
+  // Smoke, flags and water move gently; a dozen frames a second is plenty for that.
+  window.setInterval(() => {
+    if (!calm.matches && !document.hidden) requestDraw();
+  }, 80);
 
   function resize(first = false): void {
     const rect = el.canvas.getBoundingClientRect();
@@ -276,9 +284,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
 
   function updateResources(): void {
     const tiles = countTiles(state);
-    const chip = (label: string, value: string, delta?: number) => {
+    const chip = (name: IconName, label: string, value: string, delta?: number) => {
       const c = node('span', undefined, 'chip');
-      c.append(`${label} `, node('b', value));
+      c.title = label;
+      c.append(icon(name), node('span', `${label} `, 'label'), node('b', value));
       if (delta) {
         const sign = delta > 0 ? '+' : '−';
         c.append(node('span', `${sign}${Math.abs(delta)}`, `delta ${delta > 0 ? 'up' : 'down'}`));
@@ -288,26 +297,33 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     const goldDelta =
       outlook.taxes + outlook.tradeIncome - outlook.upkeep - outlook.constructionCost;
     const chips = [
-      chip(t.res.gold, String(state.gold), goldDelta),
+      chip('gold', t.res.gold, String(state.gold), goldDelta),
       chip(
+        'food',
         t.res.food,
         `${state.food}/${analysis.foodCap}`,
         outlook.foodDelivered - outlook.foodEaten,
       ),
       chip(
+        'materials',
         t.res.materials,
         `${state.materials}/${analysis.materialsCap}`,
         outlook.materialsDelivered,
       ),
-      chip(t.res.population, String(analysis.population), outlook.popAfter - outlook.popBefore),
-      chip(t.res.buildPoints, String(state.buildPoints)),
-      chip(t.res.free, `${tiles.free}/${tiles.buildable}`),
+      chip(
+        'population',
+        t.res.population,
+        String(analysis.population),
+        outlook.popAfter - outlook.popBefore,
+      ),
+      chip('buildPoints', t.res.buildPoints, String(state.buildPoints)),
+      chip('free', t.res.free, `${tiles.free}/${tiles.buildable}`),
     ];
     // Craft goods only matter once the first workshops can be built.
     if (GOODS.some((g) => state.goods[g] > 0 || analysis.production[g] > 0)) {
       for (const g of GOODS) {
         chips.push(
-          chip(t.good[g], String(state.goods[g]), analysis.production[g] - analysis.goodsDemand),
+          chip(g, t.good[g], String(state.goods[g]), analysis.production[g] - analysis.goodsDemand),
         );
       }
     }
@@ -652,7 +668,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     toolButton(t.toolRepair, { kind: 'repair' }, el.tabs);
     toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
 
-    for (const id of BUILD_MENU) toolButton(t.building[id], { kind: 'build', def: id }, el.tools);
+    for (const id of BUILD_MENU) {
+      toolButton(t.building[id], { kind: 'build', def: id }, el.tools);
+      toolButtons[toolButtons.length - 1]!.node.prepend(buildingIcon(BUILDINGS[id]!));
+    }
     rotateButton = button(t.rotate, rotate);
     el.tools.append(rotateButton);
 

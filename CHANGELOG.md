@@ -72,3 +72,22 @@
     einem eigenen Panel.
   - Die Ansicht „Wegdistanz“ ist durch die Reichweiten-Vorschau beim Platzieren ersetzt.
   - Zuschüsse des Landesherrn schmälern die Sterne noch nicht.
+
+## Phase 4 – Grafik und Atmosphäre
+
+- Alle Gebäude gezeichnet: Fenster, Türen, Fachwerk, Schornsteine, Türme mit Spitze und Kreuz;
+  Wohnhäuser unterscheiden sich je nach Lage in Dachfarbe, Höhe und Firstrichtung
+- Stadtmauer mit Zinnen und Steinlagen, Tore mit Bogen und Fahne, Burg mit Türmen
+- Umland als Kulisse: Felder mit Furchen, Wälder, Wege vor den Toren, ein Fluss, der über den
+  Kartenrand hinaus weiterfließt
+- Vier Jahreszeiten: Blüte im Frühling, gelbe Felder im Sommer, buntes Laub und gepflügte Äcker
+  im Herbst, Schnee und kahle Bäume im Winter; in Herbst und Winter leuchten die Fenster
+- Rauch aus Schornsteinen, wehende Fahnen und Glitzern auf dem Wasser; bei „Bewegung
+  reduzieren“ steht das Bild still
+- Oberfläche in Holz und Pergament, Symbole für alle Ressourcen, Gebäudebilder im Baumenü
+- Darstellung: Boden und Gebäude werden als zwei Bilder zwischengespeichert und nur bei
+  Änderungen neu gezeichnet; nah herangezoomt werden stattdessen nur die sichtbaren Felder gezeichnet
+- Entscheidungen:
+  - Statt einzelner Sprites pro Gebäude werden ganze Ebenen zwischengespeichert. Das erfüllt
+    denselben Zweck (kein Neuzeichnen pro Bild) und braucht kein Sprite-Raster.
+  - Die Bildrate auf einem echten Mittelklasse-Handy ist nicht gemessen, nur im Testbrowser.
