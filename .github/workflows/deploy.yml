@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # The Pages environment only accepts the repository default branch.
+    branches: [main, ccr-b0e31044-fipv2l]
   workflow_dispatch:
 
 permissions:
