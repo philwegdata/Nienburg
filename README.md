@@ -5,7 +5,7 @@ Der Platz innerhalb der Stadtmauer ist von Anfang an begrenzt – die Kunst lieg
 
 **Spielen:** https://philwegdata.github.io/Nienburg/
 
-Stand: Phase 0 (Projektgerüst). Der vollständige Fahrplan steht in [PLAN.md](PLAN.md).
+Stand: Phase 1 – auf der Nienburg-Karte lassen sich Wege und erste Gebäude bauen und abreißen. Runden und Wirtschaft folgen in Phase 2. Der vollständige Fahrplan steht in [PLAN.md](PLAN.md).
 
 ## Lokal starten
 

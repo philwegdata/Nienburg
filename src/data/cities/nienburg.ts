@@ -1,0 +1,41 @@
+import type { CityDef } from '../../core/types';
+
+/** Tutorial town: a compact wall ring on the east bank of the river, with a harbour gate. */
+export const nienburg: CityDef = {
+  id: 'nienburg',
+  name: { de: 'Nienburg', en: 'Nienburg' },
+  region: { de: 'An der Weser, Deutschland', en: 'On the Weser, Germany' },
+  blurb: {
+    de: 'Eine kompakte Stadt am Fluss mit Hafentor – ideal für den Einstieg.',
+    en: 'A compact riverside town with a harbour gate – a gentle start.',
+  },
+  difficulty: 1,
+  buildableRange: [300, 400],
+  map: [
+    '~~~~                          ',
+    '~~~~                          ',
+    '~~~~~        ####T###         ',
+    '~~~~~     ####......####      ',
+    '~~~~~   ###............###    ',
+    '~~~~~  T#................#T   ',
+    '~~~~~  #..................#   ',
+    '~~~~~ ##..................##  ',
+    '~~~~~ #....................#  ',
+    '~~~~  #....................#  ',
+    '~~~~  #....................## ',
+    '~~~~  #.....................# ',
+    '~~~   G.....................G ',
+    '~~~   #.....................# ',
+    '~~~   #....................## ',
+    '~~~   #....................#  ',
+    '~~~   #....................#  ',
+    '~~~   ##..................##  ',
+    '~~~    #..................#   ',
+    '~~~~   T#................#T   ',
+    '~~~~    ###............###    ',
+    '~~~~      ####......####      ',
+    '~~~~~        ####T###         ',
+    '~~~~~                         ',
+    '~~~~~                         ',
+  ],
+};

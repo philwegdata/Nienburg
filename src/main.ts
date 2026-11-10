@@ -1,17 +1,30 @@
 import './style.css';
+import { CITIES } from './data/cities';
 import { pickLang, strings } from './data/i18n';
-import { drawPlaceholder } from './render/canvas';
+import { startApp } from './ui/app';
 
 const lang = pickLang(navigator.language);
 const t = strings(lang);
 document.documentElement.lang = lang;
 
-const tagline = document.querySelector<HTMLParagraphElement>('#tagline');
-if (tagline) tagline.textContent = t.tagline;
+function need<T extends Element>(selector: string): T {
+  const node = document.querySelector<T>(selector);
+  if (!node) throw new Error(`Missing element ${selector}`);
+  return node;
+}
 
-const canvas = document.querySelector<HTMLCanvasElement>('#map');
-if (!canvas) throw new Error('Missing #map canvas');
+need<HTMLElement>('#tagline').textContent = t.tagline;
+const canvas = need<HTMLCanvasElement>('#map');
+canvas.setAttribute('aria-label', t.mapLabel);
 
-const redraw = () => drawPlaceholder(canvas, t.mapPlaceholder);
-window.addEventListener('resize', redraw);
-redraw();
+startApp(
+  {
+    canvas,
+    tools: need<HTMLElement>('#tools'),
+    hint: need<HTMLElement>('#hint'),
+    info: need<HTMLElement>('#info'),
+    stats: need<HTMLElement>('#stats'),
+  },
+  CITIES[0]!,
+  t,
+);

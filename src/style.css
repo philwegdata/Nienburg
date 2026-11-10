@@ -16,6 +16,8 @@ html,
 body {
   height: 100%;
   margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -28,23 +30,37 @@ body {
   display: flex;
   align-items: baseline;
   gap: 1rem;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 1rem;
+  padding-top: max(0.4rem, env(safe-area-inset-top));
   background: var(--parchment-dark);
   border-bottom: 2px solid var(--ink);
 }
 
 .topbar h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   letter-spacing: 0.05em;
 }
 
 .topbar p {
   margin: 0;
+}
+
+#tagline {
   font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats {
+  margin-left: auto !important;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 main {
+  position: relative;
   flex: 1;
   min-height: 0;
 }
@@ -54,4 +70,112 @@ main {
   width: 100%;
   height: 100%;
   touch-action: none;
+  cursor: grab;
+}
+
+#map.building {
+  cursor: crosshair;
+}
+
+.info {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: min(16rem, calc(100% - 1.2rem));
+  padding: 0.6rem 0.8rem;
+  background: rgba(239, 228, 204, 0.94);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.info h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+}
+
+.info p {
+  margin: 0.2rem 0 0;
+}
+
+.info .meta {
+  opacity: 0.75;
+  font-size: 0.82rem;
+}
+
+.toolbar {
+  background: var(--parchment-dark);
+  border-top: 2px solid var(--ink);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.hint {
+  margin: 0;
+  padding: 0.25rem 0.75rem 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  min-height: 1.4rem;
+}
+
+.tools {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem 0.5rem;
+  overflow-x: auto;
+}
+
+.tools button {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  color: inherit;
+  background: var(--parchment);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tools button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--parchment);
+}
+
+.tools button:focus-visible {
+  outline: 3px solid var(--roof);
+  outline-offset: 2px;
+}
+
+.tools .sep {
+  flex: 0 0 2px;
+  background: var(--ink);
+  opacity: 0.3;
+  margin: 0.2rem 0.2rem;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+}
+
+@media (max-width: 640px) {
+  #tagline {
+    display: none;
+  }
+  .info {
+    left: 0.6rem;
+    right: auto;
+    width: min(14rem, calc(100% - 1.2rem));
+    font-size: 0.82rem;
+  }
+}
+
+[hidden] {
+  display: none !important;
 }

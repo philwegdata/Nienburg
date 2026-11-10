@@ -2,7 +2,10 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+    />
     <meta
       name="description"
       content="Nienburg – ein gemütlicher, rundenbasierter Mittelalter-Städtebauer."
@@ -14,10 +17,16 @@
     <header class="topbar">
       <h1>Nienburg</h1>
       <p id="tagline"></p>
+      <p id="stats" class="stats"></p>
     </header>
     <main>
-      <canvas id="map" aria-label="Stadtkarte"></canvas>
+      <canvas id="map"></canvas>
+      <aside id="info" class="info" aria-live="polite"></aside>
     </main>
+    <footer class="toolbar">
+      <p id="hint" class="hint"></p>
+      <div id="tools" class="tools" role="toolbar"></div>
+    </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

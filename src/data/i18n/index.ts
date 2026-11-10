@@ -1,7 +1,8 @@
+import type { Lang } from '../../core/types';
 import { de, type Strings } from './de';
 import { en } from './en';
 
-export type Lang = 'de' | 'en';
+export type { Lang, Strings };
 
 const tables: Record<Lang, Strings> = { de, en };
 

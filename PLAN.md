@@ -263,13 +263,13 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 1 – Karte, Kamera, Bauen
 
-- [ ] `GameState`, `CityDef`, ASCII-Karten-Parser, Karten-Validierung (+Tests)
-- [ ] Testkarte Nienburg (vorläufige Maske)
-- [ ] Iso-Projektion, Kamera (Pan/Zoom, Maus + Touch), Feld-Picking (+Tests für Projektion hin/zurück)
-- [ ] Rendering von Boden, Mauer, Türmen, Toren, Wasser mit Platzhalter-Grafik; korrekte Zeichenreihenfolge
-- [ ] Aktionen `placeBuilding`, `demolish` mit Prüfungen (in Maske, frei, Größe, Drehung) (+Tests)
-- [ ] Bauen von Gasse, Straße, Platz (Ziehen für Linien/Flächen), Wohnparzelle, Brunnen
-- [ ] Baumenü, Bauvorschau (grün/rot), Infopanel-Grundgerüst
+- [x] `GameState`, `CityDef`, ASCII-Karten-Parser, Karten-Validierung (+Tests)
+- [x] Testkarte Nienburg (vorläufige Maske)
+- [x] Iso-Projektion, Kamera (Pan/Zoom, Maus + Touch), Feld-Picking (+Tests für Projektion hin/zurück)
+- [x] Rendering von Boden, Mauer, Türmen, Toren, Wasser mit Platzhalter-Grafik; korrekte Zeichenreihenfolge
+- [x] Aktionen `placeBuilding`, `demolish` mit Prüfungen (in Maske, frei, Größe, Drehung) (+Tests)
+- [x] Bauen von Gasse, Straße, Platz (Ziehen für Linien/Flächen), Wohnparzelle, Brunnen
+- [x] Baumenü, Bauvorschau (grün/rot), Infopanel-Grundgerüst
 
 **Abnahme:** Man kann auf der Nienburg-Karte Wege und Gebäude platzieren und abreißen; außerhalb der Mauer geht nichts. Bedienung funktioniert mit Maus und Touch.
 
