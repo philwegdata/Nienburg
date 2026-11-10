@@ -275,14 +275,14 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 2 – Runden, Wirtschaft, Wohnhäuser
 
-- [ ] Seedbarer RNG, `endTurn`-Pipeline in der Reihenfolge aus 2.1
-- [ ] Wegdistanz-Berechnung (BFS über Wegfelder, Gasse = doppelte Kosten) und Versorgungsabdeckung (+Tests)
-- [ ] Ressourcen, Tor-Lieferungen, Lagerhaus, Kornspeicher, Marktstand
-- [ ] Wohnhaus-Stufen 1–3 mit Auf-/Abstieg und Schonfrist (+Tests)
-- [ ] Einwohner, Arbeitskräfte, Steuern, Unterhalt, Baupunkte
-- [ ] Kopfleiste, „Runde beenden", Rundenbericht
-- [ ] Undo innerhalb der Runde
-- [ ] Speichern/Laden (`localStorage`, Versionsfeld, Migrationsgerüst) (+Roundtrip-Test)
+- [x] Seedbarer RNG, `endTurn`-Pipeline in der Reihenfolge aus 2.1
+- [x] Wegdistanz-Berechnung (BFS über Wegfelder, Gasse = doppelte Kosten) und Versorgungsabdeckung (+Tests)
+- [x] Ressourcen, Tor-Lieferungen, Lagerhaus, Kornspeicher, Marktstand
+- [x] Wohnhaus-Stufen 1–3 mit Auf-/Abstieg und Schonfrist (+Tests)
+- [x] Einwohner, Arbeitskräfte, Steuern, Unterhalt, Baupunkte
+- [x] Kopfleiste, „Runde beenden", Rundenbericht
+- [x] Undo innerhalb der Runde
+- [x] Speichern/Laden (`localStorage`, Versionsfeld, Migrationsgerüst) (+Roundtrip-Test)
 
 **Abnahme:** Eine Stadt lässt sich über 20+ Runden von Hütten zu Fachwerkhäusern entwickeln. Ein automatisierter Test spielt mit festem Seed ein Skript von 20 Runden und prüft das Endergebnis (Determinismus).
 

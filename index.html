@@ -15,9 +15,15 @@
   </head>
   <body>
     <header class="topbar">
-      <h1>Nienburg</h1>
-      <p id="tagline"></p>
-      <p id="stats" class="stats"></p>
+      <div class="titlebar">
+        <h1>Nienburg</h1>
+        <p id="date" class="date"></p>
+        <span class="spacer"></span>
+        <button id="new" type="button" class="quiet"></button>
+        <button id="undo" type="button"></button>
+        <button id="end" type="button" class="primary"></button>
+      </div>
+      <div id="resources" class="chips"></div>
     </header>
     <main>
       <canvas id="map"></canvas>
@@ -27,6 +33,7 @@
       <p id="hint" class="hint"></p>
       <div id="tools" class="tools" role="toolbar"></div>
     </footer>
+    <dialog id="report" class="report"></dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -13,7 +13,6 @@ function need<T extends Element>(selector: string): T {
   return node;
 }
 
-need<HTMLElement>('#tagline').textContent = t.tagline;
 const canvas = need<HTMLCanvasElement>('#map');
 canvas.setAttribute('aria-label', t.mapLabel);
 
@@ -23,7 +22,12 @@ startApp(
     tools: need<HTMLElement>('#tools'),
     hint: need<HTMLElement>('#hint'),
     info: need<HTMLElement>('#info'),
-    stats: need<HTMLElement>('#stats'),
+    resources: need<HTMLElement>('#resources'),
+    date: need<HTMLElement>('#date'),
+    undo: need<HTMLButtonElement>('#undo'),
+    end: need<HTMLButtonElement>('#end'),
+    newGame: need<HTMLButtonElement>('#new'),
+    report: need<HTMLDialogElement>('#report'),
   },
   CITIES[0]!,
   t,

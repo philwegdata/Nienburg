@@ -1,5 +1,5 @@
 import { floodFill, indexOf } from './grid';
-import type { CityDef, GameState, Point, Terrain } from './types';
+import type { Balance, CityDef, GameState, Point, Terrain } from './types';
 
 /** Characters allowed in a city map. */
 export const CITY_LEGEND: Readonly<Record<string, Terrain>> = {
@@ -75,7 +75,7 @@ export function validateCity(def: CityDef): string[] {
   return problems;
 }
 
-export function newGame(def: CityDef, seed: number): GameState {
+export function newGame(def: CityDef, seed: number, balance: Balance): GameState {
   const { width, height, terrain } = parseCity(def);
   return {
     version: 1,
@@ -87,5 +87,12 @@ export function newGame(def: CityDef, seed: number): GameState {
     buildings: {},
     nextBuildingId: 1,
     rng: seed | 0,
+    turn: 0,
+    gold: balance.start.gold,
+    food: balance.start.food,
+    materials: balance.start.materials,
+    buildPoints: balance.buildPointsPerTurn,
+    subsidies: 0,
+    lastReport: null,
   };
 }

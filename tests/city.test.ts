@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { newGame, parseCity, validateCity } from '../src/core/city';
 import type { CityDef } from '../src/core/types';
 import { CITIES } from '../src/data/cities';
+import { RULES } from '../src/data/rules';
 
 function city(map: string[], range: [number, number] = [1, 100]): CityDef {
   return {
@@ -75,10 +76,13 @@ describe('shipped cities', () => {
 
 describe('newGame', () => {
   it('starts with an empty town', () => {
-    const state = newGame(city(['#G#', '#.#', '###']), 7);
+    const state = newGame(city(['#G#', '#.#', '###']), 7, RULES.balance);
     expect(state.occupancy).toEqual(new Array(9).fill(0));
     expect(state.buildings).toEqual({});
     expect(state.rng).toBe(7);
+    expect(state.turn).toBe(0);
+    expect(state.gold).toBe(RULES.balance.start.gold);
+    expect(state.buildPoints).toBe(RULES.balance.buildPointsPerTurn);
     // The state must survive a JSON round trip unchanged.
     expect(JSON.parse(JSON.stringify(state))).toEqual(state);
   });

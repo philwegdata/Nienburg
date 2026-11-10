@@ -7,9 +7,14 @@ export type PlaceError =
   /** Some tile is already taken by another building. */
   | 'occupied'
   /** The very same path type is already there; nothing to do. */
-  | 'same';
+  | 'same'
+  | 'noGold'
+  | 'noMaterials'
+  | 'noBuildPoints';
 
 export type PlaceCheck = { ok: true; tiles: Point[] } | { ok: false; reason: PlaceError };
+
+type Defs = Readonly<Record<string, BuildingDef>>;
 
 export function rotatedSize(def: BuildingDef, rot: Rotation): { w: number; h: number } {
   return rot === 1 ? { w: def.size.h, h: def.size.w } : { w: def.size.w, h: def.size.h };
@@ -22,12 +27,12 @@ export function buildingAt(state: GameState, x: number, y: number): Building | u
 }
 
 /**
- * Checks whether `def` fits with its top-left tile at (x, y).
+ * Checks whether `def` fits with its top-left tile at (x, y); says nothing about the price.
  * `defs` is passed in so that core stays independent of the concrete catalogue.
  */
 export function canPlace(
   state: GameState,
-  defs: Readonly<Record<string, BuildingDef>>,
+  defs: Defs,
   def: BuildingDef,
   x: number,
   y: number,
@@ -54,11 +59,26 @@ export function canPlace(
   return { ok: true, tiles };
 }
 
+/** The first thing the town is short of for building `def`, if any. */
+export function affordError(state: GameState, def: BuildingDef): PlaceError | null {
+  if (state.buildPoints < def.buildPoints) return 'noBuildPoints';
+  if (state.gold < def.cost) return 'noGold';
+  if (state.materials < def.materials) return 'noMaterials';
+  return null;
+}
+
 export type PlaceResult = { ok: true; state: GameState } | { ok: false; reason: PlaceError };
+
+function removeBuilding(state: GameState, target: Building): GameState {
+  const occupancy = state.occupancy.map((id) => (id === target.id ? 0 : id));
+  const buildings = { ...state.buildings };
+  delete buildings[target.id];
+  return { ...state, occupancy, buildings };
+}
 
 export function placeBuilding(
   state: GameState,
-  defs: Readonly<Record<string, BuildingDef>>,
+  defs: Defs,
   def: BuildingDef,
   x: number,
   y: number,
@@ -66,36 +86,51 @@ export function placeBuilding(
 ): PlaceResult {
   const check = canPlace(state, defs, def, x, y, rot);
   if (!check.ok) return check;
+  const short = affordError(state, def);
+  if (short) return { ok: false, reason: short };
 
-  // Remove paths that are being replaced.
+  // Paths being paved over simply disappear; there is no refund for them.
   let base = state;
   for (const t of check.tiles) {
-    if (buildingAt(base, t.x, t.y)) base = demolish(base, t.x, t.y);
+    const old = buildingAt(base, t.x, t.y);
+    if (old) base = removeBuilding(base, old);
   }
 
   const { w, h } = rotatedSize(def, rot);
   const id = base.nextBuildingId;
   const occupancy = base.occupancy.slice();
   for (const t of check.tiles) occupancy[indexOf(base.width, t.x, t.y)] = id;
+  const building: Building = { id, def: def.id, x, y, w, h, rot };
+  if (def.category === 'housing') building.house = { level: 1, pop: 0, lacking: 0 };
   return {
     ok: true,
     state: {
       ...base,
       occupancy,
-      buildings: { ...base.buildings, [id]: { id, def: def.id, x, y, w, h, rot } },
+      buildings: { ...base.buildings, [id]: building },
       nextBuildingId: id + 1,
+      gold: base.gold - def.cost,
+      materials: base.materials - def.materials,
+      buildPoints: base.buildPoints - def.buildPoints,
     },
   };
 }
 
-/** Removes whatever building covers (x, y). Returns the same state if there is none. */
-export function demolish(state: GameState, x: number, y: number): GameState {
+/**
+ * Removes whatever building covers (x, y) and returns part of its gold cost.
+ * Returns the same state if there is nothing to remove.
+ */
+export function demolish(
+  state: GameState,
+  defs: Defs,
+  refundShare: number,
+  x: number,
+  y: number,
+): GameState {
   const target = buildingAt(state, x, y);
   if (!target) return state;
-  const occupancy = state.occupancy.map((id) => (id === target.id ? 0 : id));
-  const buildings = { ...state.buildings };
-  delete buildings[target.id];
-  return { ...state, occupancy, buildings };
+  const refund = Math.floor((defs[target.def]?.cost ?? 0) * refundShare);
+  return { ...removeBuilding(state, target), gold: state.gold + refund };
 }
 
 export interface TileCounts {
@@ -112,4 +147,10 @@ export function countTiles(state: GameState): TileCounts {
     if (!state.occupancy[i]) free++;
   });
   return { buildable, free };
+}
+
+export function population(state: GameState): number {
+  let total = 0;
+  for (const b of Object.values(state.buildings)) total += b.house?.pop ?? 0;
+  return total;
 }

@@ -3,13 +3,18 @@
   --parchment-dark: #dccdaa;
   --ink: #3b2a20;
   --roof: #a4573b;
-  --moss: #6f8a52;
+  --moss: #4f6b35;
+  --warn: #9a3d22;
   font-family: Georgia, 'Times New Roman', serif;
   color: var(--ink);
 }
 
 * {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 html,
@@ -26,37 +31,98 @@ body {
   background: var(--parchment);
 }
 
+button {
+  min-height: 44px;
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  color: inherit;
+  background: var(--parchment);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--roof);
+  outline-offset: 2px;
+}
+
+button.primary,
+button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--parchment);
+}
+
+button.quiet {
+  border-color: transparent;
+  background: transparent;
+  text-decoration: underline;
+}
+
 .topbar {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  padding: 0.4rem 1rem;
-  padding-top: max(0.4rem, env(safe-area-inset-top));
+  padding: 0.35rem 0.75rem 0.4rem;
+  padding-top: max(0.35rem, env(safe-area-inset-top));
   background: var(--parchment-dark);
   border-bottom: 2px solid var(--ink);
 }
 
-.topbar h1 {
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.titlebar h1 {
   margin: 0;
   font-size: 1.4rem;
   letter-spacing: 0.05em;
 }
 
-.topbar p {
-  margin: 0;
+.titlebar button {
+  min-height: 38px;
+  white-space: nowrap;
 }
 
-#tagline {
+.date {
+  margin: 0;
   font-style: italic;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.stats {
-  margin-left: auto !important;
-  white-space: nowrap;
+.spacer {
+  flex: 1;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1rem;
+  margin-top: 0.3rem;
+  font-size: 0.92rem;
   font-variant-numeric: tabular-nums;
+}
+
+.chip b {
+  font-weight: 700;
+}
+
+.chip .delta {
+  margin-left: 0.25rem;
+  font-size: 0.85em;
+}
+
+.delta.up {
+  color: var(--moss);
+}
+
+.delta.down {
+  color: var(--warn);
 }
 
 main {
@@ -81,7 +147,7 @@ main {
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
-  width: min(16rem, calc(100% - 1.2rem));
+  width: min(17rem, calc(100% - 1.2rem));
   padding: 0.6rem 0.8rem;
   background: rgba(239, 228, 204, 0.94);
   border: 2px solid var(--ink);
@@ -100,8 +166,18 @@ main {
 }
 
 .info .meta {
-  opacity: 0.75;
+  opacity: 0.8;
   font-size: 0.82rem;
+}
+
+.info .warn,
+.hint.warn {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.info .good {
+  color: var(--moss);
 }
 
 .toolbar {
@@ -130,24 +206,6 @@ main {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  min-height: 44px;
-  padding: 0.3rem 0.7rem;
-  font: inherit;
-  color: inherit;
-  background: var(--parchment);
-  border: 2px solid var(--ink);
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.tools button[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--parchment);
-}
-
-.tools button:focus-visible {
-  outline: 3px solid var(--roof);
-  outline-offset: 2px;
 }
 
 .tools .sep {
@@ -164,18 +222,79 @@ main {
   border-radius: 3px;
 }
 
+.report {
+  width: min(26rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  padding: 1rem 1.2rem;
+  color: var(--ink);
+  background: var(--parchment);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+}
+
+.report::backdrop {
+  background: rgba(59, 42, 32, 0.45);
+}
+
+.report h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+}
+
+.report h3 {
+  margin: 0.9rem 0 0.3rem;
+  font-size: 1rem;
+}
+
+.report ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.report li {
+  margin: 0.15rem 0;
+}
+
+.report .hints {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.report .hints button {
+  text-align: left;
+}
+
+.report .actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
 @media (max-width: 640px) {
-  #tagline {
+  .titlebar {
+    gap: 0.3rem;
+  }
+  .titlebar h1 {
     display: none;
+  }
+  .titlebar button {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.9rem;
+  }
+  .date {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .chips {
+    font-size: 0.82rem;
+    gap: 0.1rem 0.7rem;
   }
   .info {
     left: 0.6rem;
     right: auto;
-    width: min(14rem, calc(100% - 1.2rem));
+    width: min(15rem, calc(100% - 1.2rem));
     font-size: 0.82rem;
   }
-}
-
-[hidden] {
-  display: none !important;
 }

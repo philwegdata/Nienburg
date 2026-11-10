@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { BUILD_MENU } from '../src/data/buildings';
-import { pickLang, strings } from '../src/data/i18n';
+import { fill, pickLang, plural, strings } from '../src/data/i18n';
 
 /** Flattens nested string tables to "a.b" → text. */
 function flatten(obj: object, prefix = ''): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string') out[prefix + key] = value;
+    else if (Array.isArray(value)) value.forEach((v, i) => (out[`${prefix}${key}.${i}`] = v));
     else Object.assign(out, flatten(value as object, `${prefix}${key}.`));
   }
   return out;
@@ -34,6 +35,22 @@ describe('i18n', () => {
       for (const id of BUILD_MENU) {
         expect(t.building[id]).toBeTruthy();
         expect(t.buildingInfo[id]).toBeTruthy();
+      }
+    }
+  });
+
+  it('fills placeholders and picks singular or plural', () => {
+    expect(fill('{a} → {b}, {missing}', { a: 1, b: 'x' })).toBe('1 → x, {missing}');
+    const forms = strings('de').hint.noWater;
+    expect(plural(forms, 1)).toBe('Ein Haus braucht Wasser.');
+    expect(plural(forms, 3)).toBe('3 Häuser brauchen Wasser.');
+  });
+
+  it('gives every hint and count message a singular and a plural form', () => {
+    for (const lang of ['de', 'en'] as const) {
+      const t = strings(lang);
+      for (const forms of [...Object.values(t.hint), t.report.upgraded, t.report.downgraded]) {
+        expect(forms).toHaveLength(2);
       }
     }
   });

@@ -7,6 +7,8 @@ export interface PreviewTile extends Point {
 }
 
 export interface Overlay {
+  /** Ids of buildings to mark as needing attention. */
+  warnings: Set<number>;
   /** Tiles a pending build or demolition would touch. */
   preview: PreviewTile[];
   /** Tile under the pointer or selected in the info panel. */
@@ -28,6 +30,19 @@ const COLORS = {
   plaza: '#cfc8b8',
   houseWall: { top: '#e8dcc0', left: '#c9b993', right: '#e0d2b0' },
   houseRoof: { back: '#8a4630', left: '#a4573b', right: '#b96a4a' },
+  plot: 'rgba(59, 42, 32, 0.25)',
+  hutWall: { top: '#bfa27a', left: '#9c8160', right: '#b3966f' },
+  thatch: { back: '#8f7a45', left: '#a8904f', right: '#bda55f' },
+  clayWall: { top: '#dcc7a0', left: '#b9a37c', right: '#d0ba92' },
+  clayRoof: { back: '#7d5a3c', left: '#94694a', right: '#a87a58' },
+  stallBody: { top: '#c9b993', left: '#8a6a45', right: '#a37f55' },
+  awning: { back: '#b8a24a', left: '#d2b955', right: '#e3cc6a' },
+  barnWall: { top: '#b89a70', left: '#8c7250', right: '#a78860' },
+  barnRoof: { back: '#5d4a38', left: '#6f5944', right: '#836b53' },
+  granaryWall: { top: '#e6dbc0', left: '#bfb394', right: '#d6caac' },
+  fireWall: { top: '#c9b1a4', left: '#93786c', right: '#b0958a' },
+  fireRoof: { back: '#7c2f24', left: '#96392c', right: '#b04a3a' },
+  warn: '#e0a526',
   chapelWall: { top: '#e4e0d4', left: '#b7b2a4', right: '#d3cfc1' },
   chapelRoof: { back: '#4f5a63', left: '#5f6c76', right: '#73818c' },
   well: { top: '#6f9db8', left: '#8d8676', right: '#a39c8b' },
@@ -191,13 +206,59 @@ function drawFortification(ctx: Ctx, t: Terrain, x: number, y: number): void {
   }
 }
 
+function drawHouse(ctx: Ctx, b: Building): void {
+  const { x, y, w, h } = b;
+  const level = b.house?.level ?? 1;
+  if ((b.house?.pop ?? 0) === 0 && level === 1) {
+    // An empty plot: just a staked-out patch of ground.
+    ctx.lineWidth = 1;
+    poly(ctx, diamond(x, y, w, h, 0.16), 'rgba(255,255,255,0.12)', COLORS.plot);
+    return;
+  }
+  if (level === 1) {
+    box(ctx, x, y, w, h, 0, 6, COLORS.hutWall, 0.22);
+    roof(ctx, x, y, w, h, 6, 8, COLORS.thatch, 0.16);
+  } else if (level === 2) {
+    box(ctx, x, y, w, h, 0, 9, COLORS.clayWall, 0.16);
+    roof(ctx, x, y, w, h, 9, 9, COLORS.clayRoof, 0.1);
+  } else {
+    box(ctx, x, y, w, h, 0, 16, COLORS.houseWall, 0.12);
+    // Timber frame lines on both visible walls.
+    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = 'rgba(59,42,32,0.55)';
+    ctx.beginPath();
+    for (const z of [8, 16]) {
+      const a = v(x + 0.12, y + h - 0.12, z);
+      const m = v(x + w - 0.12, y + h - 0.12, z);
+      const c = v(x + w - 0.12, y + 0.12, z);
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(m.x, m.y);
+      ctx.lineTo(c.x, c.y);
+    }
+    ctx.stroke();
+    roof(ctx, x, y, w, h, 16, 11, COLORS.houseRoof, 0.06);
+  }
+}
+
 function drawBuilding(ctx: Ctx, b: Building): void {
   const { x, y, w, h } = b;
   if (b.def === 'house') {
-    box(ctx, x, y, w, h, 0, 9, COLORS.houseWall, 0.14);
-    roof(ctx, x, y, w, h, 9, 9, COLORS.houseRoof, 0.08);
+    drawHouse(ctx, b);
   } else if (b.def === 'well') {
     box(ctx, x, y, 1, 1, 0, 5, COLORS.well, 0.3);
+  } else if (b.def === 'stall') {
+    box(ctx, x, y, 1, 1, 0, 5, COLORS.stallBody, 0.24);
+    roof(ctx, x, y, 1, 1, 9, 5, COLORS.awning, 0.14);
+  } else if (b.def === 'granary') {
+    box(ctx, x, y, w, h, 0, 20, COLORS.granaryWall, 0.14);
+    roof(ctx, x, y, w, h, 20, 16, COLORS.barnRoof, 0.08);
+  } else if (b.def === 'warehouse') {
+    box(ctx, x, y, w, h, 0, 12, COLORS.barnWall, 0.1);
+    roof(ctx, x, y, w, h, 12, 12, COLORS.barnRoof, 0.05);
+  } else if (b.def === 'firewatch') {
+    box(ctx, x, y, 1, 1, 0, 10, COLORS.fireWall, 0.16);
+    box(ctx, x, y, 1, 1, 10, 24, COLORS.fireWall, 0.3);
+    roof(ctx, x, y, 1, 1, 24, 8, COLORS.fireRoof, 0.24);
   } else if (b.def === 'chapel') {
     box(ctx, x, y, w, h, 0, 16, COLORS.chapelWall, 0.1);
     roof(ctx, x, y, w, h, 16, 14, COLORS.chapelRoof, 0.05);
@@ -207,6 +268,23 @@ function drawBuilding(ctx: Ctx, b: Building): void {
     box(ctx, cx, cy, 0.24, 0.24, 28, 38, COLORS.chapelWall);
     roof(ctx, cx, cy, 0.24, 0.24, 38, 8, COLORS.chapelRoof, -0.03);
   }
+}
+
+/** A small floating marker above buildings that need attention. */
+function drawWarning(ctx: Ctx, b: Building): void {
+  const p = v(b.x + b.w / 2, b.y + b.h / 2, 34);
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+  ctx.fillStyle = COLORS.warn;
+  ctx.fill();
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = COLORS.ink;
+  ctx.stroke();
+  ctx.fillStyle = COLORS.ink;
+  ctx.font = 'bold 8px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('!', p.x, p.y + 0.5);
 }
 
 interface Raised {
@@ -251,6 +329,7 @@ export function render(
   }
   raised.sort((a, b) => a.depth - b.depth);
   for (const r of raised) r.draw();
+  for (const b of buildings) if (overlay.warnings.has(b.id)) drawWarning(ctx, b);
 
   for (const p of overlay.preview) {
     poly(ctx, diamond(p.x, p.y), p.ok ? COLORS.ok : COLORS.bad);
