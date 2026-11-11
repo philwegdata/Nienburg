@@ -27,7 +27,7 @@ describe('colours', () => {
 });
 
 describe('seasonal palettes', () => {
-  const [spring, summer, autumn, winter] = [0, 1, 2, 3].map(buildPalette) as [
+  const [spring, summer, autumn, winter] = [0, 1, 2, 3].map((season) => buildPalette(season)) as [
     ReturnType<typeof buildPalette>,
     ReturnType<typeof buildPalette>,
     ReturnType<typeof buildPalette>,

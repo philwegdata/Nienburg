@@ -37,6 +37,12 @@ const list: BuildingDef[] = [
   def('street', 'path', [1, 1], [3, 1, 1, 0, 0], { drag: 'line' }),
   def('plaza', 'path', [1, 1], [3, 1, 1, 0, 0], { drag: 'rect', appeal: { value: 1, radius: 1 } }),
 
+  def('bridge', 'path', [1, 1], [12, 4, 2, 0, 0], {
+    drag: 'line',
+    onCanal: true,
+    cities: ['bruges'],
+  }),
+
   def('house', 'housing', [1, 1], [15, 3, 2, 0, 0], { drag: 'line', fireRisk: 1 }),
 
   // Water
@@ -156,6 +162,12 @@ const list: BuildingDef[] = [
     trade: { capacity: 8, price: 5 },
     unlockPop: 150,
   }),
+  def('towerhouse', 'admin', [1, 1], [150, 30, 8, 2, 0], {
+    yields: { gold: 6 },
+    appeal: { value: 2, radius: 2 },
+    cities: ['sangimignano'],
+    unlockPop: 60,
+  }),
   def('guildhall', 'craft', [2, 3], [180, 45, 14, 8, 2], {
     guildBoost: 0.5,
     appeal: { value: 1, radius: 2 },
@@ -199,6 +211,8 @@ const list: BuildingDef[] = [
 
 export type BuildingId =
   | 'alley'
+  | 'bridge'
+  | 'towerhouse'
   | 'street'
   | 'plaza'
   | 'house'

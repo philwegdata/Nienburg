@@ -292,7 +292,7 @@ main {
 }
 
 .sheet.wide {
-  width: min(40rem, calc(100% - 2rem));
+  width: min(48rem, calc(100% - 2rem));
 }
 
 .sheet::backdrop {
@@ -565,6 +565,91 @@ button.quiet {
 
 .sheet p {
   margin: 0.2rem 0 0.5rem;
+}
+
+.worldmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+}
+
+.chart {
+  flex: 1 1 15rem;
+  max-width: 100%;
+  height: auto;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: #b9d2de;
+}
+
+.chart .sea {
+  fill: #b9d2de;
+}
+
+.chart .land {
+  fill: #e3d6b4;
+  stroke: #8a7a5c;
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+}
+
+.chart .inset-frame {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+
+.chart .pin {
+  cursor: pointer;
+}
+
+.chart .pin circle {
+  fill: var(--parchment);
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+
+.chart .pin.done circle {
+  fill: var(--gold);
+}
+
+.chart .pin.current circle {
+  fill: var(--roof);
+}
+
+.chart .pin.current text {
+  fill: #fff6e4;
+}
+
+.chart .pin text {
+  fill: var(--ink);
+  font-weight: 700;
+  font-family: Georgia, serif;
+  pointer-events: none;
+}
+
+.chart .pin:focus-visible circle,
+.chart .pin:hover circle {
+  stroke: var(--roof);
+  stroke-width: 2.4;
+}
+
+.chart .pin:focus {
+  outline: none;
+}
+
+.city .number {
+  display: inline-block;
+  min-width: 1.5em;
+  margin-right: 0.4em;
+  padding: 0 0.3em;
+  text-align: center;
+  font-size: 0.85em;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
 }
 
 @media (max-width: 640px) {

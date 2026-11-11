@@ -45,7 +45,9 @@ export function canPlace(
   for (const t of tiles) {
     if (!inBounds(state.width, state.height, t.x, t.y))
       return { ok: false, reason: 'notBuildable' };
-    if (state.terrain[indexOf(state.width, t.x, t.y)] !== 'buildable') {
+    // Bridges go on canal water, everything else on land.
+    const ground = def.onCanal ? 'canal' : 'buildable';
+    if (state.terrain[indexOf(state.width, t.x, t.y)] !== ground) {
       return { ok: false, reason: 'notBuildable' };
     }
     const existing = buildingAt(state, t.x, t.y);
@@ -63,9 +65,14 @@ export function canPlace(
 
 /** Why a building cannot be chosen at the moment. */
 export type Lock =
-  { kind: 'pop'; value: number } | { kind: 'requires'; def: string } | { kind: 'unique' };
+  | { kind: 'pop'; value: number }
+  | { kind: 'requires'; def: string }
+  | { kind: 'unique' }
+  /** A building that belongs to another town. */
+  | { kind: 'elsewhere' };
 
 export function lockOf(state: GameState, def: BuildingDef): Lock | null {
+  if (def.cities && !def.cities.includes(state.cityId)) return { kind: 'elsewhere' };
   if (def.unlockPop && state.peakPop < def.unlockPop) return { kind: 'pop', value: def.unlockPop };
   const all = Object.values(state.buildings);
   if (def.requires) {

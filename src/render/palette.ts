@@ -1,5 +1,7 @@
 /** Colours for one season. Everything the renderer paints goes through a palette. */
 
+import type { CityLook } from '../core/types';
+
 export type RGB = [r: number, g: number, b: number];
 
 export function parseColor(color: string): RGB {
@@ -98,6 +100,11 @@ export interface Palette {
   flag: string;
   /** 0 = none, up to 1 = everything white. */
   snow: number;
+  /** What crowns places of faith, and what the town's landmark looks like. */
+  faith: NonNullable<CityLook['faith']>;
+  landmark: NonNullable<CityLook['landmark']>;
+  /** The look this palette was built for. */
+  look: CityLook | undefined;
   walls: Record<WallKey, BoxColors>;
   roofs: Record<RoofKey, RoofColors>;
 }
@@ -184,9 +191,52 @@ function mapValues<K extends string, V>(obj: Record<K, V>, fn: (v: V) => V): Rec
   ) as Record<K, V>;
 }
 
-/** The palette for a season (0 = spring … 3 = winter). */
-export function buildPalette(season: number): Palette {
-  const look = LOOKS[((season % 4) + 4) % 4]!;
+const SAND = '#dccb9e';
+const SNOW_BY_CLIMATE = { temperate: 1, mild: 0.3, dry: 0 } as const;
+
+function boxFrom(base: string): BoxColors {
+  return { top: base, left: shade(base, -0.24), right: shade(base, -0.11) };
+}
+
+function roofFrom(base: string): RoofColors {
+  return { back: shade(base, -0.18), left: base, right: shade(base, 0.1) };
+}
+
+/** The palette for a season (0 = spring … 3 = winter), in a town's regional colours. */
+export function buildPalette(season: number, region?: CityLook): Palette {
+  const base = LOOKS[((season % 4) + 4) % 4]!;
+  const climate = region?.climate ?? 'temperate';
+  // Dry lands are sandy all year; mild ones see only a dusting of snow.
+  const dry = (c: string) => (climate === 'dry' ? mix(c, SAND, 0.62) : c);
+  const look: SeasonLook = {
+    ...base,
+    meadow: base.meadow.map(dry),
+    fields: base.fields.map(dry),
+    snow: base.snow * SNOW_BY_CLIMATE[climate],
+    bare: base.bare && climate === 'temperate',
+    wash: climate === 'temperate' ? base.wash : [base.wash[0], base.wash[1] * 0.4],
+  };
+  if (climate !== 'temperate' && base.snow > 0) {
+    // Without real snow the land keeps its autumn colours through the winter.
+    const autumn = LOOKS[2];
+    look.meadow = autumn.meadow.map(dry);
+    look.fields = autumn.fields.map(dry);
+    look.leaf = autumn.leaf;
+    look.bed = autumn.bed;
+    look.water = autumn.water;
+  }
+  const walls: Record<WallKey, BoxColors> = { ...WALLS };
+  const roofs: Record<RoofKey, RoofColors> = { ...ROOFS };
+  if (region?.stone) {
+    walls.stone = boxFrom(region.stone);
+    walls.darkStone = boxFrom(shade(region.stone, -0.14));
+  }
+  if (region?.plaster) walls.plaster = boxFrom(region.plaster);
+  if (region?.roof) {
+    roofs.tile = roofFrom(region.roof);
+    roofs.darkTile = roofFrom(shade(region.roof, -0.16));
+  }
+  const groundColors = region?.ground ?? ['#d9c9a3', '#d5c49c'];
   const [washColor, washAmount] = look.wash;
   const wash = (c: string) => mix(c, washColor, washAmount);
   // Snow settles on what faces the sky, far less on walls.
@@ -198,7 +248,7 @@ export function buildPalette(season: number): Palette {
     furrow: look.furrow,
     water: look.water,
     glint: 'rgba(255, 255, 255, 0.7)',
-    ground: ['#d9c9a3', '#d5c49c'].map((c) => snowTop(c, 0.75)),
+    ground: groundColors.map((c) => snowTop(c, 0.75)),
     road: snowTop('#c2ab7e', 0.6),
     alley: snowTop('#b89f76', 0.55),
     street: snowTop('#a7a096', 0.45),
@@ -220,12 +270,15 @@ export function buildPalette(season: number): Palette {
     smoke: look.snow > 0 ? '225, 228, 232' : '240, 238, 232',
     flag: '#b4382c',
     snow: look.snow,
-    walls: mapValues(WALLS, (w) => ({
+    faith: region?.faith ?? 'spire',
+    landmark: region?.landmark ?? 'castle',
+    look: region,
+    walls: mapValues(walls, (w) => ({
       top: snowTop(w.top, 0.8),
       left: wash(w.left),
       right: wash(w.right),
     })),
-    roofs: mapValues(ROOFS, (r) => ({
+    roofs: mapValues(roofs, (r) => ({
       back: snowTop(r.back),
       left: snowTop(r.left),
       right: snowTop(r.right),

@@ -78,11 +78,19 @@ export function planTown(city: CityDef, spec: PlanSpec, rules: Rules): Order[] {
   const { line: L, cross: C, half } = spec;
 
   // The main street, built outwards from the crossing.
+  // It ends where it meets a canal, rock or a wall, so it never comes in pieces.
   add('street', C, L);
-  for (let d = 1; d <= half; d++) {
-    add('street', C - d, L);
-    add('street', C + d, L);
+  for (const dir of [-1, 1]) {
+    for (let d = 1; d <= half; d++) if (!add('street', C + dir * d, L)) break;
   }
+  /** Places something in a house row, but only where the main street actually runs. */
+  const beside = (def: string, u: number, v: number, lu = 1): boolean => {
+    for (let i = 0; i < lu; i++) {
+      const road = toXY(u + i, L);
+      if (!paths.has(indexOf(map.width, road.x, road.y))) return false;
+    }
+    return add(def, u, v, lu, 1);
+  };
 
   // A link to the nearest gate, so that granaries and warehouses can be supplied.
   const gateLink = (): void => {
@@ -134,9 +142,9 @@ export function planTown(city: CityDef, spec: PlanSpec, rules: Rules): Order[] {
     [-9]: ['firewatch', 1],
     [-11]: ['tavern', 2],
   };
-  add('well', C + 1, L - 1);
-  add('plaza', C - 1, L - 1);
-  add('stall', C - 2, L - 1);
+  beside('well', C + 1, L - 1);
+  beside('plaza', C - 1, L - 1);
+  beside('stall', C - 2, L - 1);
 
   const houses = (side: -1 | 1, from: number, to: number): void => {
     for (let d = from; d <= to; d++) {
@@ -153,12 +161,12 @@ export function planTown(city: CityDef, spec: PlanSpec, rules: Rules): Order[] {
   };
 
   houses(-1, 3, 5);
-  add('chapel', C - 2, L + 1, 2, 1);
-  add('firewatch', C + 2, L - 1);
-  add('well', C - 6, L - 1);
+  beside('chapel', C - 2, L + 1, 2);
+  beside('firewatch', C + 2, L - 1);
+  beside('well', C - 6, L - 1);
   houses(-1, 6, half);
   houses(1, 3, 5);
-  add('well', C + 6, L + 1);
+  beside('well', C + 6, L + 1);
 
   // The side street and its large buildings, stacked outwards on both sides of it.
   const cursor = { n: L - 4, s: L + 4 };
@@ -204,11 +212,11 @@ export function planTown(city: CityDef, spec: PlanSpec, rules: Rules): Order[] {
   const bath = reserved.filter((o) => o.def !== 'school');
   const school = reserved.filter((o) => o.def === 'school');
   large('granary');
-  add('nightwatch', C + 1, L + 1);
-  add('tavern', C + 2, L + 1, 2, 1);
+  beside('nightwatch', C + 1, L + 1);
+  beside('tavern', C + 2, L + 1, 2);
   large('townhall');
-  if (half >= 9) add('firewatch', C - 9, L + 1);
-  if (half >= 11) add('tavern', C - 11, L + 1, 2, 1);
+  if (half >= 9) beside('firewatch', C - 9, L + 1);
+  if (half >= 11) beside('tavern', C - 11, L + 1, 2);
   houses(1, 6, half);
   large('markethall');
   orders.push(...bath);
@@ -224,6 +232,50 @@ export function planTown(city: CityDef, spec: PlanSpec, rules: Rules): Order[] {
     large(def);
   }
   return orders;
+}
+
+/**
+ * Searches for a spot where the template fits well: many houses, room for the large
+ * buildings, and a link to a gate. Slow; used once per city to fill in PLANS below.
+ */
+export function findPlan(city: CityDef, rules: Rules): PlanSpec | null {
+  const map = parseCity(city);
+  let best: { spec: PlanSpec; score: number } | null = null;
+  for (const axis of ['ew', 'ns'] as const) {
+    const lines = axis === 'ew' ? map.height : map.width;
+    const crosses = axis === 'ew' ? map.width : map.height;
+    for (let line = 0; line < lines; line++) {
+      for (let cross = 0; cross < crosses; cross++) {
+        const x = axis === 'ew' ? cross : line;
+        const y = axis === 'ew' ? line : cross;
+        if (map.terrain[indexOf(map.width, x, y)] !== 'buildable') continue;
+        for (const half of [8, 6, 4]) {
+          const spec: PlanSpec = { name: 'auto', axis, line, cross, half };
+          const plan = planTown(city, spec, rules);
+          const has = (def: string) => plan.filter((o) => o.def === def).length;
+          const atGate = plan.some(
+            (o) =>
+              rules.buildings[o.def]!.category === 'path' &&
+              NEIGHBOURS_4.some(
+                (n) => map.terrain[indexOf(map.width, o.x + n.x, o.y + n.y)] === 'gate',
+              ),
+          );
+          if (!atGate || !has('well') || !has('stall') || !has('plaza')) continue;
+          if (!has('chapel') || !has('firewatch')) continue;
+          // The more of the template fits, the better; the buildings later levels depend on
+          // count most, streets alone least.
+          const key = ['townhall', 'markethall', 'bathhouse', 'weaver', 'brewery', 'school'];
+          const score =
+            plan.length -
+            0.5 * has('street') +
+            2 * has('house') +
+            6 * key.filter((def) => has(def) > 0).length;
+          if (!best || score > best.score) best = { spec, score };
+        }
+      }
+    }
+  }
+  return best?.spec ?? null;
 }
 
 export interface BotResult {
@@ -350,7 +402,10 @@ export function runBot(
   };
 }
 
-/** The layouts the balance is checked against: two quite different ones per city. */
+/**
+ * The layouts the balance is checked against: two quite different ones for the first two
+ * cities, and the best-fitting one for each of the others.
+ */
 export const PLANS: Record<string, PlanSpec[]> = {
   nienburg: [
     { name: 'Hauptstraße von Tor zu Tor', axis: 'ew', line: 12, cross: 17, half: 8 },
@@ -360,4 +415,13 @@ export const PLANS: Record<string, PlanSpec[]> = {
     { name: 'Hauptstraße am Westtor', axis: 'ew', line: 27, cross: 14, half: 8 },
     { name: 'Hauptstraße im Norden', axis: 'ew', line: 13, cross: 14, half: 8 },
   ],
+  // Found with findPlan(): the spot in each town where the template fits best.
+  dubrovnik: [{ name: 'Längs durch die Stadt', axis: 'ew', line: 13, cross: 18, half: 8 }],
+  montsaintmichel: [{ name: 'Unterhalb der Abtei', axis: 'ew', line: 10, cross: 17, half: 8 }],
+  bruges: [{ name: 'Im südöstlichen Viertel', axis: 'ew', line: 18, cross: 21, half: 8 }],
+  sangimignano: [{ name: 'Den Bergrücken entlang', axis: 'ns', line: 8, cross: 19, half: 8 }],
+  fes: [{ name: 'Quer durch die Medina', axis: 'ew', line: 17, cross: 15, half: 8 }],
+  pingyao: [{ name: 'Von Westtor zu Osttor', axis: 'ew', line: 14, cross: 14, half: 8 }],
+  bhaktapur: [{ name: 'Zwischen den Tempelplätzen', axis: 'ns', line: 12, cross: 13, half: 8 }],
+  cusco: [{ name: 'Auf der mittleren Terrasse', axis: 'ew', line: 13, cross: 18, half: 8 }],
 };

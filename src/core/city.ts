@@ -10,6 +10,7 @@ export const CITY_LEGEND: Readonly<Record<string, Terrain>> = {
   T: 'tower',
   G: 'gate',
   C: 'landmark',
+  '=': 'canal',
   '.': 'buildable',
 };
 
@@ -67,7 +68,11 @@ export function validateCity(def: CityDef): string[] {
     width,
     height,
     gates,
-    (x, y) => terrain[indexOf(width, x, y)] === 'buildable',
+    // Canals can be bridged, so land behind them still counts as reachable.
+    (x, y) => {
+      const t = terrain[indexOf(width, x, y)];
+      return t === 'buildable' || t === 'canal';
+    },
   );
   const unreachable = terrain.filter((t, i) => t === 'buildable' && !reached.has(i)).length;
   if (unreachable > 0)

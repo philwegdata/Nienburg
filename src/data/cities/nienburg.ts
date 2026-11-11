@@ -9,6 +9,7 @@ export const nienburg: CityDef = {
     de: 'Eine kompakte Stadt am Fluss mit Hafentor – ideal für den Einstieg.',
     en: 'A compact riverside town with a harbour gate – a gentle start.',
   },
+  location: { lat: 52.64, lon: 9.21 },
   difficulty: 1,
   buildableRange: [300, 400],
   goals: [

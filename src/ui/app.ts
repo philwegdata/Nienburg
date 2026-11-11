@@ -25,7 +25,7 @@ import {
 } from '../core/types';
 import { BUILD_MENU, BUILDINGS, type BuildingId } from '../data/buildings';
 import { fill, plural, type Strings } from '../data/i18n';
-import { RULES } from '../data/rules';
+import { rulesFor } from '../data/rules';
 import { fitCamera, gridToWorld, pickTile, zoomAt, type Camera } from '../render/iso';
 import { buildingIcon, Scene, type Overlay } from '../render/renderer';
 import { button, node } from './dom';
@@ -38,6 +38,7 @@ import {
   tutorialStep as storedTutorialStep,
 } from './prefs';
 import { play } from './sound';
+import { worldMap } from './worldmap';
 import { adoptLegacySave, bestStars, lastCity, loadGame, saveGame } from './storage';
 
 type Tool =
@@ -120,15 +121,17 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   if (!ctx) throw new Error('Canvas 2D is not supported');
   adoptLegacySave();
 
-  const fresh = (def: CityDef) => newGame(def, Date.now(), RULES.balance);
+  const fresh = (def: CityDef) => newGame(def, Date.now(), rules.balance);
   const remembered = cities.find((c) => c.id === lastCity());
 
   let city: CityDef = remembered ?? cities[0]!;
+  /** The general rules, bent by what makes the current town special. */
+  let rules = rulesFor(city);
   let state: GameState = loadGame(city.id) ?? fresh(city);
   /** States from earlier in this turn, for undo. */
   let history: GameState[] = [];
-  let analysis: Analysis = analyze(state, RULES);
-  let outlook: TurnReport = forecast(state, RULES, city.goals);
+  let analysis: Analysis = analyze(state, rules);
+  let outlook: TurnReport = forecast(state, rules, city.goals);
   let comingGoods = state.goods;
   let warnings = new Set<number>();
   let viewShade = new Map<number, string>();
@@ -147,7 +150,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   let screen = { w: 0, h: 0, dpr: 1 };
   let dirty = false;
   const pointers = new Map<number, Point>();
-  const scene = new Scene((id) => BUILDINGS[id]?.category === 'path');
+  const scene = new Scene((id) => rules.buildings[id]?.category === 'path');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const calm = () => motionOff() || reducedMotion.matches;
   /** Tile marker moved with the arrow keys, and where a keyboard-drawn row starts. */
@@ -161,7 +164,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     goodsTypes: outlook.goodsTypes,
     festive: state.event?.kind === 'jugglers',
   });
-  const nameOf = (defId: string) => t.building[defId as BuildingId] ?? defId;
+  /** A building's name here: some towns have their own words for things. */
+  const nameOf = (defId: string) =>
+    city.names?.[defId]?.[lang] ?? t.building[defId as BuildingId] ?? defId;
 
   // ---------- drawing ----------
 
@@ -179,7 +184,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       else if (!plan && !demolition) overlay.highlight = hover;
       // With reduced motion the picture stands still: smoke and flags are drawn, but frozen.
       const time = calm() ? 0 : performance.now() / 1000;
-      scene.render(ctx!, state, cam, screen, overlay, time);
+      scene.render(ctx!, state, cam, screen, overlay, time, city.look);
     });
   }
 
@@ -230,7 +235,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
     for (const i of analysis.reach[view]) shade.set(i, SHADE.reach);
     for (const b of Object.values(state.buildings)) {
-      const def = BUILDINGS[b.def];
+      const def = rules.buildings[b.def];
       const cares =
         b.house !== undefined ||
         (view === 'fire' && (def?.fireRisk ?? 0) > 0) ||
@@ -246,16 +251,16 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
 
   /** Recomputes everything derived from the state and refreshes all panels. */
   function refresh(): void {
-    analysis = analyze(state, RULES);
+    analysis = analyze(state, rules);
     // Playing the turn ahead once gives both the report and the stores as they will be.
-    const ahead = endTurn(state, RULES, city.goals);
+    const ahead = endTurn(state, rules, city.goals);
     outlook = ahead.lastReport!;
     comingGoods = ahead.goods;
     warnings = new Set<number>();
     for (const [id, reason] of analysis.idle) if (reason !== 'construction') warnings.add(id);
     for (const b of Object.values(state.buildings)) {
       if (!b.house) continue;
-      const missing = missingNeeds(RULES, analysis, b.id, b.house.level, needCtx());
+      const missing = missingNeeds(rules, analysis, b.id, b.house.level, needCtx());
       if (b.damaged || missing.length > 0) warnings.add(b.id);
     }
     viewShade = computeViewShade();
@@ -290,7 +295,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   }
 
   function finishTurn(): void {
-    state = endTurn(state, RULES, city.goals);
+    state = endTurn(state, rules, city.goals);
     history = [];
     clearPreview();
     saveGame(state);
@@ -303,6 +308,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
 
   function openCity(def: CityDef, restart: boolean): void {
     city = def;
+    rules = rulesFor(def);
     state = (restart ? null : loadGame(def.id)) ?? fresh(def);
     startTutorialIfDue();
     history = [];
@@ -310,6 +316,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     saveGame(state);
     setTool({ kind: 'select' });
     cam = fitCamera(state.width, state.height, screen.w, screen.h);
+    showGroup(group);
     refresh();
   }
 
@@ -368,7 +375,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   type Add = (tag: 'h2' | 'p', text: string, cls?: string) => void;
 
   function describeDef(id: BuildingId, add: Add): void {
-    const def = BUILDINGS[id]!;
+    const def = rules.buildings[id]!;
     const parts: string[] = [];
     if (def.upkeep > 0) parts.push(`${t.upkeep}: ${def.upkeep} ${t.res.gold} ${t.perTurn}`);
     if (def.workers > 0) parts.push(`${t.workers}: ${def.workers}`);
@@ -392,29 +399,29 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
 
   function describeHouse(b: Building, add: Add): void {
     const house = b.house!;
-    add('p', `${t.inhabitants}: ${house.pop} / ${houseCapacity(RULES, b, house.level)}`);
+    add('p', `${t.inhabitants}: ${house.pop} / ${houseCapacity(rules, b, house.level)}`);
     add('p', `${t.appeal}: ${analysis.houseAppeal.get(b.id) ?? 0}`, 'meta');
     if (analysis.boxedIn.has(b.id)) add('p', t.boxedIn, 'meta');
     if (b.damaged) {
       add(
         'p',
-        fill(t.idle.damaged, { n: repairCost(BUILDINGS.house!, RULES.balance.repairShare) }),
+        fill(t.idle.damaged, { n: repairCost(BUILDINGS.house!, rules.balance.repairShare) }),
         'warn',
       );
     }
     const names = (needs: Need[]) => needs.map((n) => t.need[n]).join(', ');
-    const now = missingNeeds(RULES, analysis, b.id, house.level, needCtx());
+    const now = missingNeeds(rules, analysis, b.id, house.level, needCtx());
     if (now.length > 0) {
       add('p', `${t.needsNow}: ${names(now)}`, 'warn');
       if (house.level > 1) add('p', t.declineSoon, 'meta');
       else if (house.pop === 0) add('p', t.vacant, 'meta');
       return;
     }
-    if (house.level >= RULES.housing.length) {
+    if (house.level >= rules.housing.length) {
       add('p', t.topLevel, 'good');
       return;
     }
-    const next = missingNeeds(RULES, analysis, b.id, house.level + 1, needCtx());
+    const next = missingNeeds(rules, analysis, b.id, house.level + 1, needCtx());
     if (next.length === 0) add('p', t.readyToRise, 'good');
     else add('p', `${t.needsForNext}: ${names(next)}`);
   }
@@ -424,6 +431,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (!lock) return null;
     if (lock.kind === 'pop') return fill(t.lock.pop, { n: lock.value });
     if (lock.kind === 'requires') return fill(t.lock.requires, { name: nameOf(lock.def) });
+    if (lock.kind === 'elsewhere') return null;
     return t.lock.unique;
   }
 
@@ -431,8 +439,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.info.replaceChildren();
     const add: Add = (tag, text, cls) => el.info.append(node(tag, text, cls));
     if (tool.kind === 'build') {
-      const def = BUILDINGS[tool.def]!;
-      add('h2', t.building[tool.def]);
+      const def = rules.buildings[tool.def]!;
+      add('h2', nameOf(tool.def));
       add('p', t.buildingInfo[tool.def]);
       const locked = lockText(def);
       if (locked) add('p', locked, 'warn');
@@ -463,13 +471,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
     if (b) {
       const id = b.def as BuildingId;
-      const def = BUILDINGS[id]!;
-      add('h2', t.building[id]);
+      const def = rules.buildings[id]!;
+      add('h2', nameOf(id));
       add('p', t.buildingInfo[id]);
       const idle = analysis.idle.get(b.id);
       if (idle === 'construction') add('p', fill(t.idle.construction, { n: b.construction ?? 0 }));
       else if (idle === 'damaged') {
-        add('p', fill(t.idle.damaged, { n: repairCost(def, RULES.balance.repairShare) }), 'warn');
+        add('p', fill(t.idle.damaged, { n: repairCost(def, rules.balance.repairShare) }), 'warn');
       } else if (idle) add('p', t.idle[idle], 'warn');
       else if (def.workers > 0 || def.services) add('p', t.working, 'good');
       describeDef(id, add);
@@ -477,7 +485,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
     const i = indexOf(state.width, selected.x, selected.y);
     const terrain = state.terrain[i]!;
-    add('h2', t.terrain[terrain]);
+    add(
+      'h2',
+      terrain === 'landmark'
+        ? (city.landmarkName?.[lang] ?? t.terrain.landmark)
+        : t.terrain[terrain],
+    );
+    if (terrain === 'canal') add('p', t.canalInfo);
     if (terrain === 'buildable') {
       add('p', t.infoFree);
       add('p', `${t.appeal}: ${analysis.appeal[i] ?? 0}`, 'meta');
@@ -500,7 +514,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     else if (tool.kind === 'demolish') el.hint.textContent = t.hintDemolish;
     else if (tool.kind === 'repair') el.hint.textContent = t.hintRepair;
     else {
-      const drag = BUILDINGS[tool.def]!.drag;
+      const drag = rules.buildings[tool.def]!.drag;
       el.hint.textContent =
         drag === 'line' ? t.hintLine : drag === 'rect' ? t.hintRect : t.hintSingle;
     }
@@ -512,6 +526,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const level = t.houseLevel[goal.level - 1] ?? String(goal.level);
       return fill(t.goal.houses, { n: goal.count, level });
     }
+    if ((goal.count ?? 1) > 1)
+      return fill(t.goal.buildings, { n: goal.count!, name: nameOf(goal.def) });
     return fill(t.goal.building, { name: nameOf(goal.def) });
   }
 
@@ -609,7 +625,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       }),
       button(t.help, () => {
         el.goals.close();
-        showHelp(el.help, t, RULES);
+        showHelp(el.help, t, rules);
       }),
       button(t.settings, () => {
         el.goals.close();
@@ -622,13 +638,25 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   }
 
   function showCities(): void {
+    const pick = (def: CityDef) => {
+      el.cities.close();
+      openCity(def, false);
+    };
     const grid = node('div', undefined, 'cities');
-    for (const def of cities) {
+    const pins = cities.map((def, i) => ({
+      city: def,
+      number: i + 1,
+      stars: bestStars(def.id).filter(Boolean).length,
+      current: def.id === city.id,
+    }));
+    cities.forEach((def, i) => {
       const card = node('div', undefined, 'city');
       const saved = loadGame(def.id);
       const tiles = parseCity(def).terrain.filter((x) => x === 'buildable').length;
+      const title = node('h3');
+      title.append(node('span', String(i + 1), 'number'), def.name[lang]);
       card.append(
-        node('h3', def.name[lang]),
+        title,
         node('p', def.region[lang], 'meta'),
         node('p', def.blurb[lang]),
         node(
@@ -639,17 +667,19 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         node('p', starText(bestStars(def.id)), 'stars'),
         button(
           saved ? t.resume : t.play,
-          () => {
-            el.cities.close();
-            openCity(def, false);
-          },
+          () => pick(def),
           def.id === city.id ? 'primary' : undefined,
         ),
       );
       grid.append(card);
-    }
-    el.cities.replaceChildren(node('h2', t.chooseCity), grid);
+    });
+    el.cities.replaceChildren(
+      node('h2', t.chooseCity),
+      worldMap(pins, lang, { world: t.worldMap, europe: t.europe }, pick),
+      grid,
+    );
     el.cities.showModal();
+    el.cities.scrollTop = 0;
   }
 
   function openSettings(): void {
@@ -704,7 +734,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   function updateTutorial(): void {
     for (const marked of document.querySelectorAll('.nudge')) marked.classList.remove('nudge');
     if (tutorial !== null) {
-      const reached = tutorialProgress(tutorial, state, analysis, RULES);
+      const reached = tutorialProgress(tutorial, state, analysis, rules);
       if (reached !== tutorial) {
         tutorial = reached >= TUTORIAL_STEPS.length ? null : reached;
         storeTutorialStep(tutorial);
@@ -734,7 +764,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     for (const b of toolButtons) {
       if (b.tool.kind !== 'build' || !nudge?.tools?.includes(b.tool.def)) continue;
       b.node.classList.add('nudge');
-      const tab = tabButtons.get(GROUP_OF[BUILDINGS[b.tool.def]!.category]);
+      const tab = tabButtons.get(GROUP_OF[rules.buildings[b.tool.def]!.category]);
       if (b.node.hidden) tab?.classList.add('nudge');
     }
   }
@@ -752,7 +782,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   function updateLocks(): void {
     for (const b of toolButtons) {
       if (b.tool.kind !== 'build') continue;
-      b.node.classList.toggle('locked', lockOf(state, BUILDINGS[b.tool.def]!) !== null);
+      b.node.classList.toggle('locked', lockOf(state, rules.buildings[b.tool.def]!) !== null);
     }
   }
 
@@ -761,7 +791,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     for (const [g, tab] of tabButtons) tab.setAttribute('aria-pressed', String(g === group));
     for (const b of toolButtons) {
       if (b.tool.kind !== 'build') continue;
-      b.node.hidden = GROUP_OF[BUILDINGS[b.tool.def]!.category] !== group;
+      const def = rules.buildings[b.tool.def]!;
+      const foreign = def.cities !== undefined && !def.cities.includes(city.id);
+      b.node.hidden = foreign || GROUP_OF[def.category] !== group;
+      // Some towns have their own names for buildings.
+      const label = b.node.querySelector('.name');
+      if (label) label.textContent = nameOf(b.tool.def);
     }
     updateTutorial();
   }
@@ -778,7 +813,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       b.node.setAttribute('aria-pressed', String(sameTool(b.tool, tool)));
     }
     const rotatable =
-      tool.kind === 'build' && BUILDINGS[tool.def]!.size.w !== BUILDINGS[tool.def]!.size.h;
+      tool.kind === 'build' &&
+      rules.buildings[tool.def]!.size.w !== rules.buildings[tool.def]!.size.h;
     rotateButton.hidden = !rotatable;
     el.canvas.classList.toggle('building', tool.kind !== 'select');
     updateHint();
@@ -812,8 +848,11 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
 
     for (const id of BUILD_MENU) {
-      toolButton(t.building[id], { kind: 'build', def: id }, el.tools);
-      toolButtons[toolButtons.length - 1]!.node.prepend(buildingIcon(BUILDINGS[id]!));
+      toolButton('', { kind: 'build', def: id }, el.tools);
+      toolButtons[toolButtons.length - 1]!.node.append(
+        buildingIcon(rules.buildings[id]!),
+        node('span', t.building[id], 'name'),
+      );
     }
     rotateButton = button(t.rotate, rotate);
     el.tools.append(rotateButton);
@@ -852,8 +891,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     const placed = buildingAt(built.result, anchor.x, anchor.y);
     if (!placed) return shade;
     const range = Math.max(...def.services.map((s) => s.range));
-    const sources = adjacentPaths(built.result, RULES, placed);
-    for (const i of pathDistances(built.result, RULES, sources, range).keys()) {
+    const sources = adjacentPaths(built.result, rules, placed);
+    for (const i of pathDistances(built.result, rules, sources, range).keys()) {
       shade.set(i, SHADE.reach);
     }
     return shade;
@@ -864,8 +903,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     demolition = null;
     rangeShade = new Map();
     if (tool.kind === 'build') {
-      const def = BUILDINGS[tool.def]!;
-      plan = planBuild(state, BUILDINGS, def, from, to, rot);
+      const def = rules.buildings[tool.def]!;
+      plan = planBuild(state, rules.buildings, def, from, to, rot);
       rangeShade = computeRange(plan, def);
     } else if (tool.kind === 'demolish') {
       demolition = planDemolish(state, from, to);
@@ -890,9 +929,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     rangeShade = new Map();
     if (built) change(built.result);
     else if (razed) {
-      change(commitDemolish(state, BUILDINGS, RULES.balance.demolishRefund, razed));
+      change(commitDemolish(state, rules.buildings, rules.balance.demolishRefund, razed));
     } else if (tool.kind === 'repair') {
-      const result = repair(state, BUILDINGS, RULES.balance.repairShare, at.x, at.y);
+      const result = repair(state, rules.buildings, rules.balance.repairShare, at.x, at.y);
       if (result.ok) change(result.state);
       else shortOf = result.reason;
     }

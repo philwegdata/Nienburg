@@ -21,8 +21,8 @@ export function goalProgress(state: GameState, goal: Goal): GoalProgress {
       .reduce((sum, b) => sum + b.w * b.h, 0);
     target = goal.count;
   } else {
-    current = all.some((b) => b.def === goal.def && !b.construction && !b.damaged) ? 1 : 0;
-    target = 1;
+    current = all.filter((b) => b.def === goal.def && !b.construction && !b.damaged).length;
+    target = goal.count ?? 1;
   }
   return { current: Math.min(current, target), target, done: current >= target };
 }

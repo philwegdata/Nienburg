@@ -80,14 +80,18 @@ function appealGrid(state: GameState, rules: Rules): number[] {
   const size = state.width * state.height;
   const total = new Array<number>(size).fill(0);
   const counts = new Map<string, Uint8Array>();
-  const all = Object.values(state.buildings).sort((a, b) => a.id - b.id);
-  for (const b of all) {
-    const effect = rules.buildings[b.def]?.appeal;
-    if (!effect || b.construction) continue;
-    let seen = counts.get(b.def);
-    if (!seen) counts.set(b.def, (seen = new Uint8Array(size)));
-    for (let y = b.y - effect.radius; y < b.y + b.h + effect.radius; y++) {
-      for (let x = b.x - effect.radius; x < b.x + b.w + effect.radius; x++) {
+  const radiate = (
+    kind: string,
+    x0: number,
+    y0: number,
+    w: number,
+    h: number,
+    effect: { value: number; radius: number },
+  ) => {
+    let seen = counts.get(kind);
+    if (!seen) counts.set(kind, (seen = new Uint8Array(size)));
+    for (let y = y0 - effect.radius; y < y0 + h + effect.radius; y++) {
+      for (let x = x0 - effect.radius; x < x0 + w + effect.radius; x++) {
         if (!inBounds(state.width, state.height, x, y)) continue;
         const i = indexOf(state.width, x, y);
         if (seen[i]! >= rules.balance.appeal.stack) continue;
@@ -95,6 +99,20 @@ function appealGrid(state: GameState, rules: Rules): number[] {
         total[i]! += effect.value;
       }
     }
+  };
+  // Fixed historic buildings, where the town has that.
+  const landmark = rules.balance.landmarkAppeal;
+  if (landmark) {
+    state.terrain.forEach((t, i) => {
+      if (t !== 'landmark') return;
+      radiate('landmark', i % state.width, Math.floor(i / state.width), 1, 1, landmark);
+    });
+  }
+  const all = Object.values(state.buildings).sort((a, b) => a.id - b.id);
+  for (const b of all) {
+    const effect = rules.buildings[b.def]?.appeal;
+    if (!effect || b.construction) continue;
+    radiate(b.def, b.x, b.y, b.w, b.h, effect);
   }
   return total;
 }
@@ -104,7 +122,10 @@ function openSides(state: GameState, rules: Rules, b: Building): number {
   let open = 0;
   for (const t of borderTiles(b)) {
     if (!inBounds(state.width, state.height, t.x, t.y)) continue;
-    if (state.terrain[indexOf(state.width, t.x, t.y)] !== 'buildable') continue;
+    const terrain = state.terrain[indexOf(state.width, t.x, t.y)];
+    // A canal next door is as good as open ground.
+    if (terrain === 'canal') open++;
+    if (terrain !== 'buildable') continue;
     const other = buildingAt(state, t.x, t.y);
     const category = other && rules.buildings[other.def]?.category;
     if (!other || category === 'path' || category === 'green') open++;

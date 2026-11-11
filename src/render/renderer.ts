@@ -1,5 +1,5 @@
 import { indexOf } from '../core/grid';
-import type { Building, BuildingDef, GameState, Point, Terrain } from '../core/types';
+import type { Building, BuildingDef, CityLook, GameState, Point, Terrain } from '../core/types';
 import {
   diamond,
   drawBuilding,
@@ -102,7 +102,8 @@ export class Scene {
       const all = wholeMap(state);
       for (let y = all.y0; y <= all.y1; y++) {
         for (let x = all.x0; x <= all.x1; x++) {
-          if (terrainAround(state, x, y) === 'water') this.water.push({ x, y });
+          const t = terrainAround(state, x, y);
+          if (t === 'water' || t === 'canal') this.water.push({ x, y });
         }
       }
     }
@@ -156,7 +157,7 @@ export class Scene {
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         const t = state.terrain[indexOf(state.width, x, y)]!;
-        if (t === 'wall' || t === 'tower' || t === 'gate' || t === 'landmark') {
+        if (t === 'wall' || t === 'tower' || t === 'gate' || t === 'landmark' || t === 'rock') {
           raised.push({ depth: x + y, draw: () => drawFortification(g, t, x, y, emitters) });
         }
       }
@@ -201,13 +202,28 @@ export class Scene {
     view: Viewport,
     overlay: Overlay,
     time: number,
+    look?: CityLook,
   ): void {
     const season = state.turn % 4;
-    if (this.palette.season !== season) this.palette = buildPalette(season);
+    if (this.palette.season !== season || this.palette.look !== look) {
+      this.palette = buildPalette(season, look);
+      // Other colours: both cached pictures are stale.
+      this.ground = null;
+      this.town = null;
+    }
     const g: G = { ctx, pal: this.palette };
 
     ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
-    ctx.fillStyle = this.palette.meadow[0]!;
+    // Beyond the painted countryside: more sea for an island, more meadow otherwise.
+    const corners = [
+      [0, 0],
+      [state.width - 1, 0],
+      [0, state.height - 1],
+      [state.width - 1, state.height - 1],
+    ] as const;
+    const atSea =
+      corners.filter(([x, y]) => state.terrain[indexOf(state.width, x, y)] === 'water').length >= 3;
+    ctx.fillStyle = atSea ? this.palette.water[0]! : this.palette.meadow[0]!;
     ctx.fillRect(0, 0, view.w, view.h);
     ctx.setTransform(
       view.dpr * cam.zoom,

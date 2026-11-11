@@ -45,6 +45,7 @@ export const en: Strings = {
     population: '{n} inhabitants',
     houses: '{n} houses of level “{level}” or higher',
     building: '{name} completed',
+    buildings: '{n}× {name}',
   },
   lock: {
     pop: 'Available from {n} inhabitants.',
@@ -204,6 +205,9 @@ export const en: Strings = {
     ['Ctrl+Z', 'undo'],
   ],
   tradeInfo: 'Sells up to {n} goods per turn for {gold} gold each',
+  worldMap: 'World map with all towns',
+  europe: 'Europe',
+  canalInfo: 'Only a bridge can be built here.',
   need: {
     road: 'path',
     water: 'water',
@@ -233,6 +237,8 @@ export const en: Strings = {
   houseLevel: ['Hut', 'Clay house', 'Half-timbered house', 'Burgher house', 'Patrician house'],
   building: {
     alley: 'Alley',
+    bridge: 'Bridge',
+    towerhouse: 'Family tower',
     street: 'Street',
     plaza: 'Plaza',
     house: 'House plot',
@@ -267,6 +273,9 @@ export const en: Strings = {
   },
   buildingInfo: {
     alley: 'Narrow and cheap. Services reach only half as far here.',
+    bridge: 'Carries a path across the canal and so links two quarters.',
+    towerhouse:
+      'A tall tower house of a wealthy family. Brings in a little gold and raises the standing of the neighbourhood.',
     street: 'Paved. Services reach further here than through alleys.',
     plaza: 'Open space. Market stalls need a plaza next to them.',
     house: 'People settle here. Needs a path next to it.',
@@ -309,7 +318,8 @@ export const en: Strings = {
     wall: 'Town wall',
     tower: 'Wall tower',
     gate: 'Town gate',
-    landmark: "The count's castle",
+    landmark: 'Old building',
+    canal: 'Canal',
     buildable: 'Building ground',
   },
   report: {
@@ -342,14 +352,14 @@ export const en: Strings = {
       'One house is out of reach of a market stall.',
       '{n} houses are out of reach of a market stall.',
     ],
-    noFaith: ['One house wishes for a chapel.', '{n} houses wish for a chapel.'],
+    noFaith: ['One house wishes for a place of faith.', '{n} houses wish for a place of faith.'],
     noFire: ['One house needs fire protection.', '{n} houses need fire protection.'],
     noOrder: ['One house wishes for a night watch.', '{n} houses wish for a night watch.'],
     noHealth: [
       'One house needs a bath house or hospital.',
       '{n} houses need a bath house or hospital.',
     ],
-    noFun: ['One house wishes for a tavern.', '{n} houses wish for a tavern.'],
+    noFun: ['One house wishes for entertainment.', '{n} houses wish for entertainment.'],
     noEducation: ['One house wishes for a school.', '{n} houses wish for a school.'],
     noGoods: [
       'One house lacks goods from the market hall.',

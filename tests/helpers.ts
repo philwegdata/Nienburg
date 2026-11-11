@@ -10,6 +10,7 @@ export function cityFrom(map: string[], range: [number, number] = [1, 1000]): Ci
     name: { de: 'Test', en: 'Test' },
     region: { de: '', en: '' },
     blurb: { de: '', en: '' },
+    location: { lat: 0, lon: 0 },
     difficulty: 1,
     buildableRange: range,
     goals: [

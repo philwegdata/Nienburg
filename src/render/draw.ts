@@ -236,8 +236,14 @@ export function drawGroundTile(
     }
     return;
   }
+  if (terrain === 'canal') {
+    // Canal water between stone quays.
+    poly(g, tile, pal.walls.stone.left);
+    poly(g, diamond(x, y, 1, 1, 0.06), pick(pal.water, x, y));
+    return;
+  }
   if (terrain === 'rock') {
-    poly(g, tile, pal.walls.darkStone.top);
+    poly(g, tile, pal.walls.darkStone.left);
     return;
   }
   if (terrain !== 'outside') {
@@ -342,6 +348,14 @@ export function drawPath(g: G, b: Building): void {
       line(g, v(x + t, y), v(x + t, y + 1));
       line(g, v(x, y + t), v(x + 1, y + t));
     }
+    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = pal.cobble;
+    ctx.stroke();
+  } else if (b.def === 'bridge') {
+    // A plank deck on two beams, a little above the water.
+    box(g, rect(x, y, 1, 1, 0.04), 2, 4, pal.walls.wood);
+    ctx.beginPath();
+    for (const t of [0.25, 0.5, 0.75]) line(g, v(x + t, y + 0.04, 4), v(x + t, y + 0.96, 4));
     ctx.lineWidth = 0.5;
     ctx.strokeStyle = pal.cobble;
     ctx.stroke();
@@ -452,6 +466,35 @@ export function drawFortification(
     }
     battlements(g, x, y, 30, stone);
     flagpole(g, v(x + 0.5, y + 0.5, 35), into, tileHash(x, y));
+  } else if (t === 'rock') {
+    // A band of rock: rough blocks of uneven height.
+    const seed = tileHash(x * 3 + 1, y * 7 + 2);
+    const rock = pal.walls.darkStone;
+    box(g, rect(x, y, 1, 1, 0.02), 0, 9 + (seed % 5), rock);
+    box(g, rect(x + 0.15 + (seed % 3) * 0.1, y + 0.2, 0.5, 0.5), 9, 14 + (seed % 4), {
+      top: shade(rock.top, 0.08),
+      left: rock.left,
+      right: rock.right,
+    });
+  } else if (t === 'landmark' && pal.landmark === 'abbey') {
+    // The abbey: pale walls, steep slate roofs, and a spire now and then.
+    box(g, tile, 0, 46, pal.walls.paleStone);
+    courses(46);
+    poly(
+      g,
+      [onLeft(tile, 0.4, 22), onLeft(tile, 0.6, 22), onLeft(tile, 0.6, 34), onLeft(tile, 0.4, 34)],
+      pal.window,
+    );
+    roof(g, rect(x, y, 1, 1, -0.02), 46, 22, pal.roofs.slate);
+    if ((x + y * 2) % 4 === 0) {
+      box(g, rect(x, y, 1, 1, 0.3), 46, 78, pal.walls.paleStone);
+      roof(g, rect(x, y, 1, 1, 0.26), 78, 30, pal.roofs.slate);
+    }
+  } else if (t === 'landmark' && pal.landmark === 'temple') {
+    // A temple on a stepped plinth, with tiered roofs.
+    box(g, tile, 0, 5, pal.walls.stone);
+    box(g, rect(x, y, 1, 1, 0.1), 5, 9, pal.walls.stone);
+    tiers(g, x, y, 9, (x * 2 + y) % 3 === 0 ? 3 : 2, 0.16);
   } else if (t === 'landmark') {
     const dark = pal.walls.darkStone;
     box(g, tile, 0, 42, dark);
@@ -474,6 +517,26 @@ export function drawFortification(
       roof(g, rect(x, y, 1, 1, 0.12), 58, 20, pal.roofs.slate);
       if ((x + y) % 6 === 0) flagpole(g, v(x + 0.5, y + 0.5, 78), into, tileHash(x, y));
     }
+  }
+}
+
+/** Stacked roofs that get smaller towards the top, as on a pagoda. */
+function tiers(
+  g: G,
+  x: number,
+  y: number,
+  z: number,
+  count: number,
+  inset: number,
+  size = 1,
+): void {
+  const { pal } = g;
+  let at = z;
+  for (let i = 0; i < count; i++) {
+    const grow = inset + i * 0.11 * size;
+    box(g, rect(x, y, size, size, grow + 0.08 * size), at, at + 7, pal.walls.brick);
+    roof(g, rect(x, y, size, size, grow - 0.06 * size), at + 7, 6, pal.roofs.darkTile);
+    at += 11;
   }
 }
 
@@ -621,6 +684,14 @@ const STYLES: Record<string, Style> = {
     flag: true,
     tower: 36,
   },
+  towerhouse: {
+    wall: 'paleStone',
+    roof: 'tile',
+    h: 62,
+    rise: 6,
+    inset: 0.24,
+    windows: [8, 24, 40, 54],
+  },
   guildhall: {
     wall: 'ochre',
     roof: 'darkTile',
@@ -721,15 +792,27 @@ function drawStyled(
     const shaft = rect(tx, ty, size, size);
     box(g, shaft, height, s.tower, pal.walls[s.wall]);
     openings(g, shaft, [s.tower - 9], false);
-    roof(
-      g,
-      rect(tx, ty, size, size, -0.03),
-      s.tower,
-      size * (s.spire ? 56 : 30),
-      pal.roofs[s.roof],
-    );
-    const tip = v(tx + size / 2, ty + size / 2, s.tower + size * (s.spire ? 56 : 30));
-    if (s.spire) {
+    const crown = s.spire ? pal.faith : 'roof';
+    let tip = v(tx + size / 2, ty + size / 2, s.tower + size * 30);
+    if (crown === 'dome') {
+      // A dome with a small finial.
+      const c = v(tx + size / 2, ty + size / 2, s.tower);
+      g.ctx.beginPath();
+      g.ctx.ellipse(c.x, c.y, size * 20, size * 24, 0, Math.PI, 0);
+      g.ctx.fillStyle = pal.roofs.green.right;
+      g.ctx.fill();
+      g.ctx.fillStyle = pal.ink;
+      g.ctx.fillRect(c.x - 0.6, c.y - size * 24 - 5, 1.2, 5);
+    } else if (crown === 'pagoda') {
+      tiers(g, tx, ty, s.tower - 4, 2, 0, size);
+    } else if (crown === 'plain') {
+      roof(g, rect(tx, ty, size, size, -0.06), s.tower, size * 14, pal.roofs.thatch);
+    } else {
+      const rise = size * (crown === 'spire' ? 56 : 30);
+      roof(g, rect(tx, ty, size, size, -0.03), s.tower, rise, pal.roofs[s.roof]);
+      tip = v(tx + size / 2, ty + size / 2, s.tower + rise);
+    }
+    if (crown === 'spire') {
       g.ctx.beginPath();
       g.ctx.moveTo(tip.x, tip.y);
       g.ctx.lineTo(tip.x, tip.y - 6);
@@ -738,7 +821,7 @@ function drawStyled(
       g.ctx.lineWidth = 0.9;
       g.ctx.strokeStyle = pal.ink;
       g.ctx.stroke();
-    } else if (s.flag) {
+    } else if (s.flag && crown === 'roof') {
       flagpole(g, tip, into, options.seed);
     }
   }

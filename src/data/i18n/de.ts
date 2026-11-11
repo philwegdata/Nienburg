@@ -43,6 +43,7 @@ export const de = {
     population: '{n} Einwohner',
     houses: '{n} Häuser der Stufe „{level}“ oder höher',
     building: '{name} vollendet',
+    buildings: '{n}× {name}',
   },
   lock: {
     pop: 'Verfügbar ab {n} Einwohnern.',
@@ -204,6 +205,9 @@ export const de = {
     ['Strg+Z', 'rückgängig'],
   ],
   tradeInfo: 'Verkauft bis zu {n} Waren pro Runde für je {gold} Gold',
+  worldMap: 'Weltkarte mit allen Städten',
+  europe: 'Europa',
+  canalInfo: 'Hier kann nur eine Brücke gebaut werden.',
   need: {
     road: 'Weg',
     water: 'Wasser',
@@ -233,6 +237,8 @@ export const de = {
   houseLevel: ['Hütte', 'Lehmhaus', 'Fachwerkhaus', 'Bürgerhaus', 'Patrizierhaus'],
   building: {
     alley: 'Gasse',
+    bridge: 'Brücke',
+    towerhouse: 'Geschlechterturm',
     street: 'Straße',
     plaza: 'Platz',
     house: 'Wohnparzelle',
@@ -267,6 +273,9 @@ export const de = {
   },
   buildingInfo: {
     alley: 'Schmal und günstig. Dienste kommen hier nur halb so weit.',
+    bridge: 'Führt einen Weg über den Kanal und verbindet so zwei Viertel.',
+    towerhouse:
+      'Ein hoher Wohnturm einer reichen Familie. Bringt etwas Gold und hebt das Ansehen der Nachbarschaft.',
     street: 'Gepflastert. Dienste reichen hier weiter als durch Gassen.',
     plaza: 'Offene Fläche. Marktstände brauchen einen Platz nebenan.',
     house: 'Hier lassen sich Einwohner nieder. Braucht einen Weg nebenan.',
@@ -309,7 +318,8 @@ export const de = {
     wall: 'Stadtmauer',
     tower: 'Mauerturm',
     gate: 'Stadttor',
-    landmark: 'Burg des Grafen',
+    landmark: 'Altes Bauwerk',
+    canal: 'Kanal',
     buildable: 'Baugrund',
   },
   report: {
@@ -339,7 +349,10 @@ export const de = {
     noRoad: ['Ein Haus hat keinen Weg nebenan.', '{n} Häuser haben keinen Weg nebenan.'],
     noWater: ['Ein Haus braucht Wasser.', '{n} Häuser brauchen Wasser.'],
     noFood: ['Ein Haus erreicht kein Marktstand.', '{n} Häuser erreicht kein Marktstand.'],
-    noFaith: ['Ein Haus wünscht sich eine Kapelle.', '{n} Häuser wünschen sich eine Kapelle.'],
+    noFaith: [
+      'Ein Haus wünscht sich einen Ort des Glaubens.',
+      '{n} Häuser wünschen sich einen Ort des Glaubens.',
+    ],
     noFire: ['Ein Haus braucht Brandschutz.', '{n} Häuser brauchen Brandschutz.'],
     noOrder: [
       'Ein Haus wünscht sich einen Nachtwächter.',
@@ -349,7 +362,7 @@ export const de = {
       'Ein Haus braucht ein Badehaus oder Spital.',
       '{n} Häuser brauchen ein Badehaus oder Spital.',
     ],
-    noFun: ['Ein Haus wünscht sich eine Schenke.', '{n} Häuser wünschen sich eine Schenke.'],
+    noFun: ['Ein Haus wünscht sich Unterhaltung.', '{n} Häuser wünschen sich Unterhaltung.'],
     noEducation: ['Ein Haus wünscht sich eine Schule.', '{n} Häuser wünschen sich eine Schule.'],
     noGoods: [
       'Einem Haus fehlen Waren aus der Markthalle.',

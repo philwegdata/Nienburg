@@ -3,13 +3,14 @@
  * Usage: npm run sim [-- turns [seeds]]
  */
 import { CITIES } from '../src/data/cities';
-import { RULES } from '../src/data/rules';
+import { rulesFor } from '../src/data/rules';
 import { PLANS, runBot } from './bot';
 
 const turns = Number(process.argv[2] ?? 160);
 const seeds = Number(process.argv[3] ?? 1);
 
 for (const city of CITIES) {
+  const RULES = rulesFor(city);
   for (const spec of PLANS[city.id] ?? []) {
     // With several seeds, show how much luck (events, fires) moves the stars.
     for (let seed = 2; seed <= seeds; seed++) {

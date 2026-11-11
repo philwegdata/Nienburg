@@ -5,7 +5,7 @@ Der Platz innerhalb der Stadtmauer ist von Anfang an begrenzt – die Kunst lieg
 
 **Spielen:** https://philwegdata.github.io/Nienburg/
 
-Stand: Phase 6 – zwei Städte (Nienburg und Carcassonne), 32 Gebäude, fünf Wohnhaus-Stufen, Jahreszeiten, Ereignisse, Tutorial und ein mit automatischen Probeläufen abgestimmtes Balancing. Als Nächstes folgen weitere Städte (Phase 7).
+Stand: Phase 7 – zehn Städte aus aller Welt mit je drei Sterne-Zielen, 34 Gebäude, fünf Wohnhaus-Stufen, Jahreszeiten, Ereignisse, Handel und ein Tutorial. Als Nächstes folgt die Veröffentlichung als installierbare App (Phase 8).
 
 ## Lokal starten
 

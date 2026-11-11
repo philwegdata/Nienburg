@@ -170,3 +170,36 @@
     den vorhandenen Waren Gold. So bleibt es bei einer einzigen, kurzen Kette.
   - Der Bot baut beide Gebäude nicht; die Probeläufe aus Phase 6 sind deshalb unverändert.
     Mit Handel sammelt sich im späten Spiel noch mehr Gold an als ohnehin schon.
+
+## Phase 7 – Weitere Städte
+
+- Acht neue Städte, jede mit eigenem Grundriss, eigenen Zielen und einer Besonderheit:
+  - **Dubrovnik** (344 Felder): lang gestreckt am Meer; Händler erzielen 40 % höhere Preise
+  - **Mont-Saint-Michel** (213 Felder): Insel mit der Abtei auf dem Gipfel, einem Felsring und
+    nur einem Tor, durch das dafür doppelt so viel hereinkommt; die Abtei hebt die Wohnlage
+  - **Brügge** (419 Felder): Kanäle teilen die Stadt in Viertel; nur hier gibt es Brücken
+  - **San Gimignano** (271 Felder): schmaler Bergrücken; nur hier gibt es den Geschlechterturm
+  - **Fès** (459 Felder): unregelmäßige Medina; Gerbereien bringen 40 statt 25 Gold
+  - **Pingyao** (481 Felder): fast quadratisch mit sechs Toren, durch die je nur halb so viel kommt
+  - **Bhaktapur** (377 Felder): drei feste Tempelplätze, die die Wohnlage ringsum heben
+  - **Cusco** (342 Felder): Terrassen zwischen zwei Flüssen, durch Felsbänder getrennt
+- Neu in den Regeln: Kanäle (nur Brücken, zählen als freie Seite eines Hauses), Brücke,
+  Geschlechterturm, Ziele mit Stückzahl („3× Gerberei“), Besonderheiten pro Stadt
+- Regionales Aussehen: eigene Farben für Mauern, Dächer, Putz und Boden; trockenes oder mildes
+  Klima mit wenig oder keinem Schnee; Kuppeln, Pagoden oder schlichte Dächer statt Kirchturmspitzen;
+  eigene Namen (Moschee, Tempel, Teehaus, Hammam, Wechselstube)
+- Stadtauswahl mit Weltkarte und vergrößertem Ausschnitt für Europa; Stecknadeln zeigen, wo
+  man gerade spielt und wo alle drei Sterne erreicht sind
+- Der Bot hat für jede neue Stadt einen passenden Grundriss und erreicht überall den ersten Stern
+- Entscheidungen:
+  - Höhenstufen (Mont-Saint-Michel, Cusco) sind als Felsbänder umgesetzt, die den Baugrund in
+    Terrassen teilen, nicht als echte Höhen mit Treppen. Das hätte Darstellung und Bedienung der
+    ganzen Karte verändert.
+  - Die Weltkarte ist aus wenigen Punkten von Hand gezeichnet: Sie zeigt, wo eine Stadt liegt,
+    mehr nicht.
+  - Die ersten Ziele von Mont-Saint-Michel (70 Einwohner) und Brügge (170) sind so gewählt,
+    dass der Bot sie mit seiner einfachen Vorlage erreicht; er baut keine Brücken.
+  - Die zweiten und dritten Ziele der neuen Städte sind nicht mit dem Bot durchgespielt, außer in
+    Fès und Pingyao (dort fällt der dritte Stern nach rund 70 Runden).
+  - Hinweise im Rundenbericht sprechen jetzt von einem „Ort des Glaubens“ und „Unterhaltung“
+    statt von Kapelle und Schenke.

@@ -7,6 +7,8 @@ export type Terrain =
   | 'gate'
   /** A fixed historic building that takes up room and cannot be changed. */
   | 'landmark'
+  /** Water inside the walls; only bridges can be built on it. */
+  | 'canal'
   | 'buildable';
 
 export type Lang = 'de' | 'en';
@@ -17,6 +19,16 @@ export interface CityDef {
   name: Localized;
   region: Localized;
   blurb: Localized;
+  /** Where the real town lies, for the map on the selection screen. */
+  location: { lat: number; lon: number };
+  /** Regional colours and shapes; the rules stay the same. */
+  look?: CityLook;
+  /** What the fixed historic buildings on this map are. */
+  landmarkName?: Localized;
+  /** Regional names for buildings, by building id. */
+  names?: Record<string, Localized>;
+  /** What makes this town play a little differently. */
+  modifiers?: CityModifiers;
   /** 1 (gentle) to 3 (tricky). */
   difficulty: 1 | 2 | 3;
   /** Allowed range for the number of buildable tiles; checked by validateCity. */
@@ -27,12 +39,39 @@ export interface CityDef {
   goals: [Goal, Goal, Goal];
 }
 
+export interface CityLook {
+  /** Base colour of walls and towers. */
+  stone?: string;
+  /** Two shades for the ground inside the walls. */
+  ground?: [string, string];
+  /** Base colour of tiled roofs. */
+  roof?: string;
+  /** Base colour of plastered house walls. */
+  plaster?: string;
+  /** How much snow winter brings, and how green the land is. */
+  climate?: 'temperate' | 'mild' | 'dry';
+  /** What crowns places of faith. */
+  faith?: 'spire' | 'dome' | 'pagoda' | 'plain';
+  landmark?: 'castle' | 'abbey' | 'temple';
+}
+
+export interface CityModifiers {
+  /** Factor on what each gate delivers. */
+  gate?: number;
+  /** Factor on the price merchants get. */
+  tradePrice?: number;
+  /** Factor on what a kind of building yields, by building id. */
+  yields?: Record<string, number>;
+  /** Fixed historic buildings make their surroundings nicer to live in. */
+  landmarkAppeal?: { value: number; radius: number };
+}
+
 export type Goal =
   | { kind: 'population'; value: number }
   /** At least `count` houses of `level` or higher. */
   | { kind: 'houses'; level: number; count: number }
-  /** A finished, undamaged building of this kind. */
-  | { kind: 'building'; def: string };
+  /** Finished, undamaged buildings of this kind; one unless `count` says more. */
+  | { kind: 'building'; def: string; count?: number };
 
 export type Good = 'cloth' | 'tools' | 'beer';
 export const GOODS: readonly Good[] = ['cloth', 'tools', 'beer'];
@@ -102,6 +141,10 @@ export interface BuildingDef {
   workers: number;
   /** Services handed out along the path network, each with its reach in steps. */
   services?: { kind: ServiceKind; range: number }[];
+  /** Only offered in these cities (by id). */
+  cities?: string[];
+  /** Built on canal water instead of land. */
+  onCanal?: boolean;
   /** Only operates next to a plaza tile. */
   needsPlaza?: boolean;
   /** Only operates within reach of a well or cistern. */
@@ -193,6 +236,8 @@ export interface Balance {
   fire: { perRisk: number; maxChance: number; summerFactor: number; quietTurns: number };
   /** Share of the building cost charged for repairs. */
   repairShare: number;
+  /** Appeal radiated by every landmark tile, where a city has that. */
+  landmarkAppeal?: { value: number; radius: number };
   events: {
     /** Chance per turn that something happens, once the town is past its first years. */
     chance: number;

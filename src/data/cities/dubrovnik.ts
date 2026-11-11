@@ -1,0 +1,48 @@
+import type { CityDef } from '../../core/types';
+
+/** A stylised town inspired by Dubrovnik; not an accurate plan. */
+export const dubrovnik: CityDef = {
+  id: 'dubrovnik',
+  name: { de: 'Dubrovnik', en: 'Dubrovnik' },
+  region: { de: 'Dalmatien, Kroatien', en: 'Dalmatia, Croatia' },
+  blurb: {
+    de: 'Lang gestreckt zwischen Meer und Berg. Am Hafentor verkaufen Händler besonders gut.',
+    en: 'Stretched out between sea and mountain. Merchants sell especially well at the harbour gate.',
+  },
+  location: { lat: 42.65, lon: 18.1 },
+  difficulty: 2,
+  buildableRange: [310, 380],
+  look: { stone: '#d8d2c4', roof: '#c8693f', plaster: '#ece6d6', climate: 'mild' },
+  modifiers: { tradePrice: 1.4 },
+  goals: [
+    { kind: 'population', value: 180 },
+    { kind: 'building', def: 'kontor', count: 2 },
+    { kind: 'houses', level: 5, count: 12 },
+  ],
+  map: [
+    '~~                                  ~~',
+    '~~                                  ~~',
+    '~~                                  ~~',
+    '~~                                  ~~',
+    '~~                                  ~~',
+    '~~      ####GT#####T####T#####      ~~',
+    '~~   ####....................####   ~~',
+    '~~  T#..........................#T  ~~',
+    '~~~~#............................#~~~~',
+    '~~~~#............................#~~~~',
+    '~~~~#............................#~~~~',
+    '~~~~#............................#~~~~',
+    '~~~#G............................G#~~~',
+    '~~~~#............................#~~~~',
+    '~~~~#............................#~~~~',
+    '~~~~#............................#~~~~',
+    '~~~~#............................#~~~~',
+    '~~~~T#..........................#T~~~~',
+    '~~~~~####....................####~~~~~',
+    '~~~~~~~~#####T#####T####T#####~~~~~~~~',
+    '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
+    '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
+    '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
+    '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
+  ],
+};

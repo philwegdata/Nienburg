@@ -12,6 +12,9 @@ export const carcassonne: CityDef = {
     de: 'Ovale Hügelfestung mit doppeltem Mauerring. Die Burg des Grafen steht schon – und im Weg.',
     en: "An oval hill fortress with a double wall. The count's castle is already there – and in the way.",
   },
+  location: { lat: 43.21, lon: 2.35 },
+  look: { landmark: 'castle' },
+  landmarkName: { de: 'Burg des Grafen', en: "The count's castle" },
   difficulty: 2,
   buildableRange: [380, 460],
   goals: [

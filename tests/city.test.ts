@@ -10,6 +10,7 @@ function city(map: string[], range: [number, number] = [1, 100]): CityDef {
     name: { de: 'Test', en: 'Test' },
     region: { de: '', en: '' },
     blurb: { de: '', en: '' },
+    location: { lat: 0, lon: 0 },
     difficulty: 1,
     buildableRange: range,
     goals: [

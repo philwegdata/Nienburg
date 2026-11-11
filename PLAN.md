@@ -332,10 +332,10 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 7 – Weitere Städte
 
-- [ ] Karten 3–10 aus 2.8, je mit Maske, Palette, Zielen, Modifikatoren
-- [ ] Kartenspezifische Bauteile: Brücke (Brügge), Geschlechterturm (San Gimignano), Höhenstufen (Mont-Saint-Michel, Cusco), feste Tempelplätze (Bhaktapur)
-- [ ] Regionale Umbenennung/Optik einzelner Gebäude
-- [ ] Stadtauswahl als Weltkarte mit Sterne-Fortschritt
+- [x] Karten 3–10 aus 2.8, je mit Maske, Palette, Zielen, Modifikatoren
+- [x] Kartenspezifische Bauteile: Brücke (Brügge), Geschlechterturm (San Gimignano), Höhenstufen (Mont-Saint-Michel, Cusco), feste Tempelplätze (Bhaktapur)
+- [x] Regionale Umbenennung/Optik einzelner Gebäude
+- [x] Stadtauswahl als Weltkarte mit Sterne-Fortschritt
 
 **Abnahme:** Alle Karten bestehen den Validierungstest und einen Bot-Durchlauf bis Stern 1.
 
