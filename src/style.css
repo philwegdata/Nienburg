@@ -692,3 +692,21 @@ button.quiet {
     font-size: 0.82rem;
   }
 }
+
+.asset-sheet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: #cfc09a;
+}
+
+.asset-sheet figure {
+  margin: 0;
+  padding: 0.4rem;
+  text-align: center;
+  background: #d9c9a3;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}

@@ -13,6 +13,11 @@ Cozy, turn-based medieval city builder for the browser. The roadmap and game des
   for 200 turns and five random seeds). Run it after changing numbers in `src/data/`;
   `tests/balance.test.ts` holds the corridor the results must stay in.
 
+## Art
+
+- Buildings are drawn in `src/render/buildings.ts` from a small kit (walls, gable roofs, windows,
+  props). Open the game with `?assets` appended to the URL to see every building side by side.
+
 ## Architecture rules
 
 - `src/core/` is pure, deterministic game logic: no DOM, no canvas, no imports from `render/` or

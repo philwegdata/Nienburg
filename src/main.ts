@@ -15,6 +15,11 @@ function need<T extends Element>(selector: string): T {
   return node;
 }
 
+// A sheet of all building drawings, for judging the art: open the page with ?assets
+if (new URLSearchParams(window.location.search).has('assets')) {
+  void import('./ui/assets').then((m) => m.showAssetSheet(t));
+}
+
 const canvas = need<HTMLCanvasElement>('#map');
 canvas.setAttribute('aria-label', `${t.mapLabel}. ${t.mapKeys}`);
 

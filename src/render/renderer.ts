@@ -2,7 +2,6 @@ import { indexOf } from '../core/grid';
 import type { Building, BuildingDef, CityLook, GameState, Point, Terrain } from '../core/types';
 import {
   diamond,
-  drawBuilding,
   drawEmitter,
   drawFortification,
   drawGlint,
@@ -14,6 +13,7 @@ import {
   type Emitter,
   type G,
 } from './draw';
+import { drawBuilding } from './buildings';
 import { screenToWorld, TILE_H, TILE_W, worldToGrid, type Camera } from './iso';
 import { buildPalette, type Palette } from './palette';
 import { countryside, MARGIN, terrainAround, type Countryside } from './scenery';
@@ -304,7 +304,12 @@ export class Scene {
 }
 
 /** A small picture of a building for the build menu. */
-export function buildingIcon(def: BuildingDef, width = 40, height = 30): HTMLCanvasElement {
+export function buildingIcon(
+  def: BuildingDef,
+  width = 40,
+  height = 30,
+  variant: { level?: number; merged?: boolean; season?: number } = {},
+): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const dpr = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
   canvas.width = width * dpr;
@@ -313,27 +318,54 @@ export function buildingIcon(def: BuildingDef, width = 40, height = 30): HTMLCan
   canvas.style.height = `${height}px`;
   canvas.className = 'icon';
   const ctx = canvas.getContext('2d')!;
-  const { w, h } = def.size;
+  const w = variant.merged ? 2 : def.size.w;
+  const h = def.size.h;
   const b: Building = { id: 1, def: def.id, x: 0, y: 0, w, h, rot: 0 };
-  if (def.category === 'housing') b.house = { level: 3, pop: 1, lacking: 0 };
+  if (def.category === 'housing') b.house = { level: variant.level ?? 3, pop: 1, lacking: 0 };
   const flat = def.category === 'path';
-  // Rough size of the picture in world pixels.
-  const tall = flat ? 0 : def.id === 'cathedral' ? 150 : 26 + 14 * Math.max(w, h);
-  const worldW = ((w + h) * TILE_W) / 2;
-  const worldH = ((w + h) * TILE_H) / 2 + tall;
-  const scale = Math.min((width - 2) / worldW, (height - 2) / worldH) * dpr;
-  const left = (-h * TILE_W) / 2;
-  ctx.setTransform(
-    scale,
-    0,
-    0,
-    scale,
-    (canvas.width - worldW * scale) / 2 - left * scale,
-    (canvas.height - worldH * scale) / 2 + tall * scale,
-  );
-  ctx.lineJoin = 'round';
-  const g: G = { ctx, pal: buildPalette(0) };
+  // Draw it large on a scratch canvas first, then fit whatever came out into the picture:
+  // that way nothing has to know in advance how tall a building is.
+  const scratch = document.createElement('canvas');
+  const size = 640;
+  scratch.width = size;
+  scratch.height = size;
+  const sctx = scratch.getContext('2d', { willReadFrequently: true })!;
+  const zoom = Math.min(2.4, 420 / (((w + h) * TILE_W) / 2));
+  sctx.setTransform(zoom, 0, 0, zoom, size / 2, size * 0.62);
+  sctx.lineJoin = 'round';
+  const g: G = { ctx: sctx, pal: buildPalette(variant.season ?? 0) };
   if (flat) drawPath(g, b);
   else drawBuilding(g, b, null);
+  const pixels = sctx.getImageData(0, 0, size, size).data;
+  let x0 = size;
+  let y0 = size;
+  let x1 = 0;
+  let y1 = 0;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (pixels[(y * size + x) * 4 + 3]! < 40) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  }
+  if (x1 >= x0 && y1 >= y0) {
+    const bw = x1 - x0 + 1;
+    const bh = y1 - y0 + 1;
+    const fit = Math.min((canvas.width - 2 * dpr) / bw, (canvas.height - 2 * dpr) / bh);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(
+      scratch,
+      x0,
+      y0,
+      bw,
+      bh,
+      (canvas.width - bw * fit) / 2,
+      (canvas.height - bh * fit) / 2,
+      bw * fit,
+      bh * fit,
+    );
+  }
   return canvas;
 }

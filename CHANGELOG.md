@@ -203,3 +203,26 @@
     Fès und Pingyao (dort fällt der dritte Stern nach rund 70 Runden).
   - Hinweise im Rundenbericht sprechen jetzt von einem „Ort des Glaubens“ und „Unterhaltung“
     statt von Kapelle und Schenke.
+
+## Neue Gebäudegrafik
+
+- Jedes Gebäude hat jetzt eine eigene Gestalt statt eines Kastens mit Dach:
+  - Wohnhäuser: Strohhütte, Lehmhaus mit Giebel, Fachwerkhaus mit vorkragendem Obergeschoss und
+    Fensterläden, Bürgerhaus mit zwei Fachwerkgeschossen und Gaube, Patrizierhaus aus Stein mit
+    Treppengiebel und Bogenfenstern. Putzfarbe, Läden und Firstrichtung wechseln von Haus zu Haus.
+  - Kapelle, Pfarrkirche und Kathedrale mit Langhaus, Seitenschiffen, Querhaus, Türmen,
+    Rosette und Portal; die Turmbekrönung richtet sich weiter nach der Region.
+  - Markthalle, Zunfthaus und Rathaus mit Arkaden; Rathaus mit Uhrturm, Kontor mit
+    Treppengiebel und Lastenaufzug, Geschlechterturm mit Zinnen
+  - Werkstätten mit erkennbarem Gewerbe: glühende Esse, Fässer, Bottiche und aufgespannte Häute,
+    trocknende Tuchbahnen, hohe Schornsteine
+  - Brunnen mit rundem Steinkranz und Dach, Zierbrunnen mit Wasserschale, Marktstand mit
+    gestreifter Markise, Badehaus mit Kuppeln, Bauhütte mit Zaun, Holzstapel und Kran
+- Zeichenstil: feine dunkle Konturen, Giebeldächer mit Ziegelreihen und Traufe, Fensterrahmen,
+  Mauerwerk-, Bretter- und Ziegelstruktur, Schatten unter dem Dachüberstand
+- Schatten am Boden sind kürzer und weicher; Zinnen und Bäume haben Konturen bekommen
+- Die Bilder im Baumenü passen sich jetzt selbst an die Größe des Gebäudes an
+- Neue Übersichtsseite aller Gebäude zum Beurteilen der Grafik: die Adresse des Spiels mit
+  `?assets` am Ende aufrufen
+- Entscheidung: Mauern, Tore, Boden und Umland sind bewusst nur leicht angepasst; der Schwerpunkt
+  lag auf den Gebäuden.

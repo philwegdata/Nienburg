@@ -1,13 +1,6 @@
 import type { Building, Point, Terrain } from '../core/types';
 import { gridToWorld } from './iso';
-import {
-  shade,
-  type BoxColors,
-  type Palette,
-  type RoofColors,
-  type RoofKey,
-  type WallKey,
-} from './palette';
+import { shade, type BoxColors, type Palette, type RoofColors } from './palette';
 import { tileHash, type Countryside } from './scenery';
 
 /** Canvas plus the colours of the season. */
@@ -36,7 +29,7 @@ export function poly(g: G, pts: Point[], fill: string, stroke?: string): void {
   }
 }
 
-function line(g: G, a: Point, b: Point): void {
+export function line(g: G, a: Point, b: Point): void {
   g.ctx.moveTo(a.x, a.y);
   g.ctx.lineTo(b.x, b.y);
 }
@@ -56,35 +49,58 @@ export function diamond(gx: number, gy: number, w = 1, h = 1, inset = 0, z = 0):
   ];
 }
 
-function pick<T>(list: readonly T[], x: number, y: number): T {
+export function pick<T>(list: readonly T[], x: number, y: number): T {
   return list[tileHash(x, y) % list.length]!;
 }
 
 /** An axis-aligned footprint in grid coordinates. */
-interface Rect {
+export interface Rect {
   x0: number;
   y0: number;
   x1: number;
   y1: number;
 }
 
-function rect(x: number, y: number, w: number, h: number, inset = 0): Rect {
+export function rect(x: number, y: number, w: number, h: number, inset = 0): Rect {
   return { x0: x + inset, y0: y + inset, x1: x + w - inset, y1: y + h - inset };
 }
 
 /** Point on the left-hand visible wall (t runs along x), at height z. */
-const onLeft = (r: Rect, t: number, z: number) => v(r.x0 + t * (r.x1 - r.x0), r.y1, z);
+export const onLeft = (r: Rect, t: number, z: number) => v(r.x0 + t * (r.x1 - r.x0), r.y1, z);
 /** Point on the right-hand visible wall (t runs from the front corner backwards), at height z. */
-const onRight = (r: Rect, t: number, z: number) => v(r.x1, r.y1 - t * (r.y1 - r.y0), z);
+export const onRight = (r: Rect, t: number, z: number) => v(r.x1, r.y1 - t * (r.y1 - r.y0), z);
 
-function box(g: G, r: Rect, z0: number, z1: number, c: BoxColors): void {
-  poly(g, [onLeft(r, 0, z1), onLeft(r, 1, z1), onLeft(r, 1, z0), onLeft(r, 0, z0)], c.left);
-  poly(g, [onRight(r, 0, z1), onRight(r, 1, z1), onRight(r, 1, z0), onRight(r, 0, z0)], c.right);
-  poly(g, [v(r.x0, r.y0, z1), v(r.x1, r.y0, z1), v(r.x1, r.y1, z1), v(r.x0, r.y1, z1)], c.top);
+export function box(g: G, r: Rect, z0: number, z1: number, c: BoxColors, outline?: string): void {
+  g.ctx.lineWidth = 0.5;
+  poly(
+    g,
+    [onLeft(r, 0, z1), onLeft(r, 1, z1), onLeft(r, 1, z0), onLeft(r, 0, z0)],
+    c.left,
+    outline,
+  );
+  poly(
+    g,
+    [onRight(r, 0, z1), onRight(r, 1, z1), onRight(r, 1, z0), onRight(r, 0, z0)],
+    c.right,
+    outline,
+  );
+  poly(
+    g,
+    [v(r.x0, r.y0, z1), v(r.x1, r.y0, z1), v(r.x1, r.y1, z1), v(r.x0, r.y1, z1)],
+    c.top,
+    outline,
+  );
 }
 
 /** A hipped roof; the ridge runs along the longer side unless `alongX` says otherwise. */
-function roof(g: G, r: Rect, z: number, rise: number, c: RoofColors, alongX?: boolean): Point[] {
+export function roof(
+  g: G,
+  r: Rect,
+  z: number,
+  rise: number,
+  c: RoofColors,
+  alongX?: boolean,
+): Point[] {
   const dx = r.x1 - r.x0;
   const dy = r.y1 - r.y0;
   const half = Math.min(dx, dy) / 2;
@@ -123,59 +139,13 @@ function roof(g: G, r: Rect, z: number, rise: number, c: RoofColors, alongX?: bo
   return [r1, r2];
 }
 
-/** Rows of windows on both visible walls, plus a door on the left one. */
-function openings(g: G, r: Rect, rows: number[], door: boolean, doorHeight = 6): void {
-  const { pal } = g;
-  const faces: [(t: number, z: number) => Point, number][] = [
-    [(t, z) => onLeft(r, t, z), r.x1 - r.x0],
-    [(t, z) => onRight(r, t, z), r.y1 - r.y0],
-  ];
-  faces.forEach(([at, length], face) => {
-    const count = Math.max(1, Math.round(length * 2.2));
-    const half = Math.min(0.07 / length, 0.18);
-    for (const z of rows) {
-      for (let i = 0; i < count; i++) {
-        const t = (i + 0.5) / count;
-        // Leave room for the door on the ground floor.
-        if (door && face === 0 && z < doorHeight + 2 && Math.abs(t - 0.5) < 1 / count / 1.9)
-          continue;
-        poly(
-          g,
-          [at(t - half, z), at(t + half, z), at(t + half, z + 3.4), at(t - half, z + 3.4)],
-          pal.window,
-        );
-      }
-    }
-    if (door && face === 0) {
-      const d = Math.min(0.09 / length, 0.2);
-      poly(
-        g,
-        [at(0.5 - d, 0), at(0.5 + d, 0), at(0.5 + d, doorHeight), at(0.5 - d, doorHeight)],
-        pal.door,
-      );
-    }
-  });
-}
-
-/** Half-timbering: a beam per storey, posts, and a brace or two. */
-function timberFrame(g: G, r: Rect, height: number, storey: number): void {
-  const { ctx, pal } = g;
-  ctx.beginPath();
-  for (const at of [
-    (t: number, z: number) => onLeft(r, t, z),
-    (t: number, z: number) => onRight(r, t, z),
-  ]) {
-    for (let z = storey; z < height - 1; z += storey) line(g, at(0, z), at(1, z));
-    for (const t of [0.02, 0.5, 0.98]) line(g, at(t, 0), at(t, height));
-    line(g, at(0.02, height), at(0.26, height - storey));
-    line(g, at(0.98, height), at(0.74, height - storey));
-  }
-  ctx.lineWidth = 0.7;
-  ctx.strokeStyle = pal.timber;
-  ctx.stroke();
-}
-
-function chimney(g: G, at: Point, into: Emitter[] | null, smoking: boolean, seed: number): void {
+export function chimney(
+  g: G,
+  at: Point,
+  into: Emitter[] | null,
+  smoking: boolean,
+  seed: number,
+): void {
   const { ctx, pal } = g;
   ctx.fillStyle = pal.walls.brick.left;
   ctx.fillRect(at.x - 1.6, at.y - 7, 1.6, 9);
@@ -185,8 +155,15 @@ function chimney(g: G, at: Point, into: Emitter[] | null, smoking: boolean, seed
 }
 
 /** A soft shadow on the ground towards the lower right. */
-function shadow(g: G, b: { x: number; y: number; w: number; h: number }, height: number): void {
-  const reach = Math.min(0.9, height / 38);
+export function shadow(
+  g: G,
+  b: { x: number; y: number; w: number; h: number },
+  height: number,
+): void {
+  // Kept short and soft: in a dense town long shadows would swallow the streets.
+  const reach = Math.min(0.4, height / 80);
+  const inset = 0.1;
+  b = { x: b.x + inset, y: b.y + inset, w: b.w - 2 * inset, h: b.h - 2 * inset };
   // The outline of the footprint pushed towards the lower right.
   poly(
     g,
@@ -202,7 +179,7 @@ function shadow(g: G, b: { x: number; y: number; w: number; h: number }, height:
   );
 }
 
-function vary(c: RoofColors, seed: number): RoofColors {
+export function vary(c: RoofColors, seed: number): RoofColors {
   const amount = ((seed % 5) - 2) * 0.035;
   return {
     back: shade(c.back, amount),
@@ -314,6 +291,9 @@ export function drawTree(g: G, gx: number, gy: number, size = 1): void {
   ctx.beginPath();
   ctx.ellipse(base.x - 1 * size, cy, 8.5 * size, 9 * size, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = 'rgba(30, 50, 20, 0.35)';
+  ctx.stroke();
   ctx.fillStyle = shade(leaf, 0.16);
   ctx.beginPath();
   ctx.ellipse(base.x - 3 * size, cy - 3 * size, 4 * size, 3.6 * size, 0, 0, Math.PI * 2);
@@ -369,7 +349,7 @@ export function drawPath(g: G, b: Building): void {
 // ---------- fortifications ----------
 
 /** Merlons on the four corners of a tile; neighbouring tiles join up into battlements. */
-function battlements(g: G, x: number, y: number, z: number, c: BoxColors, inset = 0): void {
+export function battlements(g: G, x: number, y: number, z: number, c: BoxColors, inset = 0): void {
   const s = 0.27;
   const lo = inset;
   const hi = 1 - inset - s;
@@ -379,11 +359,11 @@ function battlements(g: G, x: number, y: number, z: number, c: BoxColors, inset 
     [lo, hi],
     [hi, hi],
   ] as const) {
-    box(g, rect(x + dx, y + dy, s, s), z, z + 5, c);
+    box(g, rect(x + dx, y + dy, s, s), z, z + 5, c, 'rgba(46, 32, 22, 0.28)');
   }
 }
 
-function flagpole(g: G, at: Point, into: Emitter[] | null, seed: number): void {
+export function flagpole(g: G, at: Point, into: Emitter[] | null, seed: number): void {
   const { ctx, pal } = g;
   ctx.beginPath();
   ctx.moveTo(at.x, at.y);
@@ -521,7 +501,7 @@ export function drawFortification(
 }
 
 /** Stacked roofs that get smaller towards the top, as on a pagoda. */
-function tiers(
+export function tiers(
   g: G,
   x: number,
   y: number,
@@ -538,419 +518,6 @@ function tiers(
     roof(g, rect(x, y, size, size, grow - 0.06 * size), at + 7, 6, pal.roofs.darkTile);
     at += 11;
   }
-}
-
-// ---------- buildings ----------
-
-/** Simple building shapes: a box with a hipped roof, optionally with a tower. */
-interface Style {
-  wall: WallKey;
-  roof: RoofKey;
-  /** Wall height and roof rise in world pixels, footprint inset in tiles. */
-  h: number;
-  rise: number;
-  inset?: number;
-  /** A slim tower rising to this height. */
-  tower?: number;
-  /** The tower carries a spire and a cross. */
-  spire?: boolean;
-  /** Heights of the window rows. */
-  windows?: number[];
-  timber?: boolean;
-  chimney?: boolean;
-  flag?: boolean;
-}
-
-const STYLES: Record<string, Style> = {
-  stall: { wall: 'wood', roof: 'awning', h: 6, rise: 5, inset: 0.2 },
-  granary: { wall: 'paleStone', roof: 'shingle', h: 20, rise: 16, inset: 0.14, windows: [13] },
-  bakery: {
-    wall: 'plaster',
-    roof: 'darkTile',
-    h: 10,
-    rise: 9,
-    inset: 0.12,
-    windows: [4],
-    chimney: true,
-    timber: true,
-  },
-  markethall: { wall: 'ochre', roof: 'tile', h: 14, rise: 14, inset: 0.08, windows: [5] },
-  chapel: {
-    wall: 'paleStone',
-    roof: 'slate',
-    h: 16,
-    rise: 14,
-    inset: 0.1,
-    tower: 34,
-    spire: true,
-    windows: [7],
-  },
-  church: {
-    wall: 'paleStone',
-    roof: 'slate',
-    h: 24,
-    rise: 18,
-    inset: 0.1,
-    tower: 52,
-    spire: true,
-    windows: [9],
-  },
-  cathedral: {
-    wall: 'paleStone',
-    roof: 'slate',
-    h: 40,
-    rise: 26,
-    inset: 0.08,
-    tower: 92,
-    spire: true,
-    windows: [8, 22],
-  },
-  firewatch: { wall: 'brick', roof: 'red', h: 10, rise: 6, inset: 0.18, tower: 30, windows: [4] },
-  nightwatch: {
-    wall: 'darkStone',
-    roof: 'blue',
-    h: 10,
-    rise: 6,
-    inset: 0.18,
-    tower: 28,
-    windows: [4],
-  },
-  bathhouse: {
-    wall: 'paleStone',
-    roof: 'blue',
-    h: 11,
-    rise: 10,
-    inset: 0.1,
-    windows: [5],
-    chimney: true,
-  },
-  hospital: { wall: 'plaster', roof: 'green', h: 16, rise: 12, inset: 0.1, windows: [4, 10] },
-  tavern: {
-    wall: 'plaster',
-    roof: 'shingle',
-    h: 11,
-    rise: 10,
-    inset: 0.1,
-    windows: [5],
-    chimney: true,
-    timber: true,
-  },
-  school: { wall: 'ochre', roof: 'slate', h: 14, rise: 11, inset: 0.12, windows: [4, 9] },
-  weaver: {
-    wall: 'plaster',
-    roof: 'thatch',
-    h: 10,
-    rise: 11,
-    inset: 0.12,
-    windows: [4],
-    timber: true,
-  },
-  smithy: {
-    wall: 'darkStone',
-    roof: 'shingle',
-    h: 10,
-    rise: 9,
-    inset: 0.12,
-    windows: [4],
-    chimney: true,
-  },
-  brewery: {
-    wall: 'brick',
-    roof: 'darkTile',
-    h: 12,
-    rise: 10,
-    inset: 0.12,
-    windows: [5],
-    chimney: true,
-  },
-  tannery: { wall: 'darkWood', roof: 'thatch', h: 8, rise: 8, inset: 0.14 },
-  manufactory: {
-    wall: 'brick',
-    roof: 'shingle',
-    h: 14,
-    rise: 10,
-    inset: 0.08,
-    windows: [4, 9],
-    chimney: true,
-  },
-  kontor: {
-    wall: 'plaster',
-    roof: 'darkTile',
-    h: 18,
-    rise: 12,
-    inset: 0.12,
-    windows: [4, 11],
-    timber: true,
-    flag: true,
-    tower: 36,
-  },
-  towerhouse: {
-    wall: 'paleStone',
-    roof: 'tile',
-    h: 62,
-    rise: 6,
-    inset: 0.24,
-    windows: [8, 24, 40, 54],
-  },
-  guildhall: {
-    wall: 'ochre',
-    roof: 'darkTile',
-    h: 20,
-    rise: 14,
-    inset: 0.1,
-    windows: [5, 12],
-    timber: true,
-  },
-  townhall: {
-    wall: 'ochre',
-    roof: 'tile',
-    h: 22,
-    rise: 16,
-    inset: 0.1,
-    tower: 52,
-    windows: [5, 13],
-    flag: true,
-  },
-  warehouse: { wall: 'wood', roof: 'shingle', h: 12, rise: 12, inset: 0.1 },
-  buildersyard: { wall: 'darkWood', roof: 'shingle', h: 8, rise: 8, inset: 0.16 },
-};
-
-const HOUSES: Style[] = [
-  { wall: 'wattle', roof: 'thatch', h: 6, rise: 8, inset: 0.2 },
-  { wall: 'clay', roof: 'shingle', h: 9, rise: 9, inset: 0.15, windows: [3.5], chimney: true },
-  {
-    wall: 'plaster',
-    roof: 'tile',
-    h: 16,
-    rise: 11,
-    inset: 0.11,
-    windows: [3.5, 10.5],
-    chimney: true,
-    timber: true,
-  },
-  {
-    wall: 'plaster',
-    roof: 'darkTile',
-    h: 23,
-    rise: 12,
-    inset: 0.09,
-    windows: [3.5, 10.5, 17.5],
-    chimney: true,
-    timber: true,
-  },
-  {
-    wall: 'ochre',
-    roof: 'slate',
-    h: 30,
-    rise: 13,
-    inset: 0.07,
-    windows: [3.5, 10.5, 17.5, 24.5],
-    chimney: true,
-  },
-];
-
-function drawStyled(
-  g: G,
-  b: Building,
-  s: Style,
-  into: Emitter[] | null,
-  options: { seed: number; smoking: boolean; ridgeAlongX?: boolean },
-): void {
-  const { pal } = g;
-  const { x, y, w, h } = b;
-  const inset = s.inset ?? 0.1;
-  const body = rect(x, y, w, h, inset);
-  const height = s.h + ((options.seed >> 3) % 3) - 1;
-  shadow(g, b, height + s.rise);
-  box(g, body, 0, height, pal.walls[s.wall]);
-  if (s.timber) timberFrame(g, body, height, 7);
-  openings(g, body, s.windows ?? [], true, Math.min(6, height - 1));
-  const ridge = roof(
-    g,
-    rect(x, y, w, h, inset - 0.05),
-    height,
-    s.rise,
-    vary(pal.roofs[s.roof], options.seed),
-    options.ridgeAlongX,
-  );
-  if (s.chimney) {
-    const [r1, r2] = ridge as [Point, Point];
-    const t = 0.25 + ((options.seed >> 6) % 3) * 0.25;
-    chimney(
-      g,
-      { x: r1.x + (r2.x - r1.x) * t, y: r1.y + (r2.y - r1.y) * t + 2 },
-      into,
-      options.smoking,
-      options.seed,
-    );
-  }
-  if (s.tower) {
-    // The tower stands at the back end of the ridge so it does not hide the roof.
-    const size = Math.min(0.5, Math.min(w, h) * 0.34);
-    const tx = x + (w >= h ? inset + 0.05 : w / 2 - size / 2);
-    const ty = y + (w >= h ? h / 2 - size / 2 : inset + 0.05);
-    const shaft = rect(tx, ty, size, size);
-    box(g, shaft, height, s.tower, pal.walls[s.wall]);
-    openings(g, shaft, [s.tower - 9], false);
-    const crown = s.spire ? pal.faith : 'roof';
-    let tip = v(tx + size / 2, ty + size / 2, s.tower + size * 30);
-    if (crown === 'dome') {
-      // A dome with a small finial.
-      const c = v(tx + size / 2, ty + size / 2, s.tower);
-      g.ctx.beginPath();
-      g.ctx.ellipse(c.x, c.y, size * 20, size * 24, 0, Math.PI, 0);
-      g.ctx.fillStyle = pal.roofs.green.right;
-      g.ctx.fill();
-      g.ctx.fillStyle = pal.ink;
-      g.ctx.fillRect(c.x - 0.6, c.y - size * 24 - 5, 1.2, 5);
-    } else if (crown === 'pagoda') {
-      tiers(g, tx, ty, s.tower - 4, 2, 0, size);
-    } else if (crown === 'plain') {
-      roof(g, rect(tx, ty, size, size, -0.06), s.tower, size * 14, pal.roofs.thatch);
-    } else {
-      const rise = size * (crown === 'spire' ? 56 : 30);
-      roof(g, rect(tx, ty, size, size, -0.03), s.tower, rise, pal.roofs[s.roof]);
-      tip = v(tx + size / 2, ty + size / 2, s.tower + rise);
-    }
-    if (crown === 'spire') {
-      g.ctx.beginPath();
-      g.ctx.moveTo(tip.x, tip.y);
-      g.ctx.lineTo(tip.x, tip.y - 6);
-      g.ctx.moveTo(tip.x - 2, tip.y - 4);
-      g.ctx.lineTo(tip.x + 2, tip.y - 4);
-      g.ctx.lineWidth = 0.9;
-      g.ctx.strokeStyle = pal.ink;
-      g.ctx.stroke();
-    } else if (s.flag && crown === 'roof') {
-      flagpole(g, tip, into, options.seed);
-    }
-  }
-}
-
-function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
-  const { ctx, pal } = g;
-  const { x, y, w, h } = b;
-  const level = b.house?.level ?? 1;
-  const pop = b.house?.pop ?? 0;
-  if (pop === 0 && level === 1) {
-    // An empty plot: a staked-out patch of ground with a fence.
-    ctx.lineWidth = 1;
-    poly(g, diamond(x, y, w, h, 0.16), 'rgba(255, 255, 255, 0.14)', 'rgba(59, 42, 32, 0.3)');
-    ctx.beginPath();
-    for (const [px, py] of [
-      [0.16, 0.16],
-      [0.84, 0.16],
-      [0.84, 0.84],
-      [0.16, 0.84],
-    ] as const) {
-      const foot = v(x + px * w, y + py * h);
-      ctx.moveTo(foot.x, foot.y);
-      ctx.lineTo(foot.x, foot.y - 4);
-    }
-    ctx.strokeStyle = pal.trunk;
-    ctx.stroke();
-    return;
-  }
-  const seed = tileHash(x * 31 + 7, y * 17 + 3);
-  const style = HOUSES[Math.min(level, HOUSES.length) - 1]!;
-  drawStyled(g, b, style, into, {
-    seed,
-    smoking: pop > 0,
-    // Single plots turn their ridge this way or that; merged houses follow their long side.
-    ridgeAlongX: w === h ? (seed & 4) === 0 : undefined,
-  });
-}
-
-function drawSite(g: G, b: Building): void {
-  const { ctx, pal } = g;
-  const { x, y, w, h } = b;
-  const body = rect(x, y, w, h, 0.1);
-  box(g, body, 0, 7, pal.walls.paleStone);
-  ctx.beginPath();
-  for (const t of [0, 0.34, 0.67, 1]) {
-    line(g, onLeft(body, t, 0), onLeft(body, t, 34));
-    line(g, onRight(body, t, 0), onRight(body, t, 34));
-  }
-  for (const z of [14, 26]) {
-    line(g, onLeft(body, 0, z), onLeft(body, 1, z));
-    line(g, onRight(body, 0, z), onRight(body, 1, z));
-  }
-  line(g, onLeft(body, 0, 14), onLeft(body, 0.34, 26));
-  line(g, onRight(body, 0.67, 14), onRight(body, 1, 26));
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = pal.trunk;
-  ctx.stroke();
-}
-
-function drawWater(g: G, b: Building): void {
-  const { ctx, pal } = g;
-  const { x, y, w, h } = b;
-  const rim = { ...pal.walls.stone, top: pal.basin };
-  if (b.def === 'well') {
-    box(g, rect(x, y, 1, 1, 0.3), 0, 5, rim);
-    // Two posts and a little roof over the winch.
-    ctx.beginPath();
-    for (const [px, py] of [
-      [0.3, 0.7],
-      [0.7, 0.3],
-    ] as const) {
-      line(g, v(x + px, y + py, 5), v(x + px, y + py, 14));
-    }
-    ctx.lineWidth = 1.1;
-    ctx.strokeStyle = pal.trunk;
-    ctx.stroke();
-    roof(g, rect(x, y, 1, 1, 0.22), 14, 6, pal.roofs.shingle);
-  } else if (b.def === 'cistern') {
-    box(g, rect(x, y, w, h, 0.14), 0, 6, rim);
-    poly(g, diamond(x, y, w, h, 0.3, 6), 'rgba(255, 255, 255, 0.18)');
-  } else {
-    box(g, rect(x, y, 1, 1, 0.2), 0, 4, rim);
-    box(g, rect(x, y, 1, 1, 0.43), 4, 14, pal.walls.paleStone);
-    box(g, rect(x, y, 1, 1, 0.36), 14, 16, rim);
-  }
-}
-
-function drawGarden(g: G, b: Building): void {
-  const { ctx, pal } = g;
-  const { x, y } = b;
-  poly(g, diamond(x, y, 1, 1, 0.1), pal.bed);
-  ctx.beginPath();
-  for (const t of [0.36, 0.64]) line(g, v(x + t, y + 0.12), v(x + t, y + 0.88));
-  ctx.lineWidth = 0.7;
-  ctx.strokeStyle = 'rgba(60, 50, 30, 0.25)';
-  ctx.stroke();
-  if (!pal.bloom) return;
-  for (let i = 0; i < 7; i++) {
-    const s = tileHash(x * 7 + i, y * 13 + i * 3);
-    const p = v(x + 0.2 + (s % 60) / 100, y + 0.2 + ((s >> 8) % 60) / 100);
-    ctx.fillStyle = pal.flowers[i % pal.flowers.length]!;
-    ctx.fillRect(p.x - 1, p.y - 1, 2.2, 2.2);
-  }
-}
-
-export function drawBuilding(g: G, b: Building, into: Emitter[] | null): void {
-  const { x, y, w, h } = b;
-  if (b.construction) drawSite(g, b);
-  else if (b.def === 'house') drawHouse(g, b, into);
-  else if (b.def === 'well' || b.def === 'cistern' || b.def === 'fountain') drawWater(g, b);
-  else if (b.def === 'tree') drawTree(g, x + 0.5, y + 0.5);
-  else if (b.def === 'garden') drawGarden(g, b);
-  else {
-    const style = STYLES[b.def];
-    const seed = tileHash(x * 31 + 7, y * 17 + 3);
-    if (style) drawStyled(g, b, style, into, { seed, smoking: !b.damaged });
-    else box(g, rect(x, y, w, h, 0.1), 0, 10, g.pal.walls.stone);
-    if (b.def === 'stall') {
-      // Wares on the counter.
-      const colors = ['#c46a5a', '#d9b44a', '#7da05a'];
-      colors.forEach((c, i) => {
-        const p = v(x + 0.3 + i * 0.2, y + 0.82, 3);
-        g.ctx.fillStyle = c;
-        g.ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
-      });
-    }
-  }
-  if (b.damaged) poly(g, diamond(x, y, w, h, 0.05, 2), 'rgba(30, 24, 20, 0.5)');
 }
 
 /** A small floating marker above buildings that need attention. */
