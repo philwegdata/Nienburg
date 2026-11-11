@@ -1,7 +1,7 @@
 import type { GameState } from './types';
 
 /** Version of the save format written by this build. */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 interface SaveFile {
   saveVersion: number;
@@ -28,6 +28,8 @@ const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
       stars: [false, false, false],
     };
   },
+  // 2 → 3: events.
+  2: (old) => ({ ...(old as object), version: 3, event: null }),
 };
 
 export function serialize(state: GameState): string {
@@ -44,6 +46,7 @@ function looksLikeState(value: unknown): value is GameState {
     return false;
   }
   if (typeof s.goods !== 'object' || s.goods === null || !Array.isArray(s.stars)) return false;
+  if (s.event !== null && typeof s.event !== 'object') return false;
   const size = (s.width as number) * (s.height as number);
   return (
     Array.isArray(s.terrain) &&

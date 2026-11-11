@@ -54,4 +54,32 @@ describe('i18n', () => {
       }
     }
   });
+
+  it('has a text for every event, running or reported', () => {
+    const kinds = ['fair', 'pilgrims', 'goodHarvest', 'jugglers', 'harshWinter', 'dryWell'];
+    for (const lang of ['de', 'en'] as const) {
+      const t = strings(lang);
+      expect(Object.keys(t.event).sort()).toEqual([...kinds].sort());
+      expect(Object.keys(t.eventNow).sort()).toEqual(['dryWell', 'harshWinter', 'jugglers']);
+    }
+  });
+
+  it('explains every key in the help and every reason a building stands idle', () => {
+    for (const lang of ['de', 'en'] as const) {
+      const t = strings(lang);
+      expect(t.keys.length).toBeGreaterThanOrEqual(8);
+      expect(t.helpText.length).toBeGreaterThanOrEqual(6);
+      expect(Object.keys(t.idle).sort()).toEqual(
+        [
+          'construction',
+          'damaged',
+          'dry',
+          'needsPlaza',
+          'needsWater',
+          'noAccess',
+          'unstaffed',
+        ].sort(),
+      );
+    }
+  });
 });

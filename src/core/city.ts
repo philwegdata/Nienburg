@@ -79,7 +79,7 @@ export function validateCity(def: CityDef): string[] {
 export function newGame(def: CityDef, seed: number, balance: Balance): GameState {
   const { width, height, terrain } = parseCity(def);
   return {
-    version: 2,
+    version: 3,
     cityId: def.id,
     width,
     height,
@@ -96,6 +96,7 @@ export function newGame(def: CityDef, seed: number, balance: Balance): GameState
     peakPop: 0,
     stars: [false, false, false],
     buildPoints: balance.buildPointsPerTurn,
+    event: null,
     subsidies: 0,
     lastReport: null,
   };

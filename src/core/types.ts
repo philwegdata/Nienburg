@@ -186,6 +186,17 @@ export interface Balance {
   fire: { perRisk: number; maxChance: number; summerFactor: number; quietTurns: number };
   /** Share of the building cost charged for repairs. */
   repairShare: number;
+  events: {
+    /** Chance per turn that something happens, once the town is past its first years. */
+    chance: number;
+    quietTurns: number;
+    fairBase: number;
+    fairPerHead: number;
+    pilgrimGold: number;
+    harvestFood: number;
+    /** Factor on food demand in a harsh winter. */
+    harshWinterDemand: number;
+  };
   buildPointsPerTurn: number;
   /** Share of the building cost returned on demolition. */
   demolishRefund: number;
@@ -209,6 +220,37 @@ export interface Rules {
   buildings: Readonly<Record<string, BuildingDef>>;
   housing: readonly HousingLevel[];
   balance: Balance;
+}
+
+/** Things that happen now and then. None of them destroys anything. */
+export type EventKind =
+  /** A fair on the plaza brings gold at once. */
+  | 'fair'
+  /** Pilgrims leave gold at the town's places of faith. */
+  | 'pilgrims'
+  /** A rich harvest fills the stores. */
+  | 'goodHarvest'
+  /** Travelling jugglers entertain the whole town for the coming season. */
+  | 'jugglers'
+  /** The coming winter is harsh: people eat more. */
+  | 'harshWinter'
+  /** One well runs dry for the coming season. */
+  | 'dryWell';
+
+/** An event whose effect lasts through the current turn. */
+export interface ActiveEvent {
+  kind: 'jugglers' | 'harshWinter' | 'dryWell';
+  /** The well that ran dry. */
+  building?: number;
+}
+
+/** What the turn report says about an event. */
+export interface EventNews {
+  kind: EventKind;
+  gold?: number;
+  food?: number;
+  /** Where to look, if the event has a place. */
+  at?: Point;
 }
 
 export type HintKind =
@@ -263,6 +305,8 @@ export interface TurnReport {
   constructionCost: number;
   /** Kinds of craft goods houses could get this turn. */
   goodsTypes: number;
+  /** Something that happened at the end of this turn, or begins with the next one. */
+  event: EventNews | null;
   /** A building that caught fire this turn. */
   fire: { def: string; x: number; y: number } | null;
   /** Buildings finished this turn. */
@@ -276,7 +320,7 @@ export interface TurnReport {
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 2;
+  version: 3;
   cityId: string;
   width: number;
   height: number;
@@ -299,6 +343,8 @@ export interface GameState {
   stars: [boolean, boolean, boolean];
   /** Building capacity left this turn. */
   buildPoints: number;
+  /** An event in effect during the current turn. */
+  event: ActiveEvent | null;
   /** How often the sovereign had to cover an empty treasury. */
   subsidies: number;
   lastReport: TurnReport | null;

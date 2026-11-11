@@ -1,7 +1,6 @@
 import type { Strings } from './de';
 
 export const en: Strings = {
-  tagline: 'One town, one wall, no room to spare.',
   mapLabel: 'Town map',
   buildMenu: 'Build menu',
   toolSelect: 'Look',
@@ -94,6 +93,116 @@ export const en: Strings = {
   topLevel: 'Highest level reached.',
   readyToRise: 'All set. Will rise once the house is full.',
   declineSoon: 'Will decline soon if nothing changes.',
+  settings: 'Settings',
+  help: 'Help',
+  language: 'Language',
+  animations: 'Move smoke, flags and water',
+  sound: 'Play sounds',
+  saveGame: 'Saved game',
+  exportSave: 'Export',
+  importSave: 'Import',
+  importFailed: 'This file is not a Nienburg save, or it comes from a newer version.',
+  tutorialRestart: 'Restart tutorial',
+  skipTutorial: 'Skip tutorial',
+  next: 'Next',
+  finish: 'Done',
+  stepOf: 'Step {a} of {b}',
+  mapKeys:
+    'Arrow keys move the marker, Enter builds or selects, Shift+Enter sets the start of a row.',
+  eventNow: {
+    jugglers: 'Jugglers in town',
+    harshWinter: 'Harsh winter',
+    dryWell: 'A well has run dry',
+  },
+  event: {
+    fair: 'A fair on the plaza: +{gold} gold.',
+    pilgrims: 'A band of pilgrims has given {gold} gold.',
+    goodHarvest: 'A rich harvest: +{food} food.',
+    jugglers: 'Jugglers are in town. Everyone is well entertained for the coming season.',
+    harshWinter: 'A harsh winter is coming: people will eat more. Full stores help.',
+    dryWell: 'A well runs dry for the coming season. A second well nearby helps.',
+  },
+  tutorial: {
+    welcome: [
+      'Welcome to Nienburg',
+      'A town is to rise inside this wall. Space is scarce and will never grow – the art is to use it well. There is no hurry and nothing to lose.',
+    ],
+    street: [
+      'A street from the gate',
+      'Under “Basics”, pick the street and drag it from one of the two town gates a little way into town. People and goods come in along the paths.',
+    ],
+    houses: [
+      'House plots',
+      'Pick the house plot and drag a row of at least four plots right next to the street. Nobody moves in without a path next door.',
+    ],
+    endTurn: [
+      'The first season',
+      'Building costs gold, material and build points. Build points are renewed every turn. End the turn now – then the first people move in.',
+    ],
+    water: [
+      'Water',
+      'The huts want to grow, but they need water for that. Under “Supply”, build a well by the street. It serves houses along the paths, about six tiles far.',
+    ],
+    market: [
+      'Food',
+      'Food comes in through the gates, but someone has to hand it out. Under “Basics”, lay one tile of plaza and put a market stall right next to it by the street.',
+    ],
+    grow: [
+      'Let it grow',
+      'End a few turns. Once a hut is full and has water and food, it becomes a clay house. Tap a house to see what it lacks.',
+    ],
+    faith: [
+      'The half-timbered house',
+      'From 20 inhabitants on there are new buildings. For half-timbered houses you need a chapel and a fire watch under “Services” – and some green: plant trees behind the houses.',
+    ],
+    goal: [
+      'The first star',
+      'You now know the essentials. Keep building until 150 people live in Nienburg. Your goals are at the top left, and under “View” the map shows who is supplied. Enjoy!',
+    ],
+  },
+  helpText: [
+    [
+      'What it is about',
+      'You build a town inside a wall that never grows. Every town has three goals, each worth a star. There is no time pressure, no opponent, and nothing is ever lost for good.',
+    ],
+    [
+      'Turns',
+      'A turn is a season. During your turn you build as long as gold, material and build points last. “End turn” brings deliveries, taxes and new residents. The small numbers next to your stores show what the next turn will bring.',
+    ],
+    [
+      'Paths and reach',
+      'Every building needs a path next to it. Wells, market stalls, chapels and other services supply houses along the paths. Through alleys they get only half as far as along streets and plazas.',
+    ],
+    [
+      'Houses',
+      'A house rises when it is full and has everything the next level asks for. If something is missing for two turns, it declines again. From the burgher house on, neighbouring houses grow together.',
+    ],
+    [
+      'Neighbourhood',
+      'Trees, gardens, plazas and churches make a neighbourhood nicer; tannery, smithy and tavern make it worse. A house with fewer than two open sides counts as boxed in.',
+    ],
+    [
+      'Crafts',
+      'Weaver, smithy and brewery make goods. A market hall within reach hands them out to the better houses. Whatever does not fit into storage is sold.',
+    ],
+    [
+      'Fires and events',
+      'A building with no fire watch within reach may be blackened by fire; “Repair” puts it right. Now and then something happens: a fair, pilgrims, a harsh winter. The turn report tells you what to do.',
+    ],
+  ],
+  helpLevels: 'What the houses need',
+  helpKeys: 'Keys',
+  keys: [
+    ['Arrow keys', 'move the marker on the map (while the map has focus)'],
+    ['Enter', 'build, demolish or select'],
+    ['Shift+Enter', 'set the start of a row or area'],
+    ['W A S D', 'move the map'],
+    ['+ and −', 'zoom'],
+    ['R', 'rotate the building'],
+    ['Esc', 'put the tool away'],
+    ['1–9, 0', 'change the view'],
+    ['Ctrl+Z', 'undo'],
+  ],
   need: {
     road: 'path',
     water: 'water',
@@ -116,6 +225,7 @@ export const en: Strings = {
     unstaffed: 'Idle: there are not enough workers.',
     construction: 'Under construction: {n} more turns.',
     damaged: 'Blackened by a fire. Repair: {n} gold.',
+    dry: 'The well has run dry for this season.',
   },
   working: 'Operating.',
   houseLevel: ['Hut', 'Clay house', 'Half-timbered house', 'Burgher house', 'Patrician house'],

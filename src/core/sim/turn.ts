@@ -15,6 +15,7 @@ import {
   type TurnReport,
 } from '../types';
 import { analyze, houseCapacity, missingNeeds, type IdleReason } from './analyze';
+import { rollEvent } from './events';
 
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const;
 export type Season = (typeof SEASONS)[number];
@@ -173,14 +174,15 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   }
 
   // 3. Everyone eats; if the stores run dry, nobody counts as fed this season.
+  const harsh = state.event?.kind === 'harshWinter' ? balance.events.harshWinterDemand : 1;
   const demand = Math.ceil(
-    analysis.population * balance.foodPerHead * balance.seasonFoodDemand[season]!,
+    analysis.population * balance.foodPerHead * balance.seasonFoodDemand[season]! * harsh,
   );
   const hungry = demand > food;
   const foodEaten = hungry ? food : demand;
   food -= foodEaten;
   if (hungry) hints.add('hungry', centre);
-  const ctx = { hungry, goodsTypes };
+  const ctx = { hungry, goodsTypes, festive: state.event?.kind === 'jugglers' };
 
   for (const [id, reason] of analysis.idle) {
     const b = state.buildings[id];
@@ -286,7 +288,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   const subsidy = gold < 0;
   if (subsidy) gold = 0;
 
-  const next: GameState = {
+  const settled: GameState = {
     ...state,
     buildings: joined.buildings,
     occupancy: joined.occupancy,
@@ -299,6 +301,16 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     peakPop: Math.max(state.peakPop, popAfter),
     buildPoints: analysis.buildPoints,
     subsidies: state.subsidies + (subsidy ? 1 : 0),
+  };
+
+  // Now and then something happens: a windfall at once, or a change for the coming season.
+  const happening = rollEvent(settled, analysis, rules);
+  const next: GameState = {
+    ...settled,
+    rng: happening.rng,
+    gold: settled.gold + happening.gold,
+    food: Math.min(Math.max(analysis.foodCap, settled.food), settled.food + happening.food),
+    event: happening.active,
   };
 
   // 7. New buildings to choose from, and goals reached.
@@ -336,6 +348,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     tradeIncome,
     constructionCost,
     goodsTypes,
+    event: happening.news,
     fire,
     completed,
     unlocked,

@@ -21,5 +21,14 @@ export const BALANCE: Balance = {
   slowPaths: ['alley'],
   plazaPath: 'plaza',
   appeal: { pleasant: 1, fine: 5, stack: 2, boxedIn: -2 },
+  events: {
+    chance: 0.3,
+    quietTurns: 6,
+    fairBase: 10,
+    fairPerHead: 0.25,
+    pilgrimGold: 20,
+    harvestFood: 30,
+    harshWinterDemand: 1.4,
+  },
   fire: { perRisk: 0.01, maxChance: 0.4, summerFactor: 2, quietTurns: 8 },
 };

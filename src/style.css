@@ -442,7 +442,129 @@ main {
 
 .tools button.locked {
   border-style: dashed;
-  opacity: 0.55;
+  opacity: 0.72;
+}
+
+.tutorial {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.6rem;
+  width: min(22rem, calc(100% - 1.2rem));
+  padding: 0.6rem 0.8rem 0.7rem;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.35), transparent 60%),
+    rgba(239, 228, 204, 0.97);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  font-size: 0.92rem;
+}
+
+.tutorial h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.tutorial p {
+  margin: 0 0 0.4rem;
+}
+
+.tutorial .meta {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.tutorial .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.tutorial button {
+  min-height: 36px;
+}
+
+button.quiet {
+  box-shadow: none;
+}
+
+/* Buttons the tutorial points at. */
+.nudge {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  50% {
+    outline-offset: 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge {
+    animation: none;
+  }
+}
+
+#map:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: -3px;
+}
+
+.chip.event {
+  padding: 0 0.45rem;
+  color: var(--ink);
+  background: var(--gold);
+  border-radius: 999px;
+  font-size: 0.85em;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+}
+
+.option input[type='checkbox'] {
+  width: 1.3rem;
+  height: 1.3rem;
+  accent-color: var(--roof);
+}
+
+.option select {
+  min-height: 36px;
+  padding: 0.2rem 0.4rem;
+  font: inherit;
+  color: var(--ink);
+  background: #f5ecd8;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+}
+
+.sheet .actions.start {
+  justify-content: flex-start;
+  margin-top: 0.3rem;
+}
+
+.glossary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.9rem;
+  margin: 0;
+}
+
+.glossary dt {
+  font-weight: 700;
+}
+
+.glossary dd {
+  margin: 0;
+}
+
+.sheet p {
+  margin: 0.2rem 0 0.5rem;
 }
 
 @media (max-width: 640px) {
@@ -466,6 +588,17 @@ main {
   .chips {
     font-size: 0.82rem;
     gap: 0.1rem 0.7rem;
+  }
+  .tutorial {
+    width: calc(100% - 1.2rem);
+    font-size: 0.85rem;
+  }
+  .glossary {
+    grid-template-columns: 1fr;
+    gap: 0 0;
+  }
+  .glossary dd {
+    margin-bottom: 0.4rem;
   }
   .info {
     left: 0.6rem;

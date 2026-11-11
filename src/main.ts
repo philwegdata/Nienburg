@@ -2,8 +2,10 @@ import './style.css';
 import { CITIES } from './data/cities';
 import { pickLang, strings } from './data/i18n';
 import { startApp } from './ui/app';
+import { storedLang } from './ui/prefs';
 
-const lang = pickLang(navigator.language);
+// The player's own choice wins over the browser's language.
+const lang = storedLang() ?? pickLang(navigator.language);
 const t = strings(lang);
 document.documentElement.lang = lang;
 
@@ -14,7 +16,7 @@ function need<T extends Element>(selector: string): T {
 }
 
 const canvas = need<HTMLCanvasElement>('#map');
-canvas.setAttribute('aria-label', t.mapLabel);
+canvas.setAttribute('aria-label', `${t.mapLabel}. ${t.mapKeys}`);
 
 startApp(
   {
@@ -33,6 +35,9 @@ startApp(
     report: need<HTMLDialogElement>('#report'),
     goals: need<HTMLDialogElement>('#goals'),
     cities: need<HTMLDialogElement>('#cities'),
+    settings: need<HTMLDialogElement>('#settings'),
+    help: need<HTMLDialogElement>('#help'),
+    tutorial: need<HTMLElement>('#tutorial'),
   },
   CITIES,
   t,

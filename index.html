@@ -25,8 +25,9 @@
       <div id="resources" class="chips"></div>
     </header>
     <main>
-      <canvas id="map"></canvas>
+      <canvas id="map" tabindex="0" role="application"></canvas>
       <aside id="info" class="info" aria-live="polite"></aside>
+      <aside id="tutorial" class="tutorial" aria-live="polite" hidden></aside>
     </main>
     <footer class="toolbar">
       <div class="hintrow">
@@ -42,6 +43,8 @@
     <dialog id="report" class="sheet"></dialog>
     <dialog id="goals" class="sheet"></dialog>
     <dialog id="cities" class="sheet wide"></dialog>
+    <dialog id="settings" class="sheet"></dialog>
+    <dialog id="help" class="sheet wide"></dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

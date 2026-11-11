@@ -312,12 +312,12 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 5 – Ereignisse, Tutorial, Feinschliff
 
-- [ ] Ereignissystem aus 2.6
-- [ ] Geführtes Tutorial auf Nienburg (ca. 8 Schritte, überspringbar)
-- [ ] i18n vollständig (de/en), Sprachumschalter, Erkennung der Browsersprache
-- [ ] Einstellungen: Sprache, Ton, Animationen, Spielstand exportieren/importieren/löschen
-- [ ] Hilfeseite/Glossar im Spiel
-- [ ] Tastaturbedienung, Fokus-Stile, Kontrastprüfung
+- [x] Ereignissystem aus 2.6
+- [x] Geführtes Tutorial auf Nienburg (ca. 8 Schritte, überspringbar)
+- [x] i18n vollständig (de/en), Sprachumschalter, Erkennung der Browsersprache
+- [x] Einstellungen: Sprache, Ton, Animationen, Spielstand exportieren/importieren/löschen
+- [x] Hilfeseite/Glossar im Spiel
+- [x] Tastaturbedienung, Fokus-Stile, Kontrastprüfung
 
 **Abnahme:** Eine Person ohne Vorwissen kommt allein mit dem Tutorial zum ersten Stern.
 

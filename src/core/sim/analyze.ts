@@ -14,7 +14,14 @@ import {
 import { adjacentPaths, borderTiles, buildingsAlong, pathAt, pathDistances } from './coverage';
 
 export type IdleReason =
-  'noAccess' | 'needsPlaza' | 'needsWater' | 'unstaffed' | 'construction' | 'damaged';
+  | 'noAccess'
+  | 'needsPlaza'
+  | 'needsWater'
+  | 'unstaffed'
+  | 'construction'
+  | 'damaged'
+  /** A well that an event has dried up for this turn. */
+  | 'dry';
 
 /** Everything that follows from the current layout, before a turn is played. */
 export interface Analysis {
@@ -180,6 +187,10 @@ export function analyze(state: GameState, rules: Rules): Analysis {
       analysis.idle.set(b.id, 'damaged');
       continue;
     }
+    if (state.event?.kind === 'dryWell' && state.event.building === b.id) {
+      analysis.idle.set(b.id, 'dry');
+      continue;
+    }
     // Greenery and the like simply stand there.
     const passive =
       def.workers === 0 && !def.services && !def.delivery && !def.produces && !def.yields;
@@ -273,6 +284,8 @@ export interface NeedContext {
   hungry: boolean;
   /** Kinds of craft goods available this turn. */
   goodsTypes: number;
+  /** Jugglers are in town: everyone is entertained. */
+  festive?: boolean;
 }
 
 /** The needs of `level` that the house does not currently have met. */
@@ -301,6 +314,8 @@ export function missingNeeds(
         return appeal < rules.balance.appeal.pleasant;
       case 'appeal2':
         return appeal < rules.balance.appeal.fine;
+      case 'fun':
+        return !ctx.festive && !analysis.covered.fun.has(houseId);
       default:
         return !analysis.covered[need].has(houseId);
     }

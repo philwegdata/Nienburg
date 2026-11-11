@@ -3,9 +3,11 @@ import { newGame, parseCity } from '../core/city';
 import { goalProgress } from '../core/goals';
 import { inBounds, indexOf } from '../core/grid';
 import { commitDemolish, planBuild, planDemolish, type BuildPlan } from '../core/planning';
+import { serialize, deserialize } from '../core/save';
 import { analyze, houseCapacity, missingNeeds, type Analysis } from '../core/sim/analyze';
 import { adjacentPaths, pathDistances } from '../core/sim/coverage';
 import { endTurn, forecast, seasonOf, yearOf } from '../core/sim/turn';
+import { TUTORIAL_STEPS, tutorialProgress, type TutorialStepId } from '../core/tutorial';
 import {
   GOODS,
   SERVICES,
@@ -26,7 +28,16 @@ import { fill, plural, type Strings } from '../data/i18n';
 import { RULES } from '../data/rules';
 import { fitCamera, gridToWorld, pickTile, zoomAt, type Camera } from '../render/iso';
 import { buildingIcon, Scene, type Overlay } from '../render/renderer';
+import { button, node } from './dom';
 import { icon, type IconName } from './icons';
+import { showHelp, showSettings, stepLabel } from './panels';
+import {
+  motionOff,
+  storeTutorialStep,
+  tutorialKnown,
+  tutorialStep as storedTutorialStep,
+} from './prefs';
+import { play } from './sound';
 import { adoptLegacySave, bestStars, lastCity, loadGame, saveGame } from './storage';
 
 type Tool =
@@ -78,30 +89,29 @@ export interface Elements {
   report: HTMLDialogElement;
   goals: HTMLDialogElement;
   cities: HTMLDialogElement;
+  settings: HTMLDialogElement;
+  help: HTMLDialogElement;
+  tutorial: HTMLElement;
 }
+
+/** Which buttons a tutorial step points at. */
+const NUDGES: Partial<
+  Record<TutorialStepId, { tools?: BuildingId[]; end?: boolean; menu?: boolean }>
+> = {
+  street: { tools: ['street'] },
+  houses: { tools: ['house'] },
+  endTurn: { end: true },
+  water: { tools: ['well'] },
+  market: { tools: ['plaza', 'stall'] },
+  grow: { end: true },
+  faith: { tools: ['chapel', 'firewatch', 'tree'] },
+  goal: { menu: true },
+};
 
 type Gesture =
   | { kind: 'pan'; last: Point; moved: number; clickSelects: boolean; cancelsTool: boolean }
   | { kind: 'paint'; from: Point }
   | { kind: 'pinch'; dist: number; mid: Point };
-
-function node<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  text?: string,
-  cls?: string,
-): HTMLElementTagNameMap[K] {
-  const n = document.createElement(tag);
-  if (text !== undefined) n.textContent = text;
-  if (cls) n.className = cls;
-  return n;
-}
-
-function button(text: string, onClick: () => void, cls?: string): HTMLButtonElement {
-  const b = node('button', text, cls);
-  b.type = 'button';
-  b.addEventListener('click', onClick);
-  return b;
-}
 
 const starText = (stars: readonly boolean[]) => stars.map((s) => (s ? '★' : '☆')).join('');
 
@@ -137,9 +147,19 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   let dirty = false;
   const pointers = new Map<number, Point>();
   const scene = new Scene((id) => BUILDINGS[id]?.category === 'path');
-  const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const calm = () => motionOff() || reducedMotion.matches;
+  /** Tile marker moved with the arrow keys, and where a keyboard-drawn row starts. */
+  let cursor: Point | null = null;
+  let anchor: Point | null = null;
+  /** Step of the tutorial, or null when it is not running. */
+  let tutorial: number | null = null;
 
-  const needCtx = () => ({ hungry: outlook.hungry, goodsTypes: outlook.goodsTypes });
+  const needCtx = () => ({
+    hungry: outlook.hungry,
+    goodsTypes: outlook.goodsTypes,
+    festive: state.event?.kind === 'jugglers',
+  });
   const nameOf = (defId: string) => t.building[defId as BuildingId] ?? defId;
 
   // ---------- drawing ----------
@@ -153,17 +173,18 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const overlay: Overlay = { warnings, preview: [], highlight: null, shade };
       if (plan) overlay.preview = plan.tiles;
       else if (demolition) overlay.preview = demolition.map((p) => ({ ...p, ok: false }));
-      if (tool.kind === 'select') overlay.highlight = selected;
+      if (cursor) overlay.highlight = cursor;
+      else if (tool.kind === 'select') overlay.highlight = selected;
       else if (!plan && !demolition) overlay.highlight = hover;
       // With reduced motion the picture stands still: smoke and flags are drawn, but frozen.
-      const time = calm.matches ? 0 : performance.now() / 1000;
+      const time = calm() ? 0 : performance.now() / 1000;
       scene.render(ctx!, state, cam, screen, overlay, time);
     });
   }
 
   // Smoke, flags and water move gently; a dozen frames a second is plenty for that.
   window.setInterval(() => {
-    if (!calm.matches && !document.hidden) requestDraw();
+    if (!calm() && !document.hidden) requestDraw();
   }, 80);
 
   function resize(first = false): void {
@@ -237,6 +258,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     updateResources();
     updateInfo();
     updateLocks();
+    updateTutorial();
     el.undo.disabled = history.length === 0;
     el.menu.textContent = `${starText(state.stars)} ${city.name[lang]}`;
     requestDraw();
@@ -245,6 +267,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   /** Applies a planning-phase change that can be undone until the turn ends. */
   function change(next: GameState): void {
     if (next === state) return;
+    play(
+      Object.keys(next.buildings).length < Object.keys(state.buildings).length ? 'remove' : 'build',
+    );
     history.push(state);
     state = next;
     saveGame(state);
@@ -266,12 +291,16 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     clearPreview();
     saveGame(state);
     refresh();
-    if (state.lastReport) showReport(state.lastReport);
+    if (state.lastReport) {
+      play(state.lastReport.newStars.length > 0 ? 'star' : 'turn');
+      showReport(state.lastReport);
+    }
   }
 
   function openCity(def: CityDef, restart: boolean): void {
     city = def;
     state = (restart ? null : loadGame(def.id)) ?? fresh(def);
+    startTutorialIfDue();
     history = [];
     selected = null;
     saveGame(state);
@@ -330,6 +359,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     const date = `${t.season[seasonOf(state.turn)]}, ${t.year} ${yearOf(state.turn)}`;
     el.date.textContent = date;
     // On narrow screens the title bar has no room for the date, so it leads the chips instead.
+    if (state.event) chips.push(node('span', t.eventNow[state.event.kind], 'chip event'));
     el.resources.replaceChildren(node('span', date, 'chip narrow-only'), ...chips);
   }
 
@@ -452,7 +482,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   function showShortage(reason: string | null | undefined): boolean {
     const known = reason === 'noGold' || reason === 'noMaterials' || reason === 'noBuildPoints';
     el.hint.classList.toggle('warn', known);
-    if (known) el.hint.textContent = t.shortOf[reason];
+    if (known) {
+      el.hint.textContent = t.shortOf[reason];
+      play('no');
+    }
     return known;
   }
 
@@ -484,6 +517,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       line(`★ ${fill(t.report.star, { goal: goalText(city.goals[i]!) })}`, 'news');
     }
     for (const def of r.completed) line(fill(t.report.completed, { name: nameOf(def) }), 'news');
+    if (r.event && !r.event.at) {
+      line(
+        fill(t.event[r.event.kind], { gold: r.event.gold ?? 0, food: r.event.food ?? 0 }),
+        'news',
+      );
+    }
     if (r.unlocked.length > 0) {
       line(fill(t.report.unlocked, { names: r.unlocked.map(nameOf).join(', ') }), 'news');
     }
@@ -512,8 +551,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       updateInfo();
       requestDraw();
     };
-    if (r.hints.length > 0 || r.fire) {
+    const placed = r.event?.at ? r.event : null;
+    if (r.hints.length > 0 || r.fire || placed) {
       const hints = node('div', undefined, 'hints');
+      if (placed) {
+        const text = fill(t.event[placed.kind], { gold: placed.gold ?? 0, food: placed.food ?? 0 });
+        hints.append(button(text, () => jump(placed.at!)));
+      }
       if (r.fire) {
         const fire = r.fire;
         hints.append(button(fill(t.report.fire, { name: nameOf(fire.def) }), () => jump(fire)));
@@ -552,14 +596,17 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     });
     const actions = node('div', undefined, 'actions');
     actions.append(
-      button(t.restart, () => {
-        if (!window.confirm(t.restartConfirm)) return;
-        el.goals.close();
-        openCity(city, true);
-      }),
       button(t.cities, () => {
         el.goals.close();
         showCities();
+      }),
+      button(t.help, () => {
+        el.goals.close();
+        showHelp(el.help, t, RULES);
+      }),
+      button(t.settings, () => {
+        el.goals.close();
+        openSettings();
       }),
       button(t.close, () => el.goals.close(), 'primary'),
     );
@@ -598,6 +645,93 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.cities.showModal();
   }
 
+  function openSettings(): void {
+    showSettings(el.settings, t, lang, {
+      exportSave() {
+        const blob = new Blob([serialize(state)], { type: 'application/json' });
+        const link = node('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `nienburg-${city.id}-${yearOf(state.turn)}.json`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      },
+      importSave(text) {
+        const loaded = deserialize(
+          text,
+          cities.map((c) => c.id),
+        );
+        const def = loaded && cities.find((c) => c.id === loaded.cityId);
+        if (!loaded || !def) return false;
+        saveGame(loaded);
+        openCity(def, false);
+        return true;
+      },
+      restart: () => openCity(city, true),
+      restartTutorial() {
+        storeTutorialStep(0);
+        const home = cities.find((c) => c.id === 'nienburg') ?? city;
+        if (home.id === city.id) {
+          startTutorialIfDue();
+          refresh();
+        } else openCity(home, false);
+      },
+      changed: requestDraw,
+    });
+  }
+
+  // ---------- tutorial ----------
+
+  /** The tutorial runs on Nienburg only, until it is finished or skipped. */
+  function startTutorialIfDue(): void {
+    // Someone who already has a town going does not need the first steps explained.
+    if (!tutorialKnown() && state.turn > 0) storeTutorialStep(null);
+    tutorial = city.id === 'nienburg' ? storedTutorialStep() : null;
+  }
+
+  function setTutorial(step: number | null): void {
+    tutorial = step !== null && step >= TUTORIAL_STEPS.length ? null : step;
+    storeTutorialStep(tutorial);
+    updateTutorial();
+  }
+
+  function updateTutorial(): void {
+    for (const marked of document.querySelectorAll('.nudge')) marked.classList.remove('nudge');
+    if (tutorial !== null) {
+      const reached = tutorialProgress(tutorial, state, analysis, RULES);
+      if (reached !== tutorial) {
+        tutorial = reached >= TUTORIAL_STEPS.length ? null : reached;
+        storeTutorialStep(tutorial);
+      }
+    }
+    const step = tutorial === null ? undefined : TUTORIAL_STEPS[tutorial];
+    el.tutorial.hidden = !step;
+    if (!step || tutorial === null) return;
+
+    const [title, body] = t.tutorial[step.id];
+    const last = tutorial === TUTORIAL_STEPS.length - 1;
+    const actions = node('div', undefined, 'actions');
+    if (!last) actions.append(button(t.skipTutorial, () => setTutorial(null), 'quiet'));
+    if (!step.done) actions.append(button(t.next, () => setTutorial(tutorial! + 1), 'primary'));
+    if (last) actions.append(button(t.finish, () => setTutorial(null), 'primary'));
+    el.tutorial.replaceChildren(
+      node('p', stepLabel(t, tutorial, TUTORIAL_STEPS.length), 'meta'),
+      node('h2', title),
+      node('p', body),
+      actions,
+    );
+
+    // Point at the buttons this step is about.
+    const nudge = NUDGES[step.id];
+    if (nudge?.end) el.end.classList.add('nudge');
+    if (nudge?.menu) el.menu.classList.add('nudge');
+    for (const b of toolButtons) {
+      if (b.tool.kind !== 'build' || !nudge?.tools?.includes(b.tool.def)) continue;
+      b.node.classList.add('nudge');
+      const tab = tabButtons.get(GROUP_OF[BUILDINGS[b.tool.def]!.category]);
+      if (b.node.hidden) tab?.classList.add('nudge');
+    }
+  }
+
   // ---------- toolbar ----------
 
   const toolButtons: { tool: Tool; node: HTMLButtonElement }[] = [];
@@ -622,12 +756,14 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       if (b.tool.kind !== 'build') continue;
       b.node.hidden = GROUP_OF[BUILDINGS[b.tool.def]!.category] !== group;
     }
+    updateTutorial();
   }
 
   function setTool(next: Tool): void {
     tool = next;
     rot = 0;
     hover = null;
+    anchor = null;
     plan = null;
     demolition = null;
     rangeShade = new Map();
@@ -767,6 +903,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   }
 
   el.canvas.addEventListener('pointerdown', (e) => {
+    cursor = null;
+    anchor = null;
     el.canvas.setPointerCapture(e.pointerId);
     const pos = localPos(e);
     pointers.set(e.pointerId, pos);
@@ -882,7 +1020,57 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     { passive: false },
   );
 
-  const dialogOpen = () => el.report.open || el.goals.open || el.cities.open;
+  const dialogOpen = () =>
+    el.report.open || el.goals.open || el.cities.open || el.settings.open || el.help.open;
+
+  // ---------- keyboard on the map ----------
+
+  /** Moves the tile marker and keeps it on screen. */
+  function moveCursor(dx: number, dy: number): void {
+    const from = cursor ??
+      selected ?? { x: Math.floor(state.width / 2), y: Math.floor(state.height / 2) };
+    cursor = {
+      x: Math.min(state.width - 1, Math.max(0, from.x + dx)),
+      y: Math.min(state.height - 1, Math.max(0, from.y + dy)),
+    };
+    const w = gridToWorld(cursor.x + 0.5, cursor.y + 0.5);
+    const sx = w.x * cam.zoom + cam.x;
+    const sy = w.y * cam.zoom + cam.y;
+    if (sx < 40 || sy < 40 || sx > screen.w - 40 || sy > screen.h - 40) centreOn(cursor);
+    if (tool.kind === 'select') {
+      selected = cursor;
+      updateInfo();
+    } else {
+      refreshPreview(anchor ?? cursor, cursor);
+    }
+    requestDraw();
+  }
+
+  /** Enter on the map: what a click on the marked tile would do. */
+  function actAtCursor(setAnchor: boolean): void {
+    if (!cursor) return moveCursor(0, 0);
+    if (tool.kind === 'select') {
+      selected = cursor;
+      updateInfo();
+    } else if (setAnchor) {
+      anchor = cursor;
+      refreshPreview(anchor, cursor);
+    } else {
+      refreshPreview(anchor ?? cursor, cursor);
+      anchor = null;
+      const shortOf = commit(cursor);
+      refreshPreview(cursor, cursor);
+      if (shortOf) showShortage(shortOf);
+    }
+    requestDraw();
+  }
+
+  el.canvas.addEventListener('blur', () => {
+    cursor = null;
+    anchor = null;
+    clearPreview();
+    requestDraw();
+  });
 
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
@@ -900,6 +1088,26 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const options = [...el.view.options].map((o) => o.value as View);
       setView(options[Number(key)] ?? 'normal');
       return;
+    }
+    if (document.activeElement === el.canvas) {
+      // With the map focused, the arrow keys walk a marker from tile to tile.
+      const moves: Record<string, [number, number]> = {
+        arrowleft: [-1, 0],
+        arrowright: [1, 0],
+        arrowup: [0, -1],
+        arrowdown: [0, 1],
+      };
+      const move = moves[key];
+      if (move) {
+        e.preventDefault();
+        moveCursor(move[0], move[1]);
+        return;
+      }
+      if (key === 'enter' || key === ' ') {
+        e.preventDefault();
+        actAtCursor(e.shiftKey);
+        return;
+      }
     }
     if (key === 'r') rotate();
     else if (key === 'escape') setTool({ kind: 'select' });
@@ -922,6 +1130,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   el.menu.addEventListener('click', showGoals);
 
   buildToolbar();
+  startTutorialIfDue();
   showGroup('basics');
   setTool({ kind: 'select' });
   resize(true);

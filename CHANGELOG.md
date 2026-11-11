@@ -91,3 +91,28 @@
   - Statt einzelner Sprites pro Gebäude werden ganze Ebenen zwischengespeichert. Das erfüllt
     denselben Zweck (kein Neuzeichnen pro Bild) und braucht kein Sprite-Raster.
   - Die Bildrate auf einem echten Mittelklasse-Handy ist nicht gemessen, nur im Testbrowser.
+
+## Phase 5 – Ereignisse, Tutorial, Feinschliff
+
+- Ereignisse: Jahrmarkt, Pilgerzug und reiche Ernte bringen sofort etwas; Gaukler, strenger
+  Winter und ein versiegter Brunnen gelten für die kommende Jahreszeit. Höchstens eines pro
+  Runde, keines in den ersten anderthalb Jahren, und der Rundenbericht kündigt es vorher an.
+- Tutorial auf Nienburg in neun Schritten: Jeder Schritt erkennt selbst, wann er erledigt ist,
+  und hebt die passenden Knöpfe hervor. Überspringbar, in den Einstellungen neu startbar.
+- Einstellungen: Sprache, Animationen, Töne, Spielstand exportieren, importieren und neu beginnen
+- Hilfe mit den Regeln in Kurzform, den Anforderungen aller Hausstufen und der Tastenbelegung
+- Leise Töne beim Bauen, am Rundenende und bei einem Stern; standardmäßig aus
+- Tastatur: Hat die Karte den Fokus, bewegen die Pfeiltasten eine Marke von Feld zu Feld,
+  Eingabe baut oder wählt aus, Umschalt+Eingabe setzt den Anfang einer Reihe
+- Spielstände aus Phase 3 und 4 werden übernommen
+- Entscheidungen:
+  - Ereignisse mit Folgen (strenger Winter, versiegter Brunnen) werden eine Runde im Voraus
+    angekündigt, damit man reagieren kann. Der Schwelbrand bleibt die Brandregel aus Phase 3.
+  - Wer schon eine Stadt begonnen hat, bekommt das Tutorial nicht ungefragt.
+  - „Neu beginnen“ steht jetzt in den Einstellungen statt im Ziele-Dialog.
+  - Kontraste sind nachgerechnet, nicht mit einem Werkzeug gemessen: helle Schrift auf Holz
+    etwa 7:1, Grün und Rot auf Pergament etwa 4,6:1 und 5,9:1. Gesperrte Knöpfe sind weniger
+    stark ausgegraut als zuvor.
+  - Die Abnahme „eine Person ohne Vorwissen“ ist durch einen Test ersetzt, der genau das tut,
+    was die Tutorial-Karten sagen, und so den ersten Stern erreicht. Ein Test mit einem
+    echten Menschen steht aus.

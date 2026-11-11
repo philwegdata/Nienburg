@@ -1,5 +1,4 @@
 export const de = {
-  tagline: 'Eine Stadt, eine Mauer, kein Platz zu verschenken.',
   mapLabel: 'Stadtkarte',
   buildMenu: 'Baumenü',
   toolSelect: 'Ansehen',
@@ -92,6 +91,118 @@ export const de = {
   topLevel: 'Höchste Stufe erreicht.',
   readyToRise: 'Alles da. Steigt auf, sobald das Haus voll bewohnt ist.',
   declineSoon: 'Steigt bald ab, wenn sich nichts ändert.',
+  settings: 'Einstellungen',
+  help: 'Hilfe',
+  language: 'Sprache',
+  animations: 'Rauch, Fahnen und Wasser bewegen',
+  sound: 'Töne abspielen',
+  saveGame: 'Spielstand',
+  exportSave: 'Exportieren',
+  importSave: 'Importieren',
+  importFailed:
+    'Diese Datei ist kein Spielstand von Nienburg, oder sie stammt aus einer neueren Version.',
+  tutorialRestart: 'Tutorial neu starten',
+  skipTutorial: 'Tutorial überspringen',
+  next: 'Weiter',
+  finish: 'Fertig',
+  stepOf: 'Schritt {a} von {b}',
+  mapKeys:
+    'Pfeiltasten bewegen die Marke, Eingabe baut oder wählt aus, Umschalt+Eingabe setzt den Anfang einer Reihe.',
+  eventNow: {
+    jugglers: 'Gaukler in der Stadt',
+    harshWinter: 'Strenger Winter',
+    dryWell: 'Ein Brunnen ist versiegt',
+  },
+  event: {
+    fair: 'Jahrmarkt auf dem Platz: +{gold} Gold.',
+    pilgrims: 'Ein Pilgerzug hat {gold} Gold gespendet.',
+    goodHarvest: 'Reiche Ernte: +{food} Nahrung.',
+    jugglers: 'Gaukler sind in der Stadt. In der kommenden Jahreszeit sind alle gut unterhalten.',
+    harshWinter: 'Ein strenger Winter steht bevor: Die Leute essen mehr. Volle Speicher helfen.',
+    dryWell:
+      'Ein Brunnen versiegt für die kommende Jahreszeit. Ein zweiter Brunnen in der Nähe hilft.',
+  },
+  tutorial: {
+    welcome: [
+      'Willkommen in Nienburg',
+      'Innerhalb dieser Mauer soll eine Stadt entstehen. Der Platz ist knapp und wird nie mehr – die Kunst ist, ihn gut zu nutzen. Es gibt keine Eile und nichts zu verlieren.',
+    ],
+    street: [
+      'Eine Straße vom Tor',
+      'Wähle unter „Grundlagen“ die Straße und ziehe sie von einem der beiden Stadttore ein Stück in die Stadt. Über Wege kommen Menschen und Waren herein.',
+    ],
+    houses: [
+      'Wohnparzellen',
+      'Wähle die Wohnparzelle und ziehe eine Reihe von mindestens vier Parzellen direkt neben die Straße. Ohne Weg nebenan zieht niemand ein.',
+    ],
+    endTurn: [
+      'Die erste Jahreszeit',
+      'Bauen kostet Gold, Material und Baupunkte. Die Baupunkte gibt es jede Runde neu. Beende jetzt die Runde – dann ziehen die ersten Leute ein.',
+    ],
+    water: [
+      'Wasser',
+      'Die Hütten wollen wachsen, brauchen dafür aber Wasser. Baue unter „Versorgung“ einen Brunnen an die Straße. Er versorgt Häuser entlang der Wege, etwa sechs Felder weit.',
+    ],
+    market: [
+      'Nahrung',
+      'Nahrung kommt durch die Tore, aber jemand muss sie verteilen. Lege unter „Grundlagen“ ein Feld Platz an und stelle direkt daneben einen Marktstand an die Straße.',
+    ],
+    grow: [
+      'Wachsen lassen',
+      'Beende ein paar Runden. Sobald eine Hütte voll bewohnt ist und Wasser und Nahrung hat, wird sie zum Lehmhaus. Tippe ein Haus an, um zu sehen, was ihm fehlt.',
+    ],
+    faith: [
+      'Das Fachwerkhaus',
+      'Ab 20 Einwohnern gibt es neue Gebäude. Für Fachwerkhäuser brauchst du unter „Dienste“ eine Kapelle und eine Brandwache – und etwas Grün: Pflanze Bäume hinter die Häuser.',
+    ],
+    goal: [
+      'Der erste Stern',
+      'Du kennst jetzt das Wichtigste. Baue weiter, bis 150 Menschen in Nienburg leben. Oben links siehst du deine Ziele, und unter „Ansicht“ zeigt die Karte, wer versorgt ist. Viel Freude!',
+    ],
+  },
+  helpText: [
+    [
+      'Worum es geht',
+      'Du baust eine Stadt innerhalb einer Mauer, die nie größer wird. Jede Stadt hat drei Ziele; für jedes gibt es einen Stern. Es gibt keinen Zeitdruck, keinen Gegner und nichts, was endgültig verloren geht.',
+    ],
+    [
+      'Runden',
+      'Eine Runde ist eine Jahreszeit. In deiner Runde baust du, solange Gold, Material und Baupunkte reichen. „Runde beenden“ bringt Lieferungen, Steuern und neue Einwohner. Die kleinen Zahlen neben den Vorräten zeigen, was die nächste Runde bringt.',
+    ],
+    [
+      'Wege und Reichweite',
+      'Jedes Gebäude braucht einen Weg nebenan. Brunnen, Marktstände, Kapellen und andere Dienste versorgen Häuser entlang der Wege. Durch Gassen kommen sie nur halb so weit wie über Straßen und Plätze.',
+    ],
+    [
+      'Wohnhäuser',
+      'Ein Haus steigt auf, wenn es voll bewohnt ist und alles hat, was die nächste Stufe verlangt. Fehlt zwei Runden lang etwas, steigt es wieder ab. Ab dem Bürgerhaus wachsen Nachbarhäuser zusammen.',
+    ],
+    [
+      'Wohnlage',
+      'Bäume, Gärten, Plätze und Kirchen heben die Wohnlage, Gerberei, Schmiede und Schenke senken sie. Ein Haus mit weniger als zwei freien Seiten gilt als eingezwängt.',
+    ],
+    [
+      'Handwerk',
+      'Weberei, Schmiede und Brauerei stellen Waren her. Eine Markthalle in Reichweite verteilt sie an die besseren Häuser. Was nicht ins Lager passt, wird verkauft.',
+    ],
+    [
+      'Brände und Ereignisse',
+      'Ein Gebäude ohne Brandwache in Reichweite kann rußgeschwärzt werden; mit „Reparieren“ ist es wieder in Ordnung. Ab und zu geschieht etwas: ein Jahrmarkt, Pilger, ein strenger Winter. Der Rundenbericht sagt, was zu tun ist.',
+    ],
+  ],
+  helpLevels: 'Was die Häuser brauchen',
+  helpKeys: 'Tasten',
+  keys: [
+    ['Pfeiltasten', 'Marke auf der Karte bewegen (wenn die Karte den Fokus hat)'],
+    ['Eingabe', 'bauen, abreißen oder auswählen'],
+    ['Umschalt+Eingabe', 'Anfang einer Reihe oder Fläche setzen'],
+    ['W A S D', 'Karte verschieben'],
+    ['+ und −', 'zoomen'],
+    ['R', 'Gebäude drehen'],
+    ['Esc', 'Werkzeug ablegen'],
+    ['1–9, 0', 'Ansicht wechseln'],
+    ['Strg+Z', 'rückgängig'],
+  ],
   need: {
     road: 'Weg',
     water: 'Wasser',
@@ -114,6 +225,7 @@ export const de = {
     unstaffed: 'Außer Betrieb: Es fehlen Arbeitskräfte.',
     construction: 'Im Bau: noch {n} Runden.',
     damaged: 'Rußgeschwärzt nach einem Brand. Reparatur: {n} Gold.',
+    dry: 'Der Brunnen ist für diese Jahreszeit versiegt.',
   },
   working: 'In Betrieb.',
   houseLevel: ['Hütte', 'Lehmhaus', 'Fachwerkhaus', 'Bürgerhaus', 'Patrizierhaus'],

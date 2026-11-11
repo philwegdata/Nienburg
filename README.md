@@ -5,7 +5,7 @@ Der Platz innerhalb der Stadtmauer ist von Anfang an begrenzt – die Kunst lieg
 
 **Spielen:** https://philwegdata.github.io/Nienburg/
 
-Stand: Phase 4 – zwei Städte (Nienburg und Carcassonne) mit je drei Sterne-Zielen, 30 Gebäude, fünf Wohnhaus-Stufen, gezeichnete Gebäude mit Jahreszeiten, Rauch und Fahnen. Als Nächstes folgen Ereignisse und ein Tutorial (Phase 5).
+Stand: Phase 5 – zwei Städte (Nienburg und Carcassonne), 30 Gebäude, fünf Wohnhaus-Stufen, Jahreszeiten und Ereignisse, ein geführtes Tutorial, Einstellungen und Hilfe. Als Nächstes folgt das Balancing (Phase 6).
 
 ## Lokal starten
 
