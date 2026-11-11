@@ -143,8 +143,12 @@ export interface BuildingDef {
   services?: { kind: ServiceKind; range: number }[];
   /** Only offered in these cities (by id). */
   cities?: string[];
-  /** Built on canal water instead of land. */
+  /** Built on canal water instead of land: on a canal of the map, or over a dug one. */
   onCanal?: boolean;
+  /** A dug canal: carries water from the town wall to the houses along it. */
+  canal?: boolean;
+  /** Lies flat on the ground like a path, without being one. */
+  flat?: boolean;
   /** Only operates next to a plaza tile. */
   needsPlaza?: boolean;
   /** Only operates within reach of a well or cistern. */
@@ -208,6 +212,8 @@ export interface Building {
   construction?: number;
   /** Blackened by a fire; out of use until repaired. */
   damaged?: boolean;
+  /** A bridge built over a dug canal, which reappears when the bridge is removed. */
+  overCanal?: boolean;
 }
 
 export interface HousingLevel {
@@ -236,6 +242,10 @@ export interface Balance {
   fire: { perRisk: number; maxChance: number; summerFactor: number; quietTurns: number };
   /** Share of the building cost charged for repairs. */
   repairShare: number;
+  /** How many tiles around a flowing canal get water from it. */
+  canalReach: number;
+  /** Price of a tile of land outside the walls: `base` plus `step` for each one already bought. */
+  land: { base: number; step: number };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -322,6 +332,7 @@ export type HintKind =
   | 'needsPlaza'
   | 'needsWater'
   | 'noGate'
+  | 'dryCanal'
   | 'damaged'
   | 'stalled'
   | 'hungry';
@@ -375,7 +386,7 @@ export interface TurnReport {
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 3;
+  version: 4;
   cityId: string;
   width: number;
   height: number;
@@ -398,6 +409,8 @@ export interface GameState {
   stars: [boolean, boolean, boolean];
   /** Building capacity left this turn. */
   buildPoints: number;
+  /** Tiles of land bought outside the walls so far. */
+  landBought: number;
   /** An event in effect during the current turn. */
   event: ActiveEvent | null;
   /** How often the sovereign had to cover an empty treasury. */

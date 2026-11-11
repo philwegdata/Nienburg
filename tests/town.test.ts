@@ -110,8 +110,9 @@ describe('unlocking', () => {
   });
 
   it('remembers the peak even if people move away again', () => {
-    let state = fillWith({ ...field(), peakPop: 0 }, 'street', 1, 2, 10, 2);
-    state = fillWith(state, 'house', 1, 1, 10, 1);
+    // Away from the gate at (1, 0), which would itself count as a path.
+    let state = fillWith({ ...field(), peakPop: 0 }, 'street', 3, 2, 12, 2);
+    state = fillWith(state, 'house', 3, 1, 12, 1);
     state = turns(state, 3);
     expect(state.peakPop).toBe(40);
     expect(state.lastReport?.unlocked).toEqual([]);
@@ -476,7 +477,8 @@ describe('saves from before craft goods existed', () => {
     const restored = deserialize(JSON.stringify({ saveVersion: 1, state: old }), ['test']);
     expect(restored).not.toBeNull();
     expect(restored).toMatchObject({
-      version: 3,
+      version: 4,
+      landBought: 0,
       event: null,
       goods: { cloth: 0, tools: 0, beer: 0 },
       peakPop: population(state),

@@ -39,6 +39,10 @@ export interface Analysis {
   appeal: number[];
   /** Appeal as felt by each house, including the malus for being boxed in. */
   houseAppeal: Map<number, number>;
+  /** Canal tiles (by index) that carry water. */
+  flowing: Set<number>;
+  /** Dug canals that reach neither the wall nor another flowing canal. */
+  dryCanals: Set<number>;
   /** Houses with fewer than two open sides. */
   boxedIn: Set<number>;
   population: number;
@@ -127,8 +131,9 @@ function openSides(state: GameState, rules: Rules, b: Building): number {
     if (terrain === 'canal') open++;
     if (terrain !== 'buildable') continue;
     const other = buildingAt(state, t.x, t.y);
-    const category = other && rules.buildings[other.def]?.category;
-    if (!other || category === 'path' || category === 'green') open++;
+    const def = other && rules.buildings[other.def];
+    // Paths, greenery and canals leave a house room to breathe.
+    if (!other || def?.category === 'path' || def?.category === 'green' || def?.canal) open++;
   }
   return open;
 }
@@ -150,6 +155,8 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     reach: kindSets(() => new Set<number>()),
     appeal: appealGrid(state, rules),
     houseAppeal: new Map(),
+    flowing: new Set(),
+    dryCanals: new Set(),
     boxedIn: new Set(),
     population: pop,
     workforce: Math.floor(pop * balance.workerShare),
@@ -254,6 +261,7 @@ export function analyze(state: GameState, rules: Rules): Analysis {
 
   // Pass 2: water first, because bath houses depend on it.
   for (const entry of running) spread(entry, true);
+  canalWater(state, rules, analysis, all);
   const operating = running.filter(({ b, def }) => {
     if (def.needsWater && !analysis.covered.water.has(b.id)) {
       analysis.idle.set(b.id, 'needsWater');
@@ -318,6 +326,70 @@ function tilesOf(b: Building): Point[] {
 /** Whether two buildings share an edge. */
 function touching(a: Building, b: Building): boolean {
   return borderTiles(a).some((t) => t.x >= b.x && t.x < b.x + b.w && t.y >= b.y && t.y < b.y + b.h);
+}
+
+/**
+ * Canals carry water from the town wall (or from a canal of the map) along their whole length,
+ * and everything within a few tiles of flowing water is supplied.
+ */
+function canalWater(state: GameState, rules: Rules, analysis: Analysis, all: Building[]): void {
+  const { width, height } = state;
+  const dug = new Map<number, Building>();
+  for (const b of all) {
+    if (rules.buildings[b.def]?.canal || b.overCanal) dug.set(indexOf(width, b.x, b.y), b);
+  }
+  const isCanal = (i: number) => state.terrain[i] === 'canal' || dug.has(i);
+  const feeds = (t: string | undefined) =>
+    t === 'wall' || t === 'tower' || t === 'gate' || t === 'water' || t === 'canal';
+
+  const queue: number[] = [];
+  const start = (i: number) => {
+    if (analysis.flowing.has(i)) return;
+    analysis.flowing.add(i);
+    queue.push(i);
+  };
+  state.terrain.forEach((t, i) => {
+    if (t === 'canal') start(i);
+  });
+  for (const i of dug.keys()) {
+    const x = i % width;
+    const y = Math.floor(i / width);
+    const fed = NEIGHBOURS_4.some(
+      (n) =>
+        inBounds(width, height, x + n.x, y + n.y) &&
+        feeds(state.terrain[indexOf(width, x + n.x, y + n.y)]),
+    );
+    if (fed) start(i);
+  }
+  for (let head = 0; head < queue.length; head++) {
+    const i = queue[head]!;
+    const x = i % width;
+    const y = Math.floor(i / width);
+    for (const n of NEIGHBOURS_4) {
+      if (!inBounds(width, height, x + n.x, y + n.y)) continue;
+      const j = indexOf(width, x + n.x, y + n.y);
+      if (isCanal(j)) start(j);
+    }
+  }
+  for (const [i, b] of dug) if (!analysis.flowing.has(i)) analysis.dryCanals.add(b.id);
+  if (analysis.flowing.size === 0) return;
+
+  const reach = rules.balance.canalReach;
+  const wet = new Uint8Array(width * height);
+  for (const i of analysis.flowing) {
+    const x = i % width;
+    const y = Math.floor(i / width);
+    for (let dy = -reach; dy <= reach; dy++) {
+      for (let dx = -reach; dx <= reach; dx++) {
+        if (inBounds(width, height, x + dx, y + dy)) wet[indexOf(width, x + dx, y + dy)] = 1;
+      }
+    }
+    analysis.reach.water.add(i);
+  }
+  for (const b of all) {
+    if (rules.buildings[b.def]?.category === 'path' || dug.has(indexOf(width, b.x, b.y))) continue;
+    if (tilesOf(b).some((t) => wet[indexOf(width, t.x, t.y)])) analysis.covered.water.add(b.id);
+  }
 }
 
 export interface NeedContext {

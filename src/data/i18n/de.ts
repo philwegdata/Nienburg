@@ -190,6 +190,10 @@ export const de = {
       'Brände und Ereignisse',
       'Ein Gebäude ohne Brandwache in Reichweite kann rußgeschwärzt werden; mit „Reparieren“ ist es wieder in Ordnung. Ab und zu geschieht etwas: ein Jahrmarkt, Pilger, ein strenger Winter. Der Rundenbericht sagt, was zu tun ist.',
     ],
+    [
+      'Kanäle, Brücken und neues Land',
+      'Ein gegrabener Kanal bringt Wasser von der Mauer zu allen Gebäuden im Umkreis von zwei Feldern – ganz ohne Wege. Brücken führen Wege darüber. Vor den Toren kannst du Umland kaufen und bebauen; jedes weitere Feld kostet mehr als das letzte.',
+    ],
   ],
   helpLevels: 'Was die Häuser brauchen',
   helpKeys: 'Tasten',
@@ -208,6 +212,17 @@ export const de = {
   worldMap: 'Weltkarte mit allen Städten',
   europe: 'Europa',
   canalInfo: 'Hier kann nur eine Brücke gebaut werden.',
+  toolLand: 'Land kaufen',
+  hintLand:
+    'Tippe auf Umland neben einem Tor oder neben eigenem Land. Das nächste Feld kostet {n} Gold.',
+  landNo: {
+    notOutside: 'Hier gibt es kein Land zu kaufen.',
+    notAdjacent: 'Land muss an ein Tor oder an eigenes Land grenzen.',
+    noGold: 'Für dieses Feld reicht das Gold nicht.',
+  },
+  canalDry: 'Trocken: Der Kanal reicht nicht bis zur Mauer.',
+  canalFlows: 'Führt Wasser.',
+  landBought: 'Gekauftes Land: {n} Felder',
   need: {
     road: 'Weg',
     water: 'Wasser',
@@ -237,6 +252,7 @@ export const de = {
   houseLevel: ['Hütte', 'Lehmhaus', 'Fachwerkhaus', 'Bürgerhaus', 'Patrizierhaus'],
   building: {
     alley: 'Gasse',
+    canal: 'Kanal',
     bridge: 'Brücke',
     towerhouse: 'Geschlechterturm',
     street: 'Straße',
@@ -273,7 +289,9 @@ export const de = {
   },
   buildingInfo: {
     alley: 'Schmal und günstig. Dienste kommen hier nur halb so weit.',
-    bridge: 'Führt einen Weg über den Kanal und verbindet so zwei Viertel.',
+    canal:
+      'Leitet Wasser von der Stadtmauer in die Stadt. Alles im Umkreis von zwei Feldern hat Wasser. Muss an der Mauer oder an einem anderen Kanal beginnen.',
+    bridge: 'Führt einen Weg über einen Kanal.',
     towerhouse:
       'Ein hoher Wohnturm einer reichen Familie. Bringt etwas Gold und hebt das Ansehen der Nachbarschaft.',
     street: 'Gepflastert. Dienste reichen hier weiter als durch Gassen.',
@@ -384,6 +402,10 @@ export const de = {
     needsWater: [
       'Ein Badehaus hat kein Wasser in Reichweite.',
       '{n} Badehäuser haben kein Wasser in Reichweite.',
+    ],
+    dryCanal: [
+      'Ein Kanal ist trocken: Er reicht nicht bis zur Mauer.',
+      '{n} Kanalstücke sind trocken: Sie reichen nicht bis zur Mauer.',
     ],
     noGate: [
       'Ein Handelskontor hat keinen Weg zu einem Stadttor.',

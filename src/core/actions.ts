@@ -43,17 +43,23 @@ export function canPlace(
   const { w, h } = rotatedSize(def, rot);
   const tiles = footprint(x, y, w, h);
   for (const t of tiles) {
-    if (!inBounds(state.width, state.height, t.x, t.y))
-      return { ok: false, reason: 'notBuildable' };
-    // Bridges go on canal water, everything else on land.
-    const ground = def.onCanal ? 'canal' : 'buildable';
-    if (state.terrain[indexOf(state.width, t.x, t.y)] !== ground) {
+    if (!inBounds(state.width, state.height, t.x, t.y)) {
       return { ok: false, reason: 'notBuildable' };
     }
+    const terrain = state.terrain[indexOf(state.width, t.x, t.y)];
     const existing = buildingAt(state, t.x, t.y);
+    const existingDef = existing && defs[existing.def];
+    if (def.onCanal) {
+      // Bridges go over canal water: a canal of the map, or one the town has dug.
+      if (existing?.def === def.id) return { ok: false, reason: 'same' };
+      if (existingDef?.canal) continue;
+      if (terrain !== 'canal') return { ok: false, reason: 'notBuildable' };
+      if (existing) return { ok: false, reason: 'occupied' };
+      continue;
+    }
+    if (terrain !== 'buildable') return { ok: false, reason: 'notBuildable' };
     if (!existing) continue;
     // A path may be laid over a different kind of path (e.g. paving an alley).
-    const existingDef = defs[existing.def];
     if (def.category === 'path' && existingDef?.category === 'path') {
       if (existing.def === def.id) return { ok: false, reason: 'same' };
       continue;
@@ -117,10 +123,14 @@ export function placeBuilding(
   if (short) return { ok: false, reason: short };
 
   // Paths being paved over simply disappear; there is no refund for them.
+  // A bridge over a dug canal remembers the canal beneath it.
   let base = state;
+  let overCanal = false;
   for (const t of check.tiles) {
     const old = buildingAt(base, t.x, t.y);
-    if (old) base = removeBuilding(base, old);
+    if (!old) continue;
+    if (defs[old.def]?.canal) overCanal = true;
+    base = removeBuilding(base, old);
   }
 
   const { w, h } = rotatedSize(def, rot);
@@ -130,6 +140,7 @@ export function placeBuilding(
   const building: Building = { id, def: def.id, x, y, w, h, rot };
   if (def.category === 'housing') building.house = { level: 1, pop: 0, lacking: 0 };
   if (def.construction) building.construction = def.construction.turns;
+  if (overCanal) building.overCanal = true;
   return {
     ok: true,
     state: {
@@ -158,7 +169,23 @@ export function demolish(
   const target = buildingAt(state, x, y);
   if (!target) return state;
   const refund = Math.floor((defs[target.def]?.cost ?? 0) * refundShare);
-  return { ...removeBuilding(state, target), gold: state.gold + refund };
+  const cleared = { ...removeBuilding(state, target), gold: state.gold + refund };
+  if (!target.overCanal) return cleared;
+  // Taking a bridge away leaves the canal it spanned.
+  const canal = Object.values(defs).find((d) => d.canal);
+  if (!canal) return cleared;
+  const id = cleared.nextBuildingId;
+  const occupancy = cleared.occupancy.slice();
+  occupancy[indexOf(cleared.width, target.x, target.y)] = id;
+  return {
+    ...cleared,
+    occupancy,
+    buildings: {
+      ...cleared.buildings,
+      [id]: { id, def: canal.id, x: target.x, y: target.y, w: 1, h: 1, rot: 0 },
+    },
+    nextBuildingId: id + 1,
+  };
 }
 
 export function repairCost(def: BuildingDef, repairShare: number): number {
@@ -192,6 +219,60 @@ export function repair(
       gold: state.gold - cost,
       buildPoints: state.buildPoints - 1,
     },
+  };
+}
+
+/** What the next tile of land outside the walls costs. */
+export function landPrice(state: GameState, land: { base: number; step: number }): number {
+  return land.base + land.step * state.landBought;
+}
+
+export type LandError =
+  /** Not open countryside: water, rock, walls, or land the town already has. */
+  | 'notOutside'
+  /** Not next to a gate or to land the town already has. */
+  | 'notAdjacent'
+  | 'noGold';
+
+/** Whether the town could buy the tile at (x, y), money aside. */
+export function landError(state: GameState, x: number, y: number): LandError | null {
+  if (!inBounds(state.width, state.height, x, y)) return 'notOutside';
+  if (state.terrain[indexOf(state.width, x, y)] !== 'outside') return 'notOutside';
+  const next = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ] as const;
+  const adjacent = next.some(([dx, dy]) => {
+    if (!inBounds(state.width, state.height, x + dx, y + dy)) return false;
+    const t = state.terrain[indexOf(state.width, x + dx, y + dy)];
+    return t === 'gate' || t === 'buildable';
+  });
+  return adjacent ? null : 'notAdjacent';
+}
+
+export type LandResult = { ok: true; state: GameState } | { ok: false; reason: LandError };
+
+/**
+ * Buys a tile of countryside next to a gate or to the town's own land and makes it building
+ * ground. Every tile costs more than the last.
+ */
+export function buyLand(
+  state: GameState,
+  land: { base: number; step: number },
+  x: number,
+  y: number,
+): LandResult {
+  const error = landError(state, x, y);
+  if (error) return { ok: false, reason: error };
+  const price = landPrice(state, land);
+  if (state.gold < price) return { ok: false, reason: 'noGold' };
+  const terrain = state.terrain.slice();
+  terrain[indexOf(state.width, x, y)] = 'buildable';
+  return {
+    ok: true,
+    state: { ...state, terrain, gold: state.gold - price, landBought: state.landBought + 1 },
   };
 }
 

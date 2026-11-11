@@ -5,6 +5,7 @@ import { newGame, parseCity, validateCity } from '../src/core/city';
 import { goalProgress } from '../src/core/goals';
 import { indexOf } from '../src/core/grid';
 import { analyze } from '../src/core/sim/analyze';
+import { pathDistances } from '../src/core/sim/coverage';
 import { endTurn } from '../src/core/sim/turn';
 import type { CityDef, GameState } from '../src/core/types';
 import { BUILDINGS } from '../src/data/buildings';
@@ -99,24 +100,31 @@ describe('canals and bridges', () => {
     let s = bruges();
     for (const x of [1, 2]) s = put(s, 'street', x, 1);
     for (const x of [4, 5]) s = put(s, 'street', x, 1);
-    s = put(put(s, 'well', 1, 2), 'house', 5, 2);
-    const house = buildingAt(s, 5, 2)!.id;
-    expect(analyze(s, RULES).covered.water.has(house)).toBe(false);
+    const reached = (state: GameState) =>
+      pathDistances(state, RULES, [{ x: 1, y: 1 }], 20).has(indexOf(state.width, 5, 1));
+    expect(reached(s)).toBe(false);
     s = put(s, 'bridge', 3, 1);
-    expect(analyze(s, RULES).covered.water.has(house)).toBe(true);
+    expect(reached(s)).toBe(true);
     // A bridge does not use up building land.
     expect(s.occupancy[indexOf(s.width, 3, 1)]).toBeGreaterThan(0);
     expect(s.terrain[indexOf(s.width, 3, 1)]).toBe('canal');
   });
 
-  it('are offered in Bruges only', () => {
+  it('are offered in every town, but only fit where there is a canal', () => {
     expect(lockOf(rich(byId('bruges')), bridge)).toBeNull();
-    expect(lockOf(rich(byId('nienburg')), bridge)).toEqual({ kind: 'elsewhere' });
-    const elsewhere = { ...richGame(town.map), cityId: 'nienburg' };
-    expect(placeBuilding(elsewhere, BUILDINGS, bridge, 3, 1)).toEqual({
+    expect(lockOf(rich(byId('nienburg')), bridge)).toBeNull();
+    expect(placeBuilding(rich(byId('nienburg')), BUILDINGS, bridge, 15, 12)).toEqual({
       ok: false,
-      reason: 'locked',
+      reason: 'notBuildable',
     });
+  });
+
+  it('give the houses along a canal of the map their water', () => {
+    let s = put(bruges(), 'house', 1, 2);
+    s = put(s, 'house', 5, 2);
+    const a = analyze(s, RULES);
+    expect(a.covered.water.has(buildingAt(s, 1, 2)!.id)).toBe(true);
+    expect(a.covered.water.has(buildingAt(s, 5, 2)!.id)).toBe(true);
   });
 
   it('let a house by the canal breathe', () => {

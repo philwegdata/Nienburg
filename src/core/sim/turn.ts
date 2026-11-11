@@ -196,6 +196,10 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   if (hungry) hints.add('hungry', centre);
   const ctx = { hungry, goodsTypes, festive: state.event?.kind === 'jugglers' };
 
+  for (const id of analysis.dryCanals) {
+    const b = state.buildings[id];
+    if (b) hints.add('dryCanal', b);
+  }
   for (const [id, reason] of analysis.idle) {
     const b = state.buildings[id];
     const kind = IDLE_HINT[reason];

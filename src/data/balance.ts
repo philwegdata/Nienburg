@@ -5,6 +5,8 @@ export const BALANCE: Balance = {
   buildPointsPerTurn: 20,
   demolishRefund: 0.5,
   repairShare: 0.3,
+  canalReach: 2,
+  land: { base: 80, step: 12 },
   workerShare: 0.4,
   foodPerHead: 0.08,
   goodsPerHead: 0.008,

@@ -37,16 +37,13 @@ const list: BuildingDef[] = [
   def('street', 'path', [1, 1], [3, 1, 1, 0, 0], { drag: 'line' }),
   def('plaza', 'path', [1, 1], [3, 1, 1, 0, 0], { drag: 'rect', appeal: { value: 1, radius: 1 } }),
 
-  def('bridge', 'path', [1, 1], [12, 4, 2, 0, 0], {
-    drag: 'line',
-    onCanal: true,
-    cities: ['bruges'],
-  }),
+  def('bridge', 'path', [1, 1], [12, 4, 2, 0, 0], { drag: 'line', onCanal: true }),
 
   def('house', 'housing', [1, 1], [15, 3, 2, 0, 0], { drag: 'line', fireRisk: 1 }),
 
   // Water
   def('well', 'water', [1, 1], [20, 4, 3, 1, 0], { services: [{ kind: 'water', range: 6 }] }),
+  def('canal', 'water', [1, 1], [8, 2, 1, 0, 0], { drag: 'line', canal: true, flat: true }),
   def('cistern', 'water', [2, 2], [70, 15, 6, 3, 1], {
     services: [{ kind: 'water', range: 14 }],
     unlockPop: 60,
@@ -211,6 +208,7 @@ const list: BuildingDef[] = [
 
 export type BuildingId =
   | 'alley'
+  | 'canal'
   | 'bridge'
   | 'towerhouse'
   | 'street'

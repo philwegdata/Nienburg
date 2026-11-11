@@ -14,10 +14,13 @@ export function borderTiles(b: Building): Point[] {
   return tiles;
 }
 
-/** Id of the path kind at (x, y), or null if there is no path. */
+/** Kind of path at (x, y): a path building's id, 'gate' for a town gate, or null. */
 export function pathAt(state: GameState, rules: Rules, x: number, y: number): string | null {
   const b = buildingAt(state, x, y);
-  return b && rules.buildings[b.def]?.category === 'path' ? b.def : null;
+  if (b) return rules.buildings[b.def]?.category === 'path' ? b.def : null;
+  // A gate is a paved way through the wall: it links the town to land outside it.
+  if (!inBounds(state.width, state.height, x, y)) return null;
+  return state.terrain[indexOf(state.width, x, y)] === 'gate' ? 'gate' : null;
 }
 
 /** Path tiles next to a building. */

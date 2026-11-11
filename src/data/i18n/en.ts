@@ -190,6 +190,10 @@ export const en: Strings = {
       'Fires and events',
       'A building with no fire watch within reach may be blackened by fire; “Repair” puts it right. Now and then something happens: a fair, pilgrims, a harsh winter. The turn report tells you what to do.',
     ],
+    [
+      'Canals, bridges and new land',
+      'A dug canal brings water from the wall to every building within two tiles – no paths needed. Bridges carry paths across. Outside the gates you can buy countryside and build on it; each further tile costs more than the last.',
+    ],
   ],
   helpLevels: 'What the houses need',
   helpKeys: 'Keys',
@@ -208,6 +212,16 @@ export const en: Strings = {
   worldMap: 'World map with all towns',
   europe: 'Europe',
   canalInfo: 'Only a bridge can be built here.',
+  toolLand: 'Buy land',
+  hintLand: 'Tap countryside next to a gate or to your own land. The next tile costs {n} gold.',
+  landNo: {
+    notOutside: 'There is no land to buy here.',
+    notAdjacent: 'Land must border a gate or land you already own.',
+    noGold: 'There is not enough gold for this tile.',
+  },
+  canalDry: 'Dry: the canal does not reach the wall.',
+  canalFlows: 'Carries water.',
+  landBought: 'Land bought: {n} tiles',
   need: {
     road: 'path',
     water: 'water',
@@ -237,6 +251,7 @@ export const en: Strings = {
   houseLevel: ['Hut', 'Clay house', 'Half-timbered house', 'Burgher house', 'Patrician house'],
   building: {
     alley: 'Alley',
+    canal: 'Canal',
     bridge: 'Bridge',
     towerhouse: 'Family tower',
     street: 'Street',
@@ -273,7 +288,9 @@ export const en: Strings = {
   },
   buildingInfo: {
     alley: 'Narrow and cheap. Services reach only half as far here.',
-    bridge: 'Carries a path across the canal and so links two quarters.',
+    canal:
+      'Leads water from the town wall into town. Everything within two tiles has water. Must start at the wall or at another canal.',
+    bridge: 'Carries a path across a canal.',
     towerhouse:
       'A tall tower house of a wealthy family. Brings in a little gold and raises the standing of the neighbourhood.',
     street: 'Paved. Services reach further here than through alleys.',
@@ -381,6 +398,10 @@ export const en: Strings = {
     needsWater: [
       'One bath house has no water within reach.',
       '{n} bath houses have no water within reach.',
+    ],
+    dryCanal: [
+      'One canal is dry: it does not reach the wall.',
+      '{n} stretches of canal are dry: they do not reach the wall.',
     ],
     noGate: [
       "One merchants' office has no path to a town gate.",
