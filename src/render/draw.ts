@@ -2,6 +2,7 @@ import type { Building, Point, Terrain } from '../core/types';
 import { gridToWorld } from './iso';
 import { shade, type BoxColors, type Palette, type RoofColors } from './palette';
 import { tileHash, type Countryside } from './scenery';
+import { PATH_STYLE, tileOutline, type Joins } from './shape';
 
 /** Canvas plus the colours of the season. */
 export interface G {
@@ -213,12 +214,6 @@ export function drawGroundTile(
     }
     return;
   }
-  if (terrain === 'canal') {
-    // Canal water between stone quays.
-    poly(g, tile, pal.walls.stone.left);
-    poly(g, diamond(x, y, 1, 1, 0.06), pick(pal.water, x, y));
-    return;
-  }
   if (terrain === 'rock') {
     poly(g, tile, pal.walls.darkStone.left);
     return;
@@ -307,43 +302,126 @@ export function drawWoodland(g: G, x: number, y: number): void {
   if (seed % 3 !== 0) drawTree(g, x + 0.72, y + 0.74, 0.9);
 }
 
-export function drawPath(g: G, b: Building): void {
+/** A tile-sized shape with cut corners, from its outline in tile units. */
+function outlined(x: number, y: number, joins: Joins, kind: string, z = 0): Point[] {
+  const style = PATH_STYLE[kind] ?? PATH_STYLE.street!;
+  return tileOutline(joins, style).map(([px, py]) => v(x + px, y + py, z));
+}
+
+/** Runs `paint` with drawing confined to a shape. */
+function within(g: G, shape: Point[], paint: () => void): void {
+  const { ctx } = g;
+  ctx.save();
+  ctx.beginPath();
+  shape.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.clip();
+  paint();
+  ctx.restore();
+}
+
+const EDGE = 'rgba(46, 32, 22, 0.22)';
+
+export function drawPath(g: G, b: Building, joins: Joins): void {
   const { ctx, pal } = g;
   const { x, y } = b;
+  ctx.lineWidth = 0.6;
   if (b.def === 'alley') {
-    poly(g, diamond(x, y, 1, 1, 0.07), pal.alley);
+    const shape = outlined(x, y, joins, 'alley');
+    poly(g, shape, pal.alley, EDGE);
     const s = tileHash(x, y);
     ctx.fillStyle = pal.cobble;
     for (let i = 0; i < 3; i++) {
       const p = v(
-        x + 0.25 + ((s >> (i * 4)) % 50) / 100,
-        y + 0.25 + ((s >> (i * 4 + 2)) % 50) / 100,
+        x + 0.3 + ((s >>> (i * 4)) % 40) / 100,
+        y + 0.3 + ((s >>> (i * 4 + 2)) % 40) / 100,
       );
       ctx.fillRect(p.x, p.y, 2.2, 1.1);
     }
   } else if (b.def === 'street') {
-    poly(g, diamond(x, y), pal.street);
+    const shape = outlined(x, y, joins, 'street');
+    poly(g, shape, pal.street, EDGE);
+    // Cobbles, laid in rows.
+    within(g, shape, () => {
+      ctx.beginPath();
+      for (const t of [0.2, 0.4, 0.6, 0.8]) {
+        line(g, v(x + t, y), v(x + t, y + 1));
+        line(g, v(x, y + t), v(x + 1, y + t));
+      }
+      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = pal.cobble;
+      ctx.stroke();
+    });
+  } else if (b.def === 'bridge') {
+    // A plank deck with railings, running the way the path does.
+    const alongX = joins.e || joins.w || !(joins.n || joins.s);
+    const deck = alongX ? rect(x, y + 0.14, 1, 0.72) : rect(x + 0.14, y, 0.72, 1);
+    box(g, deck, 2, 4.5, pal.walls.wood, EDGE);
     ctx.beginPath();
-    for (const t of [0.25, 0.5, 0.75]) {
-      line(g, v(x + t, y), v(x + t, y + 1));
-      line(g, v(x, y + t), v(x + 1, y + t));
+    for (const t of [0.2, 0.4, 0.6, 0.8]) {
+      if (alongX) line(g, v(x + t, deck.y0, 4.5), v(x + t, deck.y1, 4.5));
+      else line(g, v(deck.x0, y + t, 4.5), v(deck.x1, y + t, 4.5));
     }
     ctx.lineWidth = 0.5;
     ctx.strokeStyle = pal.cobble;
     ctx.stroke();
-  } else if (b.def === 'bridge') {
-    // A plank deck on two beams, a little above the water.
-    box(g, rect(x, y, 1, 1, 0.04), 2, 4, pal.walls.wood);
     ctx.beginPath();
-    for (const t of [0.25, 0.5, 0.75]) line(g, v(x + t, y + 0.04, 4), v(x + t, y + 0.96, 4));
-    ctx.lineWidth = 0.5;
-    ctx.strokeStyle = pal.cobble;
+    const rails: [Point, Point][] = alongX
+      ? [
+          [v(deck.x0, deck.y0, 8), v(deck.x1, deck.y0, 8)],
+          [v(deck.x0, deck.y1, 8), v(deck.x1, deck.y1, 8)],
+        ]
+      : [
+          [v(deck.x0, deck.y0, 8), v(deck.x0, deck.y1, 8)],
+          [v(deck.x1, deck.y0, 8), v(deck.x1, deck.y1, 8)],
+        ];
+    for (const [p, q] of rails) {
+      line(g, p, q);
+      for (const t of [0, 0.5, 1]) {
+        const top = { x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t };
+        line(g, top, { x: top.x, y: top.y + 3.5 });
+      }
+    }
+    ctx.lineWidth = 0.9;
+    ctx.strokeStyle = pal.trunk;
     ctx.stroke();
   } else {
-    ctx.lineWidth = 0.6;
-    poly(g, diamond(x, y), pal.plaza, pal.plazaLine);
-    poly(g, diamond(x, y, 1, 1, 0.3), 'rgba(255, 255, 255, 0.16)', pal.plazaLine);
+    const shape = outlined(x, y, joins, 'plaza');
+    poly(g, shape, pal.plaza, EDGE);
+    // Large flagstones.
+    within(g, shape, () => {
+      ctx.lineWidth = 0.6;
+      poly(g, diamond(x, y, 1, 1, 0.28), 'rgba(255, 255, 255, 0.16)', pal.plazaLine);
+      ctx.beginPath();
+      line(g, v(x, y), v(x + 0.28, y + 0.28));
+      line(g, v(x + 1, y), v(x + 0.72, y + 0.28));
+      line(g, v(x + 1, y + 1), v(x + 0.72, y + 0.72));
+      line(g, v(x, y + 1), v(x + 0.28, y + 0.72));
+      ctx.strokeStyle = pal.plazaLine;
+      ctx.stroke();
+    });
   }
+}
+
+/** A stretch of canal: water between stone quays, or an empty ditch if nothing flows. */
+export function drawCanal(g: G, x: number, y: number, joins: Joins, flowing: boolean): void {
+  const { ctx, pal } = g;
+  const quay = outlined(x, y, joins, 'canal');
+  ctx.lineWidth = 0.6;
+  poly(g, quay, pal.walls.stone.left, EDGE);
+  const style = PATH_STYLE.canal!;
+  const water = tileOutline(joins, { ...style, margin: style.margin + 0.07 }).map(([px, py]) =>
+    v(x + px, y + py),
+  );
+  poly(g, water, flowing ? pick(pal.water, x, y) : shade(pal.alley, -0.22));
+  if (!flowing) return;
+  const a = v(x + 0.5, y + 0.5);
+  ctx.beginPath();
+  ctx.moveTo(a.x - 4, a.y);
+  ctx.quadraticCurveTo(a.x, a.y - 1.8, a.x + 4, a.y);
+  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.stroke();
 }
 
 // ---------- fortifications ----------

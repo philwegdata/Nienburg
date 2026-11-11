@@ -251,6 +251,8 @@ describe('buying land outside the walls', () => {
     expect(water(s, 10, 2)).toBe(true);
     // And people move in.
     expect(buildingAt(endTurn(s, RULES), 10, 2)!.house!.pop).toBe(2);
+    // With open country around it, a house out here is never boxed in.
+    expect(analyze(s, RULES).boxedIn.size).toBe(0);
   });
 
   it('survives saving and loading', () => {

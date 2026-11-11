@@ -1,4 +1,13 @@
-import { buildingAt, countTiles, lockOf, repair, repairCost } from '../core/actions';
+import {
+  buildingAt,
+  buyLand,
+  countTiles,
+  landError,
+  landPrice,
+  lockOf,
+  repair,
+  repairCost,
+} from '../core/actions';
 import { newGame, parseCity } from '../core/city';
 import { goalProgress } from '../core/goals';
 import { inBounds, indexOf } from '../core/grid';
@@ -45,6 +54,7 @@ type Tool =
   | { kind: 'select' }
   | { kind: 'demolish' }
   | { kind: 'repair' }
+  | { kind: 'land' }
   | { kind: 'build'; def: BuildingId };
 
 type View = 'normal' | 'appeal' | ServiceKind;
@@ -150,7 +160,36 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   let screen = { w: 0, h: 0, dpr: 1 };
   let dirty = false;
   const pointers = new Map<number, Point>();
-  const scene = new Scene((id) => rules.buildings[id]?.category === 'path');
+  /** Buildings that barely rise above the ground, so nobody walking behind them is hidden. */
+  const LOW: Record<string, number> = {
+    well: 0,
+    stall: 0,
+    fountain: 0,
+    tree: 0,
+    garden: 0,
+    cistern: 0,
+    tannery: 12,
+    buildersyard: 10,
+  };
+  const scene = new Scene((id) => {
+    const def = rules.buildings[id];
+    return {
+      flat: def?.category === 'path' ? 'path' : def?.canal ? 'canal' : null,
+      work: (def?.workers ?? 0) > 0,
+      trade: Boolean(def?.trade || def?.delivery || def?.needsPlaza),
+      tall: LOW[id] ?? 26,
+    };
+  });
+  /** A message to show in the hint line once the pending gesture has been dealt with. */
+  let note: string | null = null;
+  const showNote = (): void => {
+    if (!note) return;
+    el.hint.classList.add('warn');
+    el.hint.textContent = note;
+    note = null;
+  };
+  /** The tile the land tool points at, and whether it can be bought. */
+  let landTile: { x: number; y: number; ok: boolean } | null = null;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const calm = () => motionOff() || reducedMotion.matches;
   /** Tile marker moved with the arrow keys, and where a keyboard-drawn row starts. */
@@ -176,13 +215,21 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     requestAnimationFrame(() => {
       dirty = false;
       const shade = rangeShade.size > 0 ? new Map([...viewShade, ...rangeShade]) : viewShade;
-      const overlay: Overlay = { warnings, preview: [], highlight: null, shade };
+      const overlay: Overlay = {
+        warnings,
+        preview: landTile ? [landTile] : [],
+        highlight: null,
+        shade,
+        dryCanals: analysis.dryCanals,
+      };
       if (plan) overlay.preview = plan.tiles;
       else if (demolition) overlay.preview = demolition.map((p) => ({ ...p, ok: false }));
       if (cursor) overlay.highlight = cursor;
       else if (tool.kind === 'select') overlay.highlight = selected;
       else if (!plan && !demolition) overlay.highlight = hover;
       // With reduced motion the picture stands still: smoke and flags are drawn, but frozen.
+      // For automated tests that need to click on a particular tile.
+      el.canvas.dataset.camera = `${cam.x},${cam.y},${cam.zoom}`;
       const time = calm() ? 0 : performance.now() / 1000;
       scene.render(ctx!, state, cam, screen, overlay, time, city.look);
     });
@@ -258,6 +305,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     comingGoods = ahead.goods;
     warnings = new Set<number>();
     for (const [id, reason] of analysis.idle) if (reason !== 'construction') warnings.add(id);
+    for (const id of analysis.dryCanals) warnings.add(id);
     for (const b of Object.values(state.buildings)) {
       if (!b.house) continue;
       const missing = missingNeeds(rules, analysis, b.id, b.house.level, needCtx());
@@ -438,6 +486,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   function updateInfo(): void {
     el.info.replaceChildren();
     const add: Add = (tag, text, cls) => el.info.append(node(tag, text, cls));
+    if (tool.kind === 'land') {
+      add('h2', t.toolLand);
+      add('p', fill(t.hintLand, { n: landPrice(state, rules.balance.land) }));
+      if (state.landBought > 0) add('p', fill(t.landBought, { n: state.landBought }), 'meta');
+      return;
+    }
     if (tool.kind === 'build') {
       const def = rules.buildings[tool.def]!;
       add('h2', nameOf(tool.def));
@@ -474,6 +528,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const def = rules.buildings[id]!;
       add('h2', nameOf(id));
       add('p', t.buildingInfo[id]);
+      if (def.canal) {
+        const dry = analysis.dryCanals.has(b.id);
+        add('p', dry ? t.canalDry : t.canalFlows, dry ? 'warn' : 'good');
+      }
       const idle = analysis.idle.get(b.id);
       if (idle === 'construction') add('p', fill(t.idle.construction, { n: b.construction ?? 0 }));
       else if (idle === 'damaged') {
@@ -513,7 +571,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (tool.kind === 'select') el.hint.textContent = t.hintSelect;
     else if (tool.kind === 'demolish') el.hint.textContent = t.hintDemolish;
     else if (tool.kind === 'repair') el.hint.textContent = t.hintRepair;
-    else {
+    else if (tool.kind === 'land') {
+      el.hint.textContent = fill(t.hintLand, { n: landPrice(state, rules.balance.land) });
+    } else {
       const drag = rules.buildings[tool.def]!.drag;
       el.hint.textContent =
         drag === 'line' ? t.hintLine : drag === 'rect' ? t.hintRect : t.hintSingle;
@@ -806,6 +866,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     rot = 0;
     hover = null;
     anchor = null;
+    landTile = null;
     plan = null;
     demolition = null;
     rangeShade = new Map();
@@ -844,6 +905,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       el.tabs.append(tab);
     }
     el.tabs.append(node('span', undefined, 'sep'));
+    toolButton(t.toolLand, { kind: 'land' }, el.tabs);
     toolButton(t.toolRepair, { kind: 'repair' }, el.tabs);
     toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
 
@@ -908,6 +970,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       rangeShade = computeRange(plan, def);
     } else if (tool.kind === 'demolish') {
       demolition = planDemolish(state, from, to);
+    } else if (tool.kind === 'land') {
+      landTile = { x: to.x, y: to.y, ok: landError(state, to.x, to.y) === null };
     }
     updateHint();
   }
@@ -915,6 +979,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   function clearPreview(): void {
     plan = null;
     demolition = null;
+    landTile = null;
     rangeShade = new Map();
     updateHint();
   }
@@ -934,6 +999,16 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const result = repair(state, rules.buildings, rules.balance.repairShare, at.x, at.y);
       if (result.ok) change(result.state);
       else shortOf = result.reason;
+    } else if (tool.kind === 'land') {
+      const result = buyLand(state, rules.balance.land, at.x, at.y);
+      landTile = null;
+      if (result.ok) change(result.state);
+      else {
+        // Say why not; the hint line is the only place for it.
+        note = t.landNo[result.reason];
+        play('no');
+        return null;
+      }
     }
     return shortOf;
   }
@@ -1034,6 +1109,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         }
         // Keep a "cannot afford" message visible after the attempt.
         if (shortOf) showShortage(shortOf);
+        showNote();
+        showNote();
       }
     } else if (g?.kind === 'pan' && !cancelled && g.moved <= CLICK_SLOP) {
       if (g.cancelsTool) setTool({ kind: 'select' });
@@ -1107,6 +1184,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const shortOf = commit(cursor);
       refreshPreview(cursor, cursor);
       if (shortOf) showShortage(shortOf);
+      showNote();
     }
     requestDraw();
   }

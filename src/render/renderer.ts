@@ -2,6 +2,7 @@ import { indexOf } from '../core/grid';
 import type { Building, BuildingDef, CityLook, GameState, Point, Terrain } from '../core/types';
 import {
   diamond,
+  drawCanal,
   drawEmitter,
   drawFortification,
   drawGlint,
@@ -17,6 +18,8 @@ import { drawBuilding } from './buildings';
 import { screenToWorld, TILE_H, TILE_W, worldToGrid, type Camera } from './iso';
 import { buildPalette, type Palette } from './palette';
 import { countryside, MARGIN, terrainAround, type Countryside } from './scenery';
+import type { Joins } from './shape';
+import { Walkers, type DefLook } from './walkers';
 
 export interface PreviewTile extends Point {
   ok: boolean;
@@ -31,6 +34,8 @@ export interface Overlay {
   highlight: Point | null;
   /** Translucent colours laid over tiles (by tile index), for coverage and appeal views. */
   shade: Map<number, string>;
+  /** Ids of dug canals that carry no water. */
+  dryCanals: Set<number>;
 }
 
 export interface Viewport {
@@ -92,7 +97,16 @@ export class Scene {
   } | null = null;
   private water: Point[] = [];
 
-  constructor(private readonly isPath: (defId: string) => boolean) {}
+  private readonly walkers: Walkers;
+  private dryFor: Set<number> | null = null;
+
+  constructor(private readonly look: (defId: string) => DefLook) {
+    this.walkers = new Walkers(look);
+  }
+
+  private isFlat(defId: string): boolean {
+    return this.look(defId).flat !== null;
+  }
 
   private countrysideOf(state: GameState): Countryside {
     if (!this.land || this.landFor !== state.terrain) {
@@ -146,7 +160,43 @@ export class Scene {
     const inRange = (b: Building) =>
       b.x <= range.x1 && b.y <= range.y1 && b.x + b.w > range.x0 && b.y + b.h > range.y0;
     const buildings = Object.values(state.buildings).filter(inRange);
-    for (const b of buildings) if (this.isPath(b.def)) drawPath(g, b);
+    const { width, height } = state;
+    const terrainAt = (x: number, y: number) =>
+      x >= 0 && y >= 0 && x < width && y < height ? state.terrain[indexOf(width, x, y)] : undefined;
+    const builtAt = (x: number, y: number) =>
+      x >= 0 && y >= 0 && x < width && y < height
+        ? state.buildings[state.occupancy[indexOf(width, x, y)]!]
+        : undefined;
+    const joins = (x: number, y: number, joined: (x: number, y: number) => boolean): Joins => ({
+      n: joined(x, y - 1),
+      e: joined(x + 1, y),
+      s: joined(x, y + 1),
+      w: joined(x - 1, y),
+    });
+    // Paths join other paths and the gates; canals join canals and whatever feeds them.
+    const isWay = (x: number, y: number) => {
+      const b = builtAt(x, y);
+      return b ? this.look(b.def).flat === 'path' : terrainAt(x, y) === 'gate';
+    };
+    const isCanal = (x: number, y: number) => {
+      const b = builtAt(x, y);
+      if (b) return this.look(b.def).flat === 'canal' || b.overCanal === true;
+      const t = terrainAt(x, y);
+      return t === 'canal' || t === 'wall' || t === 'tower' || t === 'gate' || t === 'water';
+    };
+    const dry = this.dryFor ?? new Set<number>();
+    for (let y = Math.max(0, range.y0); y <= Math.min(height - 1, range.y1); y++) {
+      for (let x = Math.max(0, range.x0); x <= Math.min(width - 1, range.x1); x++) {
+        if (terrainAt(x, y) === 'canal') drawCanal(g, x, y, joins(x, y, isCanal), true);
+      }
+    }
+    for (const b of buildings) {
+      const kind = this.look(b.def).flat;
+      if (kind === 'canal' || b.overCanal) {
+        drawCanal(g, b.x, b.y, joins(b.x, b.y, isCanal), !dry.has(b.id));
+      }
+      if (kind === 'path') drawPath(g, b, joins(b.x, b.y, isWay));
+    }
 
     // Everything with height is painted back to front.
     const raised: { depth: number; draw: () => void }[] = [];
@@ -163,7 +213,7 @@ export class Scene {
       }
     }
     for (const b of buildings) {
-      if (this.isPath(b.def)) continue;
+      if (this.isFlat(b.def)) continue;
       raised.push({
         depth: b.x + b.w - 1 + b.y + b.h - 1,
         draw: () => drawBuilding(g, b, emitters),
@@ -214,6 +264,10 @@ export class Scene {
     const g: G = { ctx, pal: this.palette };
 
     ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    const dryChanged = this.dryFor !== overlay.dryCanals;
+    if (dryChanged) this.town = null;
+    this.dryFor = overlay.dryCanals;
+
     // Beyond the painted countryside: more sea for an island, more meadow otherwise.
     const corners = [
       [0, 0],
@@ -281,6 +335,8 @@ export class Scene {
       emitters = this.paintTown(g, state, range);
     }
     for (const e of emitters) drawEmitter(g, e, time);
+    // People are about only while the picture moves.
+    if (time > 0) this.walkers.draw(g, state, time);
 
     for (const [i, color] of overlay.shade) {
       poly(g, diamond(i % state.width, Math.floor(i / state.width)), color);
@@ -322,7 +378,7 @@ export function buildingIcon(
   const h = def.size.h;
   const b: Building = { id: 1, def: def.id, x: 0, y: 0, w, h, rot: 0 };
   if (def.category === 'housing') b.house = { level: variant.level ?? 3, pop: 1, lacking: 0 };
-  const flat = def.category === 'path';
+  const flat = def.category === 'path' || def.flat === true;
   // Draw it large on a scratch canvas first, then fit whatever came out into the picture:
   // that way nothing has to know in advance how tall a building is.
   const scratch = document.createElement('canvas');
@@ -334,7 +390,9 @@ export function buildingIcon(
   sctx.setTransform(zoom, 0, 0, zoom, size / 2, size * 0.62);
   sctx.lineJoin = 'round';
   const g: G = { ctx: sctx, pal: buildPalette(variant.season ?? 0) };
-  if (flat) drawPath(g, b);
+  const alone: Joins = { n: false, e: false, s: false, w: false };
+  if (def.canal) drawCanal(g, 0, 0, alone, true);
+  else if (flat) drawPath(g, b, alone);
   else drawBuilding(g, b, null);
   const pixels = sctx.getImageData(0, 0, size, size).data;
   let x0 = size;

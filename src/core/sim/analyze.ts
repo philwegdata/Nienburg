@@ -127,8 +127,8 @@ function openSides(state: GameState, rules: Rules, b: Building): number {
   for (const t of borderTiles(b)) {
     if (!inBounds(state.width, state.height, t.x, t.y)) continue;
     const terrain = state.terrain[indexOf(state.width, t.x, t.y)];
-    // A canal next door is as good as open ground.
-    if (terrain === 'canal') open++;
+    // A canal next door is as good as open ground, and so are open country and water.
+    if (terrain === 'canal' || terrain === 'outside' || terrain === 'water') open++;
     if (terrain !== 'buildable') continue;
     const other = buildingAt(state, t.x, t.y);
     const def = other && rules.buildings[other.def];

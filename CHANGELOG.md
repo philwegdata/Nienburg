@@ -226,3 +226,35 @@
   `?assets` am Ende aufrufen
 - Entscheidung: Mauern, Tore, Boden und Umland sind bewusst nur leicht angepasst; der Schwerpunkt
   lag auf den Gebäuden.
+
+## Achteckige Wege, Kanäle, neues Land und Leben auf den Straßen
+
+- **Wege im Achteck-Stil:** Straßen, Gassen, Plätze und Kanäle werden mit abgeschrägten Ecken
+  gezeichnet. Ein einzelnes Feld ist ein Achteck, ein Straßenende hat zwei schräge Ecken, eine
+  Biegung eine abgeschrägte Außenecke, und Flächen wie Plätze haben schräge Außenecken. Brücken
+  richten sich nach dem Weg, den sie tragen, und haben Geländer.
+- **Kanäle:** Unter „Versorgung“ lässt sich ein Kanal graben (8 Gold pro Feld). Er führt Wasser,
+  sobald er an die Stadtmauer, ein Tor oder einen anderen fließenden Kanal anschließt, und
+  versorgt alles im Umkreis von zwei Feldern – ganz ohne Wege. Trockene Stücke zeigt der
+  Rundenbericht an. Auch die Kanäle in Brügge versorgen jetzt ihre Ufer.
+- **Brücken** gibt es in jeder Stadt. Über einem gegrabenen Kanal ersetzt die Brücke das
+  Kanalstück, das Wasser fließt darunter weiter; wird sie abgerissen, ist der Kanal wieder da.
+- **Land kaufen:** Mit dem neuen Werkzeug lässt sich Umland vor einem Tor oder neben schon
+  gekauftem Land erwerben und bebauen. Das erste Feld kostet 80 Gold, jedes weitere 12 mehr.
+  Stadttore gelten als Weg, damit eine Vorstadt über das Tor versorgt werden kann.
+- **Leben auf den Straßen:** Bewohner gehen zur Arbeit und zurück, Händler kommen mit
+  Handkarren durch die Tore. Die Figuren sind reine Zierde und verschwinden hinter Häusern und
+  Mauern, die vor ihnen stehen. Bei „Bewegung reduzieren“ gibt es sie nicht.
+- Spielstände werden übernommen.
+- Entscheidungen:
+  - Das Raster bleibt quadratisch. Regelmäßige Achtecke lassen sich nicht lückenlos
+    aneinanderlegen; ein echtes Achteck-Raster (Achtecke mit kleinen Quadraten dazwischen) hätte
+    Karten, Gebäudegrößen, Regeln und den Bot von Grund auf geändert. Umgesetzt ist die
+    achteckige Formensprache für alles, was flach auf dem Boden liegt.
+  - Kanäle werden von der Mauer aus gespeist, nicht von einem Fluss: Viele Städte haben keinen,
+    und so gilt überall dieselbe einfache Regel.
+  - Das Verdecken der Figuren ist eine Näherung: Wer auf einem Feld direkt hinter einem hohen
+    Gebäude geht, wird nicht gezeichnet. Auf Straßen mit Häusern auf der Vorderseite sieht man
+    deshalb weniger Leute.
+  - Gekauftes Land liegt außerhalb der Mauer und bekommt keine eigene Befestigung.
+  - Der Bot nutzt weder Kanäle noch Landkauf; die Probeläufe sind davon unberührt.
