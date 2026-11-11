@@ -110,6 +110,11 @@ export interface BuildingDef {
   appeal?: { value: number; radius: number };
   /** Craft goods made per turn while operating. */
   produces?: { good: Good; amount: number };
+  /**
+   * Merchants: sells up to `capacity` craft goods per turn that the houses do not need, at
+   * `price` gold each. Needs a path to a gate.
+   */
+  trade?: { capacity: number; price: number };
   /** Gold or food made per turn while operating. */
   yields?: { gold?: number; food?: number };
   /** Raises production and yields of workshops that touch it by this share. */
@@ -178,6 +183,8 @@ export interface Balance {
   /** Lowest level at which neighbouring houses grow together. */
   mergeLevel: number;
   goodsPerHead: number;
+  /** Merchants leave this many turns' worth of the houses' demand in store. */
+  goodsReserveTurns: number;
   goodsCap: number;
   /** Gold per unit of craft goods that no longer fits into storage. */
   goodsPrice: number;
@@ -269,6 +276,7 @@ export type HintKind =
   | 'noAccess'
   | 'needsPlaza'
   | 'needsWater'
+  | 'noGate'
   | 'damaged'
   | 'stalled'
   | 'hungry';
@@ -301,6 +309,8 @@ export interface TurnReport {
   merged: number;
   /** Gold from tanneries and the like, plus surplus goods sold. */
   tradeIncome: number;
+  /** Craft goods the merchants sold this turn (their gold is part of tradeIncome). */
+  goodsSold: number;
   /** Gold spent on ongoing construction. */
   constructionCost: number;
   /** Kinds of craft goods houses could get this turn. */

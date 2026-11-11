@@ -17,6 +17,8 @@ export type IdleReason =
   | 'noAccess'
   | 'needsPlaza'
   | 'needsWater'
+  /** Merchants without a path to a gate. */
+  | 'noGate'
   | 'unstaffed'
   | 'construction'
   | 'damaged'
@@ -51,6 +53,9 @@ export interface Analysis {
   materialsDelivery: number;
   production: Record<Good, number>;
   goldYield: number;
+  /** Craft goods the town's merchants can sell per turn, and the best price they get. */
+  tradeCapacity: number;
+  tradePrice: number;
   /** Units of each kind of craft goods the houses want per turn. */
   goodsDemand: number;
   /** Build points the town will have next turn. */
@@ -135,6 +140,8 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     materialsDelivery: 0,
     production: { cloth: 0, tools: 0, beer: 0 },
     goldYield: 0,
+    tradeCapacity: 0,
+    tradePrice: 0,
     goodsDemand: 0,
     buildPoints: balance.buildPointsPerTurn,
     taxFactor: 1,
@@ -193,7 +200,12 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     }
     // Greenery and the like simply stand there.
     const passive =
-      def.workers === 0 && !def.services && !def.delivery && !def.produces && !def.yields;
+      def.workers === 0 &&
+      !def.services &&
+      !def.delivery &&
+      !def.produces &&
+      !def.yields &&
+      !def.trade;
     if (passive) continue;
     analysis.workersNeeded += def.workers;
     if (paths.length === 0) {
@@ -233,9 +245,17 @@ export function analyze(state: GameState, rules: Rules): Analysis {
   // Pass 3: everything else operating buildings do.
   for (const entry of operating) {
     const { b, def, paths } = entry;
+    const connected = paths.some((t) => gateNetwork.has(indexOf(state.width, t.x, t.y)));
+    if (def.trade) {
+      if (!connected) {
+        analysis.idle.set(b.id, 'noGate');
+        continue;
+      }
+      analysis.tradeCapacity += def.trade.capacity;
+      analysis.tradePrice = Math.max(analysis.tradePrice, def.trade.price);
+    }
     spread(entry, false);
     if (def.delivery) {
-      const connected = paths.some((t) => gateNetwork.has(indexOf(state.width, t.x, t.y)));
       if (connected) {
         analysis.foodDelivery += def.delivery.food ?? 0;
         analysis.materialsDelivery += def.delivery.materials ?? 0;

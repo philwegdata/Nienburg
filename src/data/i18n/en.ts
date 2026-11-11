@@ -183,7 +183,7 @@ export const en: Strings = {
     ],
     [
       'Crafts',
-      'Weaver, smithy and brewery make goods. A market hall within reach hands them out to the better houses. Whatever does not fit into storage is sold.',
+      "Weaver, smithy and brewery make goods. A market hall within reach hands them out to the better houses. Merchants in a merchants' office sell what the houses do not need and so bring gold into town.",
     ],
     [
       'Fires and events',
@@ -203,6 +203,7 @@ export const en: Strings = {
     ['1–9, 0', 'change the view'],
     ['Ctrl+Z', 'undo'],
   ],
+  tradeInfo: 'Sells up to {n} goods per turn for {gold} gold each',
   need: {
     road: 'path',
     water: 'water',
@@ -222,6 +223,7 @@ export const en: Strings = {
     noAccess: 'Idle: there is no path next to it.',
     needsPlaza: 'Idle: the stall must stand next to a plaza.',
     needsWater: 'Idle: no well or cistern within reach.',
+    noGate: 'Idle: no path leads to a town gate.',
     unstaffed: 'Idle: there are not enough workers.',
     construction: 'Under construction: {n} more turns.',
     damaged: 'Blackened by a fire. Repair: {n} gold.',
@@ -253,6 +255,8 @@ export const en: Strings = {
     smithy: 'Smithy',
     brewery: 'Brewery',
     tannery: 'Tannery',
+    manufactory: 'Cloth manufactory',
+    kontor: "Merchants' office",
     guildhall: 'Guild hall',
     townhall: 'Town hall',
     warehouse: 'Warehouse',
@@ -286,6 +290,9 @@ export const en: Strings = {
     smithy: 'Makes tools. Loud, sooty and a fire hazard.',
     brewery: 'Brews beer. Smells a little.',
     tannery: 'Earns good gold, but the stench carries far.',
+    manufactory: 'Many looms under one roof: makes plenty of cloth for merchants to sell.',
+    kontor:
+      'Merchants sell through the gate whatever goods the town does not need. Needs a path to a town gate.',
     guildhall: 'Workshops that touch it make half as much again.',
     townhall: 'Seat of the council. Raises taxes by a fifth and makes great buildings possible.',
     warehouse:
@@ -319,6 +326,7 @@ export const en: Strings = {
       'Two neighbouring houses have grown together.',
       'Neighbouring houses have grown together {n} times.',
     ],
+    sold: ['The merchants have sold one item.', 'The merchants have sold {n} goods.'],
     fire: 'A fire has blackened a building: {name}. Nobody was hurt.',
     completed: 'Completed: {name}',
     unlocked: 'New in the build menu: {names}',
@@ -363,6 +371,10 @@ export const en: Strings = {
     needsWater: [
       'One bath house has no water within reach.',
       '{n} bath houses have no water within reach.',
+    ],
+    noGate: [
+      "One merchants' office has no path to a town gate.",
+      "{n} merchants' offices have no path to a town gate.",
     ],
     damaged: ['One building is waiting for repairs.', '{n} buildings are waiting for repairs.'],
     stalled: [

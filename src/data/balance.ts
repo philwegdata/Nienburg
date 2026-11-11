@@ -8,6 +8,7 @@ export const BALANCE: Balance = {
   workerShare: 0.4,
   foodPerHead: 0.08,
   goodsPerHead: 0.008,
+  goodsReserveTurns: 3,
   goodsCap: 40,
   goodsPrice: 2,
   mergeLevel: 4,

@@ -76,6 +76,7 @@ describe('i18n', () => {
           'dry',
           'needsPlaza',
           'needsWater',
+          'noGate',
           'noAccess',
           'unstaffed',
         ].sort(),

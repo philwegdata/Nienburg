@@ -48,6 +48,7 @@ const IDLE_HINT: Partial<Record<IdleReason, HintKind>> = {
   noAccess: 'noAccess',
   needsPlaza: 'needsPlaza',
   needsWater: 'needsWater',
+  noGate: 'noGate',
   unstaffed: 'unstaffed',
   damaged: 'damaged',
 };
@@ -148,6 +149,17 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   const available = GOODS.filter((g) => goods[g] > 0 && goods[g] >= analysis.goodsDemand);
   for (const g of available) goods[g] -= analysis.goodsDemand;
   const goodsTypes = available.length;
+
+  // Merchants sell what the houses will not need for a while, fullest store first.
+  const reserve = analysis.goodsDemand * balance.goodsReserveTurns;
+  let goodsSold = 0;
+  while (goodsSold < analysis.tradeCapacity) {
+    const best = GOODS.reduce((a, b) => (goods[b] > goods[a] ? b : a));
+    if (goods[best] <= reserve) break;
+    goods[best]--;
+    goodsSold++;
+  }
+  tradeIncome += goodsSold * analysis.tradePrice;
 
   // 2. Long building projects advance if the town can pay this season's share.
   const buildings: Record<number, Building> = {};
@@ -346,6 +358,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     downgraded,
     merged: joined.merged,
     tradeIncome,
+    goodsSold,
     constructionCost,
     goodsTypes,
     event: happening.news,

@@ -153,3 +153,20 @@
     160 Runden), weil es dann nichts Teures mehr zu bauen gibt.
   - Ein Durchspielen von Hand, wie im Plan vorgesehen, steht aus; die Abnahme stützt sich auf
     die Bot-Läufe.
+
+## Handel: Handelskontor und Tuchmanufaktur
+
+- **Handelskontor** (2×2, ab 150 Einwohnern): Händler verkaufen pro Runde bis zu 8 Waren für je
+  5 Gold durch das Tor. Sie lassen den Häusern den Bedarf von drei Runden im Lager und greifen
+  zuerst in das vollste Lager. Braucht Arbeitskräfte und einen Weg zu einem Stadttor.
+- **Tuchmanufaktur** (3×2, ab 260 Einwohnern): stellt 9 Tuch pro Runde her, mehr als doppelt so
+  viel wie eine Weberei; ein angrenzendes Zunfthaus verstärkt auch sie.
+- Zusammen bringen eine Manufaktur und ein Kontor 40 Gold pro Runde bei 12 Gold Unterhalt.
+  Ohne Kontor wird weiterhin nur verkauft, was nicht mehr ins Lager passt, für 2 Gold das Stück.
+- Der Rundenbericht nennt die verkauften Waren; die kleine Zahl neben jedem Warenvorrat zeigt
+  jetzt genau, wie er sich in der nächsten Runde ändert.
+- Entscheidungen:
+  - Kein neuer Rohstoff: Die Manufaktur ist eine große Werkstatt für Tuch, das Kontor macht aus
+    den vorhandenen Waren Gold. So bleibt es bei einer einzigen, kurzen Kette.
+  - Der Bot baut beide Gebäude nicht; die Probeläufe aus Phase 6 sind deshalb unverändert.
+    Mit Handel sammelt sich im späten Spiel noch mehr Gold an als ohnehin schon.

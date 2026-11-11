@@ -129,6 +129,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   let history: GameState[] = [];
   let analysis: Analysis = analyze(state, RULES);
   let outlook: TurnReport = forecast(state, RULES, city.goals);
+  let comingGoods = state.goods;
   let warnings = new Set<number>();
   let viewShade = new Map<number, string>();
   let rangeShade = new Map<number, string>();
@@ -246,7 +247,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   /** Recomputes everything derived from the state and refreshes all panels. */
   function refresh(): void {
     analysis = analyze(state, RULES);
-    outlook = forecast(state, RULES, city.goals);
+    // Playing the turn ahead once gives both the report and the stores as they will be.
+    const ahead = endTurn(state, RULES, city.goals);
+    outlook = ahead.lastReport!;
+    comingGoods = ahead.goods;
     warnings = new Set<number>();
     for (const [id, reason] of analysis.idle) if (reason !== 'construction') warnings.add(id);
     for (const b of Object.values(state.buildings)) {
@@ -349,11 +353,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       chip('free', t.res.free, `${tiles.free}/${tiles.buildable}`),
     ];
     // Craft goods only matter once the first workshops can be built.
-    if (GOODS.some((g) => state.goods[g] > 0 || analysis.production[g] > 0)) {
+    if (GOODS.some((g) => state.goods[g] > 0 || comingGoods[g] > 0)) {
       for (const g of GOODS) {
-        chips.push(
-          chip(g, t.good[g], String(state.goods[g]), analysis.production[g] - analysis.goodsDemand),
-        );
+        chips.push(chip(g, t.good[g], String(state.goods[g]), comingGoods[g] - state.goods[g]));
       }
     }
     const date = `${t.season[seasonOf(state.turn)]}, ${t.year} ${yearOf(state.turn)}`;
@@ -374,6 +376,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (range && range < 100) parts.push(`${t.range}: ${range}`);
     if (def.produces) {
       parts.push(`${t.makes}: ${def.produces.amount} ${t.good[def.produces.good]} ${t.perTurn}`);
+    }
+    if (def.trade) {
+      parts.push(fill(t.tradeInfo, { n: def.trade.capacity, gold: def.trade.price }));
     }
     if (def.yields?.gold) parts.push(`${t.makes}: ${def.yields.gold} ${t.res.gold} ${t.perTurn}`);
     if (def.yields?.food) parts.push(`${t.makes}: ${def.yields.food} ${t.res.food} ${t.perTurn}`);
@@ -529,6 +534,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     line(fill(t.report.population, { a: r.popBefore, b: r.popAfter }));
     line(fill(t.report.gold, { a: r.taxes, b: r.upkeep }));
     if (r.tradeIncome > 0) line(fill(t.report.trade, { n: r.tradeIncome }));
+    // Reports saved before merchants existed have no such entry.
+    if ((r.goodsSold ?? 0) > 0) line(plural(t.report.sold, r.goodsSold));
     if (r.constructionCost > 0) line(fill(t.report.construction, { n: r.constructionCost }));
     line(fill(t.report.food, { a: r.foodDelivered, b: r.foodEaten }));
     line(fill(t.report.materials, { a: r.materialsDelivered }));

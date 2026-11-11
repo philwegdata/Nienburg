@@ -146,6 +146,16 @@ const list: BuildingDef[] = [
     appeal: { value: -4, radius: 4 },
     unlockPop: 260,
   }),
+  def('manufactory', 'craft', [3, 2], [260, 50, 14, 8, 8], {
+    produces: { good: 'cloth', amount: 9 },
+    appeal: { value: -1, radius: 2 },
+    fireRisk: 2,
+    unlockPop: 260,
+  }),
+  def('kontor', 'craft', [2, 2], [140, 25, 8, 4, 3], {
+    trade: { capacity: 8, price: 5 },
+    unlockPop: 150,
+  }),
   def('guildhall', 'craft', [2, 3], [180, 45, 14, 8, 2], {
     guildBoost: 0.5,
     appeal: { value: 1, radius: 2 },
@@ -211,6 +221,8 @@ export type BuildingId =
   | 'smithy'
   | 'brewery'
   | 'tannery'
+  | 'manufactory'
+  | 'kontor'
   | 'guildhall'
   | 'townhall'
   | 'warehouse'

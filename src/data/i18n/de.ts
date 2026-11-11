@@ -183,7 +183,7 @@ export const de = {
     ],
     [
       'Handwerk',
-      'Weberei, Schmiede und Brauerei stellen Waren her. Eine Markthalle in Reichweite verteilt sie an die besseren Häuser. Was nicht ins Lager passt, wird verkauft.',
+      'Weberei, Schmiede und Brauerei stellen Waren her. Eine Markthalle in Reichweite verteilt sie an die besseren Häuser. Händler in einem Handelskontor verkaufen, was die Häuser nicht brauchen, und bringen so Gold in die Stadt.',
     ],
     [
       'Brände und Ereignisse',
@@ -203,6 +203,7 @@ export const de = {
     ['1–9, 0', 'Ansicht wechseln'],
     ['Strg+Z', 'rückgängig'],
   ],
+  tradeInfo: 'Verkauft bis zu {n} Waren pro Runde für je {gold} Gold',
   need: {
     road: 'Weg',
     water: 'Wasser',
@@ -222,6 +223,7 @@ export const de = {
     noAccess: 'Außer Betrieb: Es fehlt ein Weg nebenan.',
     needsPlaza: 'Außer Betrieb: Der Stand muss an einem Platz stehen.',
     needsWater: 'Außer Betrieb: Kein Brunnen und keine Zisterne in Reichweite.',
+    noGate: 'Außer Betrieb: Es führt kein Weg zu einem Stadttor.',
     unstaffed: 'Außer Betrieb: Es fehlen Arbeitskräfte.',
     construction: 'Im Bau: noch {n} Runden.',
     damaged: 'Rußgeschwärzt nach einem Brand. Reparatur: {n} Gold.',
@@ -253,6 +255,8 @@ export const de = {
     smithy: 'Schmiede',
     brewery: 'Brauerei',
     tannery: 'Gerberei',
+    manufactory: 'Tuchmanufaktur',
+    kontor: 'Handelskontor',
     guildhall: 'Zunfthaus',
     townhall: 'Rathaus',
     warehouse: 'Lagerhaus',
@@ -286,6 +290,10 @@ export const de = {
     smithy: 'Stellt Werkzeug her. Laut, rußig und brandgefährlich.',
     brewery: 'Braut Bier. Riecht ein wenig.',
     tannery: 'Bringt gutes Gold, stinkt aber weit.',
+    manufactory:
+      'Viele Webstühle unter einem Dach: stellt reichlich Tuch her, das Händler verkaufen können.',
+    kontor:
+      'Händler verkaufen durch das Tor, was die Stadt an Waren nicht braucht. Braucht einen Weg zu einem Stadttor.',
     guildhall: 'Werkstätten, die direkt angrenzen, leisten die Hälfte mehr.',
     townhall: 'Sitz des Rates. Erhöht die Steuern um ein Fünftel und macht große Bauten möglich.',
     warehouse: 'Lagert Baumaterial und holt mehr davon durch die Tore, wenn ein Weg dorthin führt.',
@@ -318,6 +326,7 @@ export const de = {
       'Zwei Nachbarhäuser sind zusammengewachsen.',
       '{n}-mal sind Nachbarhäuser zusammengewachsen.',
     ],
+    sold: ['Die Händler haben eine Ware verkauft.', 'Die Händler haben {n} Waren verkauft.'],
     fire: 'Ein Feuer hat ein Gebäude geschwärzt: {name}. Niemand kam zu Schaden.',
     completed: 'Fertiggestellt: {name}',
     unlocked: 'Neu im Baumenü: {names}',
@@ -362,6 +371,10 @@ export const de = {
     needsWater: [
       'Ein Badehaus hat kein Wasser in Reichweite.',
       '{n} Badehäuser haben kein Wasser in Reichweite.',
+    ],
+    noGate: [
+      'Ein Handelskontor hat keinen Weg zu einem Stadttor.',
+      '{n} Handelskontore haben keinen Weg zu einem Stadttor.',
     ],
     damaged: ['Ein Gebäude wartet auf Reparatur.', '{n} Gebäude warten auf Reparatur.'],
     stalled: [
