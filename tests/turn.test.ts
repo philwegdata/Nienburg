@@ -209,12 +209,14 @@ describe('materials', () => {
 describe('treasury', () => {
   it('collects taxes per inhabitant and pays upkeep for every building', () => {
     let state = { ...street(), gold: 100 };
-    state = put(state, 'well', 1, 4); // upkeep 2
+    state = put(state, 'well', 1, 4);
     state = { ...setHouse(state, 1, { level: 1, pop: 4, lacking: 0 }), gold: 100 };
     const after = endTurn(state, RULES);
-    // Nine new houses get 2 people each, the first stays at 4: 22 × 0.15 = 3.3 → 3.
-    expect(after.lastReport).toMatchObject({ taxes: 3, upkeep: 2, subsidy: false });
-    expect(after.gold).toBe(101);
+    // Nine new houses get 2 people each, the first stays at 4: 22 huts' worth of taxes.
+    const taxes = Math.floor(22 * RULES.housing[0]!.taxPerHead);
+    const upkeep = RULES.buildings.well!.upkeep;
+    expect(after.lastReport).toMatchObject({ taxes, upkeep, subsidy: false });
+    expect(after.gold).toBe(100 + taxes - upkeep);
   });
 
   it('never drops below zero: the sovereign covers the gap and it is counted', () => {

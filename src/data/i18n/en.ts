@@ -275,7 +275,7 @@ export const en: Strings = {
     chapel: 'A small place of faith for the neighbourhood.',
     church: 'Faith for a whole quarter.',
     cathedral:
-      "The town's great work. Building takes eight turns and costs gold and material every turn.",
+      "The town's great work. Building takes twelve turns and costs gold and material every turn.",
     firewatch: 'Protects all buildings along the paths from fire.',
     nightwatch: 'Keeps order in the alleys at night.',
     bathhouse: 'Keeps people healthy. Needs water within reach.',

@@ -9,6 +9,9 @@ Cozy, turn-based medieval city builder for the browser. The roadmap and game des
 - `npm test` – unit tests (Vitest)
 - `npm run lint` – ESLint + Prettier check (`npm run format` to fix formatting)
 - `npm run build` – type-check and production build
+- `npm run sim` – a bot plays every city and prints when each star falls (`npm run sim -- 200 5`
+  for 200 turns and five random seeds). Run it after changing numbers in `src/data/`;
+  `tests/balance.test.ts` holds the corridor the results must stay in.
 
 ## Architecture rules
 

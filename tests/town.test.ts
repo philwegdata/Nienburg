@@ -161,10 +161,11 @@ describe('long building projects', () => {
     return put(state, 'cathedral', 6, 1);
   }
   const cathedral = (state: GameState) => buildingAt(state, 6, 1)!;
+  const project = BUILDINGS.cathedral!.construction!;
 
   it('start as a building site that does nothing yet and costs no upkeep', () => {
     const state = site();
-    expect(cathedral(state).construction).toBe(8);
+    expect(cathedral(state).construction).toBe(project.turns);
     const a = analyze(state, RULES);
     expect(a.idle.get(cathedral(state).id)).toBe('construction');
     expect(a.covered.faith.size).toBe(0);
@@ -174,11 +175,13 @@ describe('long building projects', () => {
   it('advance one step per turn for gold and materials, then stand finished', () => {
     const start = { ...site(), materials: 1000 };
     const one = endTurn(start, RULES);
-    expect(cathedral(one).construction).toBe(7);
-    expect(one.lastReport?.constructionCost).toBe(60);
-    expect(start.materials + one.lastReport!.materialsDelivered - one.materials).toBe(25);
+    expect(cathedral(one).construction).toBe(project.turns - 1);
+    expect(one.lastReport?.constructionCost).toBe(project.gold);
+    expect(start.materials + one.lastReport!.materialsDelivered - one.materials).toBe(
+      project.materials,
+    );
 
-    const done = turns(start, 8);
+    const done = turns(start, project.turns);
     expect(cathedral(done).construction).toBeUndefined();
     expect(done.lastReport?.completed).toEqual(['cathedral']);
     expect(goalProgress(done, { kind: 'building', def: 'cathedral' }).done).toBe(true);
@@ -187,7 +190,7 @@ describe('long building projects', () => {
 
   it('rest without loss while the town cannot pay', () => {
     const broke = endTurn({ ...site(), gold: 0, materials: 1000 }, RULES);
-    expect(cathedral(broke).construction).toBe(8);
+    expect(cathedral(broke).construction).toBe(project.turns);
     expect(broke.lastReport?.hints.map((h) => h.kind)).toContain('stalled');
     expect(broke.lastReport?.constructionCost).toBe(0);
     expect(goalProgress(broke, { kind: 'building', def: 'cathedral' }).done).toBe(false);
@@ -327,7 +330,7 @@ describe('workshops and trade', () => {
 
   it('offer a kind of goods only while the stock covers what the houses want', () => {
     let state = put(quarter(), 'markethall', 12, 7);
-    state = setHouse(state, 1, 7, { level: 4, pop: 200, lacking: 0 }); // wants 3 of each kind
+    state = setHouse(state, 1, 7, { level: 4, pop: 350, lacking: 0 }); // wants 3 of each kind
     expect(analyze(state, RULES).goodsDemand).toBe(3);
     const after = endTurn({ ...state, goods: { cloth: 10, tools: 2, beer: 3 } }, RULES);
     expect(after.lastReport?.goodsTypes).toBe(2);
@@ -349,8 +352,10 @@ describe('workshops and trade', () => {
     let state = put(quarter(), 'townhall', 2, 3);
     state = put(state, 'buildersyard', 6, 4);
     const after = endTurn(state, RULES);
-    expect(after.lastReport!.taxes).toBe(Math.floor(70 * 0.25 * 1.2));
-    expect(plain.lastReport!.taxes).toBe(Math.floor(70 * 0.25));
+    const perHead = RULES.housing[1]!.taxPerHead;
+    expect(after.lastReport!.taxes).toBe(Math.floor(70 * perHead * 1.2));
+    expect(plain.lastReport!.taxes).toBe(Math.floor(70 * perHead));
+    expect(after.lastReport!.taxes).toBeGreaterThan(plain.lastReport!.taxes);
     expect(after.buildPoints).toBe(RULES.balance.buildPointsPerTurn + 10);
   });
 });

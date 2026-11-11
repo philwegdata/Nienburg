@@ -116,3 +116,40 @@
   - Die Abnahme „eine Person ohne Vorwissen“ ist durch einen Test ersetzt, der genau das tut,
     was die Tutorial-Karten sagen, und so den ersten Stern erreicht. Ein Test mit einem
     echten Menschen steht aus.
+
+## Phase 6 – Balancing
+
+- `npm run sim`: Ein Bot plant aus einer Vorlage eine Stadt (Hauptstraße, Häuserzeilen mit Grün
+  dahinter, Seitenstraße mit den großen Gebäuden) und baut sie so schnell, wie die Kasse es
+  erlaubt. Ausgegeben werden die Runden bis zu jedem Stern, Einwohner, Hausstufen, Goldverlauf,
+  Wartezeiten und die häufigsten Hinweise. Pro Stadt gibt es zwei verschiedene Grundrisse.
+- Ergebnis über je drei Zufallswerte (Runden bis Stern 1 / 2 / 3):
+  - Nienburg, Hauptstraße von Tor zu Tor: 17 / 51–61 / 61–76
+  - Nienburg, Hauptstraße quer zum Fluss: 18–19 / 60–77 / 77–95
+  - Carcassonne, Hauptstraße am Westtor: 31–39 / 67–83 / 90–107
+  - Carcassonne, Hauptstraße im Norden: 41–47 / nicht erreicht / 103–119
+- Geänderte Zahlen:
+  - Steuern pro Kopf flacher: 0,20 / 0,24 / 0,27 / 0,27 / 0,28 statt 0,15 bis 0,90. Vorher
+    häufte sich ab den Bürgerhäusern Gold ohne Ende an, während der Anfang knapp war.
+  - Unterhalt der Grundversorgung gesenkt (Brunnen 1, Marktstand 3, Kapelle 5, Brandwache 4,
+    Nachtwächter 4). Vorher konnte ein Dorf aus neun Lehmhäusern seine Kapelle nicht tragen
+    und blieb stecken.
+  - Wohnparzelle 15 Gold und 3 Material statt 10 und 2
+  - Markthalle 220, Badehaus 150, Schule 180, Rathaus 320, Spital 260 Gold
+  - Freischaltung der mittleren Gebäude ab 150 statt 120 Einwohnern, der späten ab 260 statt
+    200, der Kathedrale ab 400 statt 350; Bauzeit der Kathedrale zwölf statt acht Runden
+  - Warenbedarf pro Kopf fast halbiert (0,008): Eine Werkstatt je Sorte reicht jetzt für eine
+    mittlere Stadt.
+  - Carcassonne, erster Stern: 170 statt 300 Einwohner
+- Neue Tests sichern das ab: jedes Gebäude ist mit den Baupunkten einer Runde und einem leeren
+  Lager bezahlbar, die Kasse fällt nie unter null, eine verschuldete Stadt kommt durch Abriss
+  und neue Häuser wieder auf die Beine, und die Bot-Läufe bleiben im Korridor.
+- Entscheidungen und offene Punkte:
+  - Der dritte Stern fällt nach 60 bis 120 Runden statt genau 120; Nienburg ist als
+    Einstiegsstadt bewusst schneller.
+  - Der nördliche Grundriss in Carcassonne hat nur 18 Hausparzellen und erreicht den zweiten
+    Stern (20 Bürgerhäuser) deshalb nicht. Das liegt an der Vorlage des Bots, nicht an der Karte.
+  - Nach dem dritten Stern sammelt sich weiterhin Gold an (im schnellsten Lauf rund 6000 nach
+    160 Runden), weil es dann nichts Teures mehr zu bauen gibt.
+  - Ein Durchspielen von Hand, wie im Plan vorgesehen, steht aus; die Abnahme stützt sich auf
+    die Bot-Läufe.

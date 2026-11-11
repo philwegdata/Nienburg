@@ -5,7 +5,7 @@ Der Platz innerhalb der Stadtmauer ist von Anfang an begrenzt – die Kunst lieg
 
 **Spielen:** https://philwegdata.github.io/Nienburg/
 
-Stand: Phase 5 – zwei Städte (Nienburg und Carcassonne), 30 Gebäude, fünf Wohnhaus-Stufen, Jahreszeiten und Ereignisse, ein geführtes Tutorial, Einstellungen und Hilfe. Als Nächstes folgt das Balancing (Phase 6).
+Stand: Phase 6 – zwei Städte (Nienburg und Carcassonne), 30 Gebäude, fünf Wohnhaus-Stufen, Jahreszeiten, Ereignisse, Tutorial und ein mit automatischen Probeläufen abgestimmtes Balancing. Als Nächstes folgen weitere Städte (Phase 7).
 
 ## Lokal starten
 
@@ -15,6 +15,7 @@ npm run dev      # Entwicklungsserver
 npm test         # Unit-Tests
 npm run lint     # ESLint + Prettier
 npm run build    # Produktions-Build nach dist/
+npm run sim      # Probeläufe: ein Bot spielt jede Stadt durch und gibt Kennzahlen aus
 ```
 
 ## Deployment

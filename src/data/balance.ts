@@ -7,7 +7,7 @@ export const BALANCE: Balance = {
   repairShare: 0.3,
   workerShare: 0.4,
   foodPerHead: 0.08,
-  goodsPerHead: 0.015,
+  goodsPerHead: 0.008,
   goodsCap: 40,
   goodsPrice: 2,
   mergeLevel: 4,

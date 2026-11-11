@@ -15,7 +15,7 @@ export const carcassonne: CityDef = {
   difficulty: 2,
   buildableRange: [380, 460],
   goals: [
-    { kind: 'population', value: 300 },
+    { kind: 'population', value: 170 },
     { kind: 'houses', level: 4, count: 20 },
     { kind: 'building', def: 'cathedral' },
   ],

@@ -79,7 +79,7 @@ describe('scripted playthrough on Nienburg', () => {
     expect(state.subsidies).toBe(0);
     // The three houses furthest east are out of the chapel's reach and stay clay houses.
     expect({ gold: state.gold, food: state.food, materials: state.materials }).toEqual({
-      gold: 433,
+      gold: 177,
       food: 40,
       materials: 80,
     });

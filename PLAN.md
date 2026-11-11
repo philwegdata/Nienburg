@@ -323,10 +323,10 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 ### Phase 6 – Balancing
 
-- [ ] Headless-Simulationsskript (`npm run sim`): spielt Karten mit einfachen Bot-Strategien durch und gibt Kennzahlen aus (Runden bis Stern 1/2/3, Goldverlauf, Engpässe)
-- [ ] Zahlen in `data/` justieren: Stern 1 in ~30 Runden, Stern 3 in ~120 Runden erreichbar
-- [ ] Sicherstellen, dass es keine Sackgassen gibt (Zuschuss-Mechanik greift, Abriss erstattet Teilkosten)
-- [ ] Mehrere tragfähige Stadtlayouts pro Karte (nicht nur eine optimale Lösung)
+- [x] Headless-Simulationsskript (`npm run sim`): spielt Karten mit einfachen Bot-Strategien durch und gibt Kennzahlen aus (Runden bis Stern 1/2/3, Goldverlauf, Engpässe)
+- [x] Zahlen in `data/` justieren: Stern 1 in ~30 Runden, Stern 3 in ~120 Runden erreichbar
+- [x] Sicherstellen, dass es keine Sackgassen gibt (Zuschuss-Mechanik greift, Abriss erstattet Teilkosten)
+- [x] Mehrere tragfähige Stadtlayouts pro Karte (nicht nur eine optimale Lösung)
 
 **Abnahme:** Bot-Läufe liegen im Zielkorridor; manueller Durchlauf von Karte 1 und 2 fühlt sich nie festgefahren an.
 

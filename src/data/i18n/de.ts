@@ -275,7 +275,7 @@ export const de = {
     chapel: 'Ein kleiner Ort des Glaubens für die Nachbarschaft.',
     church: 'Glaube für ein ganzes Viertel.',
     cathedral:
-      'Das große Werk der Stadt. Der Bau dauert acht Runden und kostet jede Runde Gold und Material.',
+      'Das große Werk der Stadt. Der Bau dauert zwölf Runden und kostet jede Runde Gold und Material.',
     firewatch: 'Schützt alle Gebäude entlang der Wege vor Feuer.',
     nightwatch: 'Sorgt nachts für Ordnung in den Gassen.',
     bathhouse: 'Hält die Leute gesund. Braucht Wasser in Reichweite.',
