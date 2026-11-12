@@ -258,3 +258,17 @@
     deshalb weniger Leute.
   - Gekauftes Land liegt außerhalb der Mauer und bekommt keine eigene Befestigung.
   - Der Bot nutzt weder Kanäle noch Landkauf; die Probeläufe sind davon unberührt.
+
+## Sandbox-Modus
+
+- Jede Stadt lässt sich zusätzlich als Sandbox spielen (Knopf unter „Spielen“ in der Stadtauswahl).
+- In der Sandbox kostet nichts etwas: Bauen, Reparieren, Landkauf und Bauprojekte sind frei,
+  Gold, Material und Baupunkte zeigen „∞“.
+- Alle Gebäude sind von Anfang an verfügbar, auch mehrfach die sonst einmaligen (Rathaus,
+  Kathedrale) und die Besonderheiten anderer Städte (Geschlechterturm).
+- Es gibt keine Ziele und keine Sterne, und das Tutorial startet nicht.
+- Die Sandbox hat pro Stadt einen eigenen Spielstand; das normale Spiel bleibt unberührt. Beim
+  nächsten Öffnen geht es dort weiter, wo man zuletzt war.
+- Entscheidung: Alles andere läuft wie gewohnt weiter – Einwohner brauchen Wasser, Nahrung und
+  Dienste, Gebäude brauchen Arbeitskräfte, Brände und Ereignisse kommen vor. Die Sandbox nimmt
+  die Knappheit weg, nicht die Stadt.

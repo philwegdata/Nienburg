@@ -4,6 +4,7 @@ import type { GameState } from '../core/types';
 const SAVE_PREFIX = 'nienburg.save.';
 const LEGACY_SAVE = 'nienburg.save';
 const LAST_CITY = 'nienburg.last';
+const LAST_MODE = 'nienburg.lastMode';
 const STARS = 'nienburg.stars';
 
 export type Stars = [boolean, boolean, boolean];
@@ -36,20 +37,34 @@ export function adoptLegacySave(): void {
   }
 }
 
-export function loadGame(cityId: string): GameState | null {
-  const text = read(SAVE_PREFIX + cityId);
-  return text ? deserialize(text, [cityId]) : null;
+const slot = (cityId: string, sandbox: boolean) =>
+  SAVE_PREFIX + cityId + (sandbox ? '.sandbox' : '');
+
+/** The saved game of a city: the normal one, or its separate sandbox. */
+export function loadGame(cityId: string, sandbox = false): GameState | null {
+  const text = read(slot(cityId, sandbox));
+  const state = text ? deserialize(text, [cityId]) : null;
+  // A save in the wrong slot is not trusted to be what the slot says.
+  return state && Boolean(state.sandbox) === sandbox ? state : null;
 }
 
 export function saveGame(state: GameState): void {
-  write(SAVE_PREFIX + state.cityId, serialize(state));
+  const sandbox = state.sandbox === true;
+  write(slot(state.cityId, sandbox), serialize(state));
   write(LAST_CITY, state.cityId);
+  write(LAST_MODE, sandbox ? 'sandbox' : 'normal');
+  if (sandbox) return;
   // Stars stay earned even if the town is started over.
   const best = bestStars(state.cityId);
   const merged = state.stars.map((s, i) => s || best[i]) as Stars;
   const all = allStars();
   all[state.cityId] = merged;
   write(STARS, JSON.stringify(all));
+}
+
+/** Whether the game last played was a sandbox. */
+export function lastWasSandbox(): boolean {
+  return read(LAST_MODE) === 'sandbox';
 }
 
 function allStars(): Record<string, Stars> {

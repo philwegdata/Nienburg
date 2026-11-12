@@ -222,6 +222,10 @@ export const en: Strings = {
   canalDry: 'Dry: the canal does not reach the wall.',
   canalFlows: 'Carries water.',
   landBought: 'Land bought: {n} tiles',
+  sandbox: 'Sandbox',
+  sandboxInfo:
+    'Sandbox: everything is free and available from the start. There are no goals and no stars.',
+  sandboxResume: 'Continue sandbox',
   need: {
     road: 'path',
     water: 'water',

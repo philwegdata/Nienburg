@@ -409,6 +409,11 @@ export interface GameState {
   stars: [boolean, boolean, boolean];
   /** Building capacity left this turn. */
   buildPoints: number;
+  /**
+   * Sandbox: everything is free and available from the start, and there are no goals.
+   * Absent in a normal game.
+   */
+  sandbox?: boolean;
   /** Tiles of land bought outside the walls so far. */
   landBought: number;
   /** An event in effect during the current turn. */

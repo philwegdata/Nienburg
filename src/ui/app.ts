@@ -48,7 +48,14 @@ import {
 } from './prefs';
 import { play } from './sound';
 import { worldMap } from './worldmap';
-import { adoptLegacySave, bestStars, lastCity, loadGame, saveGame } from './storage';
+import {
+  adoptLegacySave,
+  bestStars,
+  lastCity,
+  lastWasSandbox,
+  loadGame,
+  saveGame,
+} from './storage';
 
 type Tool =
   | { kind: 'select' }
@@ -131,13 +138,16 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   if (!ctx) throw new Error('Canvas 2D is not supported');
   adoptLegacySave();
 
-  const fresh = (def: CityDef) => newGame(def, Date.now(), rules.balance);
+  const fresh = (def: CityDef, sandbox = false) =>
+    newGame(def, Date.now(), rulesFor(def).balance, sandbox);
   const remembered = cities.find((c) => c.id === lastCity());
 
   let city: CityDef = remembered ?? cities[0]!;
   /** The general rules, bent by what makes the current town special. */
   let rules = rulesFor(city);
-  let state: GameState = loadGame(city.id) ?? fresh(city);
+  // Pick up where the player left off, in the normal game or in the sandbox.
+  const resumeSandbox = remembered !== undefined && lastWasSandbox();
+  let state: GameState = loadGame(city.id, resumeSandbox) ?? fresh(city, resumeSandbox);
   /** States from earlier in this turn, for undo. */
   let history: GameState[] = [];
   let analysis: Analysis = analyze(state, rules);
@@ -317,7 +327,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     updateLocks();
     updateTutorial();
     el.undo.disabled = history.length === 0;
-    el.menu.textContent = `${starText(state.stars)} ${city.name[lang]}`;
+    el.menu.textContent = state.sandbox
+      ? `${t.sandbox} · ${city.name[lang]}`
+      : `${starText(state.stars)} ${city.name[lang]}`;
     requestDraw();
   }
 
@@ -354,10 +366,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
   }
 
-  function openCity(def: CityDef, restart: boolean): void {
+  function openCity(def: CityDef, restart: boolean, sandbox = false): void {
     city = def;
     rules = rulesFor(def);
-    state = (restart ? null : loadGame(def.id)) ?? fresh(def);
+    state = (restart ? null : loadGame(def.id, sandbox)) ?? fresh(def, sandbox);
     startTutorialIfDue();
     history = [];
     selected = null;
@@ -385,26 +397,31 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     const goldDelta =
       outlook.taxes + outlook.tradeIncome - outlook.upkeep - outlook.constructionCost;
     const chips = [
-      chip('gold', t.res.gold, String(state.gold), goldDelta),
+      // In a sandbox nothing runs out.
+      state.sandbox
+        ? chip('gold', t.res.gold, '∞')
+        : chip('gold', t.res.gold, String(state.gold), goldDelta),
       chip(
         'food',
         t.res.food,
         `${state.food}/${analysis.foodCap}`,
         outlook.foodDelivered - outlook.foodEaten,
       ),
-      chip(
-        'materials',
-        t.res.materials,
-        `${state.materials}/${analysis.materialsCap}`,
-        outlook.materialsDelivered,
-      ),
+      state.sandbox
+        ? chip('materials', t.res.materials, '∞')
+        : chip(
+            'materials',
+            t.res.materials,
+            `${state.materials}/${analysis.materialsCap}`,
+            outlook.materialsDelivered,
+          ),
       chip(
         'population',
         t.res.population,
         String(analysis.population),
         outlook.popAfter - outlook.popBefore,
       ),
-      chip('buildPoints', t.res.buildPoints, String(state.buildPoints)),
+      chip('buildPoints', t.res.buildPoints, state.sandbox ? '∞' : String(state.buildPoints)),
       chip('free', t.res.free, `${tiles.free}/${tiles.buildable}`),
     ];
     // Craft goods only matter once the first workshops can be built.
@@ -488,7 +505,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     const add: Add = (tag, text, cls) => el.info.append(node(tag, text, cls));
     if (tool.kind === 'land') {
       add('h2', t.toolLand);
-      add('p', fill(t.hintLand, { n: landPrice(state, rules.balance.land) }));
+      add('p', fill(t.hintLand, { n: state.sandbox ? 0 : landPrice(state, rules.balance.land) }));
       if (state.landBought > 0) add('p', fill(t.landBought, { n: state.landBought }), 'meta');
       return;
     }
@@ -572,7 +589,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     else if (tool.kind === 'demolish') el.hint.textContent = t.hintDemolish;
     else if (tool.kind === 'repair') el.hint.textContent = t.hintRepair;
     else if (tool.kind === 'land') {
-      el.hint.textContent = fill(t.hintLand, { n: landPrice(state, rules.balance.land) });
+      el.hint.textContent = fill(t.hintLand, {
+        n: state.sandbox ? 0 : landPrice(state, rules.balance.land),
+      });
     } else {
       const drag = rules.buildings[tool.def]!.drag;
       el.hint.textContent =
@@ -665,9 +684,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.goals.replaceChildren(
       node('h2', city.name[lang]),
       node('p', city.region[lang], 'sub'),
-      node('h3', t.goals),
+      node(state.sandbox ? 'p' : 'h3', state.sandbox ? t.sandboxInfo : t.goals),
     );
-    city.goals.forEach((goal, i) => {
+    (state.sandbox ? [] : city.goals).forEach((goal, i) => {
       const row = node('div', undefined, 'goal');
       const progress = goalProgress(state, goal);
       row.append(
@@ -698,9 +717,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   }
 
   function showCities(): void {
-    const pick = (def: CityDef) => {
+    const pick = (def: CityDef, sandbox = false) => {
       el.cities.close();
-      openCity(def, false);
+      openCity(def, false, sandbox);
     };
     const grid = node('div', undefined, 'cities');
     const pins = cities.map((def, i) => ({
@@ -728,7 +747,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         button(
           saved ? t.resume : t.play,
           () => pick(def),
-          def.id === city.id ? 'primary' : undefined,
+          def.id === city.id && !state.sandbox ? 'primary' : undefined,
+        ),
+        button(
+          loadGame(def.id, true) ? t.sandboxResume : t.sandbox,
+          () => pick(def, true),
+          def.id === city.id && state.sandbox ? 'primary' : 'quiet',
         ),
       );
       grid.append(card);
@@ -760,10 +784,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         const def = loaded && cities.find((c) => c.id === loaded.cityId);
         if (!loaded || !def) return false;
         saveGame(loaded);
-        openCity(def, false);
+        openCity(def, false, loaded.sandbox === true);
         return true;
       },
-      restart: () => openCity(city, true),
+      restart: () => openCity(city, true, state.sandbox === true),
       restartTutorial() {
         storeTutorialStep(0);
         const home = cities.find((c) => c.id === 'nienburg') ?? city;
@@ -782,7 +806,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   function startTutorialIfDue(): void {
     // Someone who already has a town going does not need the first steps explained.
     if (!tutorialKnown() && state.turn > 0) storeTutorialStep(null);
-    tutorial = city.id === 'nienburg' ? storedTutorialStep() : null;
+    tutorial = city.id === 'nienburg' && !state.sandbox ? storedTutorialStep() : null;
   }
 
   function setTutorial(step: number | null): void {
@@ -852,7 +876,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     for (const b of toolButtons) {
       if (b.tool.kind !== 'build') continue;
       const def = rules.buildings[b.tool.def]!;
-      const foreign = def.cities !== undefined && !def.cities.includes(city.id);
+      // In a sandbox even other towns' specialities are on offer.
+      const foreign = !state.sandbox && def.cities !== undefined && !def.cities.includes(city.id);
       b.node.hidden = foreign || GROUP_OF[def.category] !== group;
       // Some towns have their own names for buildings.
       const label = b.node.querySelector('.name');

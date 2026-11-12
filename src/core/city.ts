@@ -81,9 +81,10 @@ export function validateCity(def: CityDef): string[] {
   return problems;
 }
 
-export function newGame(def: CityDef, seed: number, balance: Balance): GameState {
+export function newGame(def: CityDef, seed: number, balance: Balance, sandbox = false): GameState {
   const { width, height, terrain } = parseCity(def);
   return {
+    ...(sandbox ? { sandbox: true } : {}),
     version: 4,
     cityId: def.id,
     width,

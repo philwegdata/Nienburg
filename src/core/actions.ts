@@ -78,6 +78,8 @@ export type Lock =
   | { kind: 'elsewhere' };
 
 export function lockOf(state: GameState, def: BuildingDef): Lock | null {
+  // In a sandbox everything can be built at once, as often as one likes.
+  if (state.sandbox) return null;
   if (def.cities && !def.cities.includes(state.cityId)) return { kind: 'elsewhere' };
   if (def.unlockPop && state.peakPop < def.unlockPop) return { kind: 'pop', value: def.unlockPop };
   const all = Object.values(state.buildings);
@@ -93,6 +95,7 @@ export function lockOf(state: GameState, def: BuildingDef): Lock | null {
 
 /** The first thing the town is short of for building `def`, if any. */
 export function affordError(state: GameState, def: BuildingDef): PlaceError | null {
+  if (state.sandbox) return null;
   if (state.buildPoints < def.buildPoints) return 'noBuildPoints';
   if (state.gold < def.cost) return 'noGold';
   if (state.materials < def.materials) return 'noMaterials';
@@ -148,9 +151,14 @@ export function placeBuilding(
       occupancy,
       buildings: { ...base.buildings, [id]: building },
       nextBuildingId: id + 1,
-      gold: base.gold - def.cost,
-      materials: base.materials - def.materials,
-      buildPoints: base.buildPoints - def.buildPoints,
+      // Nothing costs anything in a sandbox.
+      ...(base.sandbox
+        ? {}
+        : {
+            gold: base.gold - def.cost,
+            materials: base.materials - def.materials,
+            buildPoints: base.buildPoints - def.buildPoints,
+          }),
     },
   };
 }
@@ -206,8 +214,9 @@ export function repair(
   const target = buildingAt(state, x, y);
   const def = target && defs[target.def];
   if (!target?.damaged || !def) return { ok: false, reason: 'nothing' };
-  if (state.buildPoints < 1) return { ok: false, reason: 'noBuildPoints' };
-  const cost = repairCost(def, repairShare);
+  const free = state.sandbox === true;
+  if (!free && state.buildPoints < 1) return { ok: false, reason: 'noBuildPoints' };
+  const cost = free ? 0 : repairCost(def, repairShare);
   if (state.gold < cost) return { ok: false, reason: 'noGold' };
   const fixed = { ...target };
   delete fixed.damaged;
@@ -217,7 +226,7 @@ export function repair(
       ...state,
       buildings: { ...state.buildings, [target.id]: fixed },
       gold: state.gold - cost,
-      buildPoints: state.buildPoints - 1,
+      buildPoints: state.buildPoints - (free ? 0 : 1),
     },
   };
 }
@@ -266,7 +275,7 @@ export function buyLand(
 ): LandResult {
   const error = landError(state, x, y);
   if (error) return { ok: false, reason: error };
-  const price = landPrice(state, land);
+  const price = state.sandbox ? 0 : landPrice(state, land);
   if (state.gold < price) return { ok: false, reason: 'noGold' };
   const terrain = state.terrain.slice();
   terrain[indexOf(state.width, x, y)] = 'buildable';

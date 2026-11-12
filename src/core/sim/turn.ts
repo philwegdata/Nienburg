@@ -170,13 +170,16 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     .sort((a, b) => a.id - b.id);
   for (const b of sites) {
     const cost = rules.buildings[b.def]?.construction;
-    if (!cost || gold < cost.gold || materials < cost.materials) {
+    const free = state.sandbox === true;
+    if (!cost || (!free && (gold < cost.gold || materials < cost.materials))) {
       hints.add('stalled', b);
       continue;
     }
-    gold -= cost.gold;
-    materials -= cost.materials;
-    constructionCost += cost.gold;
+    if (!free) {
+      gold -= cost.gold;
+      materials -= cost.materials;
+      constructionCost += cost.gold;
+    }
     const next: Building = { ...b, construction: b.construction! - 1 };
     if (next.construction === 0) {
       delete next.construction;
@@ -339,6 +342,8 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   const stars: [boolean, boolean, boolean] = [...state.stars];
   const newStars: number[] = [];
   goals.forEach((goal, i) => {
+    // A sandbox has no goals to reach.
+    if (state.sandbox) return;
     if (i < 3 && !stars[i] && goalProgress(next, goal).done) {
       stars[i] = true;
       newStars.push(i);

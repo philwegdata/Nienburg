@@ -223,6 +223,10 @@ export const de = {
   canalDry: 'Trocken: Der Kanal reicht nicht bis zur Mauer.',
   canalFlows: 'Führt Wasser.',
   landBought: 'Gekauftes Land: {n} Felder',
+  sandbox: 'Sandbox',
+  sandboxInfo:
+    'Sandbox: Alles ist kostenlos und von Anfang an verfügbar. Es gibt keine Ziele und keine Sterne.',
+  sandboxResume: 'Sandbox fortsetzen',
   need: {
     road: 'Weg',
     water: 'Wasser',
