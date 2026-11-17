@@ -726,3 +726,15 @@ button.quiet {
   border-radius: 6px;
   font-size: 0.85rem;
 }
+
+.chip.wish,
+.chip.wish:hover,
+.chip.wish:focus-visible {
+  color: var(--ink);
+  background: #f2d7c2;
+}
+
+.chip.wish:hover,
+.chip.wish:focus-visible {
+  filter: brightness(1.06);
+}

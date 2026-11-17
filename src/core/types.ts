@@ -303,6 +303,22 @@ export interface Balance {
     fireRisk: number;
     shade: number;
   };
+  /**
+   * Residents' wishes: chance per turn that someone wishes for something once the town is past
+   * `quietTurns`, how close a wished-for building has to be, and the reward.
+   */
+  wishes: {
+    chance: number;
+    quietTurns: number;
+    radius: number;
+    reward: number;
+    perLevel: number;
+    /** How many first names there are to pick from. */
+    names: number;
+    /** Buildings wished for close to home, and buildings wished for once more in town. */
+    near: readonly string[];
+    more: readonly string[];
+  };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -413,6 +429,10 @@ export interface TurnReport {
   loanInterest: number;
   /** Gold paid back to the bank this turn. */
   loanPaid: number;
+  /** A wish fulfilled this turn, with the gold it brought. */
+  wishGranted?: Wish | null;
+  /** A wish spoken this turn. */
+  wishNew?: Wish | null;
   foodDelivered: number;
   foodWasted: number;
   foodEaten: number;
@@ -445,9 +465,21 @@ export interface TurnReport {
   hints: Hint[];
 }
 
+/**
+ * A resident's wish. There is never a deadline; a wish whose house is gone is simply dropped.
+ * `name` indexes the list of first names; `house` is the building id of the resident's home.
+ */
+export type Wish =
+  /** A building of kind `def` close to the house. */
+  | { kind: 'near'; house: number; name: number; def: string; reward: number }
+  /** The house reaches `level`. */
+  | { kind: 'level'; house: number; name: number; level: number; reward: number }
+  /** The town has `count` buildings of kind `def`. */
+  | { kind: 'count'; house: number; name: number; def: string; count: number; reward: number };
+
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 6;
+  version: 7;
   cityId: string;
   width: number;
   height: number;
@@ -485,6 +517,10 @@ export interface GameState {
   subsidies: number;
   /** Gold owed to the bank. */
   debt: number;
+  /** What one of the residents wishes for right now. */
+  wish: Wish | null;
+  /** Wishes fulfilled so far. */
+  wishesGranted: number;
   lastReport: TurnReport | null;
 }
 

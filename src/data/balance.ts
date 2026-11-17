@@ -1,4 +1,5 @@
 import type { Balance } from '../core/types';
+import { WISH_MORE, WISH_NAMES, WISH_NEAR } from './wishes';
 
 export const BALANCE: Balance = {
   start: { gold: 500, food: 30, materials: 60 },
@@ -22,6 +23,16 @@ export const BALANCE: Balance = {
     capacity: 0.4,
     fireRisk: 1,
     shade: -1,
+  },
+  wishes: {
+    chance: 0.5,
+    quietTurns: 3,
+    radius: 3,
+    reward: 30,
+    perLevel: 15,
+    names: WISH_NAMES.length,
+    near: WISH_NEAR,
+    more: WISH_MORE,
   },
   loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },
   workerShare: 0.4,

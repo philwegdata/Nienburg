@@ -8,6 +8,15 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  wish: {
+    chip: 'Wunsch: {name}',
+    near: '{name} wünscht sich nahe dem eigenen Haus (höchstens {r} Felder entfernt): {thing}',
+    level: '{name} möchte gern in einem {level} wohnen.',
+    count: '{name} wünscht sich mehr davon in der Stadt: {thing} ({have} von {n})',
+    reward: 'Belohnung: {gold} Gold. Es eilt nicht.',
+    granted: '{name} freut sich, der Wunsch ist erfüllt: +{gold} Gold',
+    fresh: 'Ein neuer Wunsch – {name} hat etwas auf dem Herzen.',
+  },
   hintRaise:
     'Tippe auf ein Haus, um ein Stockwerk aufzusetzen. Grün markierte Häuser können wachsen.',
   storeys: 'Stockwerke obendrauf: {n} von {max}',

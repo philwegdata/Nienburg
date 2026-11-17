@@ -307,3 +307,15 @@
   Schatten: −1 Wohnlage je Stockwerk auf den Feldern rund um das Haus (nicht auf dem Haus selbst).
 - Aufgestockte Häuser wachsen nicht mit Nachbarn zusammen; Stockwerke gehen nie verloren.
 - Beim Aufstocken markiert die Karte alle Häuser grün, die jetzt wachsen könnten.
+
+## Bürgerwünsche
+
+- Ab der vierten Runde äußert ab und zu ein Bewohner mit Namen einen Wunsch: ein bestimmtes
+  Gebäude nahe dem eigenen Haus (höchstens drei Felder entfernt), ein Gebäude mehr in der Stadt,
+  oder eine bessere Hausstufe. Es gibt immer nur einen Wunsch auf einmal und nie eine Frist.
+- Ein erfüllter Wunsch bringt am Rundenende Gold (30 plus 15 je Hausstufe). Wird das Haus
+  abgerissen, verschwindet der Wunsch still.
+- Der Wunsch steht oben als Chip; ein Tipp darauf zeigt das Haus. Neue und erfüllte Wünsche
+  stehen im Rundenbericht.
+- Wünsche ziehen eigene Zufallszahlen, damit Brände und Ereignisse genauso ausfallen wie ohne
+  sie. Spielstand Version 7.

@@ -383,7 +383,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 
 **C. Leben und Geschichten**
 
-- [ ] ★ Bürgerwünsche: Bewohner mit Namen bitten um Dinge („Meisterin Gesa wünscht sich einen
+- [x] ★ Bürgerwünsche: Bewohner mit Namen bitten um Dinge („Meisterin Gesa wünscht sich einen
       Brunnen bei der Weberei“); erfüllte Wünsche bringen Gold, Ansehen oder neue Gebäude
 - [ ] Feste selbst ausrichten: Erntedank, Wintermarkt, Johannisfeuer; kosten Vorräte, bringen
       Zuzug und Ansehen

@@ -1,5 +1,6 @@
 import { lockOf, settleLoan } from '../actions';
 import { goalProgress } from '../goals';
+import { rollWish, wishLost, wishProgress } from '../wishes';
 import { indexOf } from '../grid';
 import { rngStep } from '../rng';
 import {
@@ -14,6 +15,7 @@ import {
   type Need,
   type Rules,
   type TurnReport,
+  type Wish,
 } from '../types';
 import { analyze, houseCapacity, missingNeeds, type IdleReason } from './analyze';
 import { rollEvent } from './events';
@@ -356,6 +358,25 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     event: happening.active,
   };
 
+  // A resident's wish comes true, or is dropped with the house; perhaps someone else speaks up.
+  let wish = state.wish ?? null;
+  let wishGranted: Wish | null = null;
+  let wishNew: Wish | null = null;
+  let wishesGranted = state.wishesGranted ?? 0;
+  if (wish && wishLost(next, wish)) wish = null;
+  if (wish && wishProgress(next, rules, wish).done) {
+    wishGranted = wish;
+    next.gold += wish.reward;
+    wishesGranted++;
+    wish = null;
+  }
+  if (!wish && !wishGranted) {
+    wishNew = rollWish(next, rules);
+    wish = wishNew;
+  }
+  next.wish = wish;
+  next.wishesGranted = wishesGranted;
+
   // 7. New buildings to choose from, and goals reached.
   const unlocked = Object.values(rules.buildings)
     .filter((def) => {
@@ -381,6 +402,8 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     subsidy,
     loanInterest: loan.interest,
     loanPaid: loan.paid,
+    wishGranted,
+    wishNew,
     foodDelivered,
     foodWasted: foodArriving - foodDelivered,
     foodEaten,

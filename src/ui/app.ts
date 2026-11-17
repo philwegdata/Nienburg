@@ -16,6 +16,8 @@ import {
 import { newGame, parseCity } from '../core/city';
 import { goalProgress } from '../core/goals';
 import { levelForStorey, raiseCost, raiseError, raiseHouse } from '../core/storeys';
+import { wishProgress } from '../core/wishes';
+import { WISH_NAMES } from '../data/wishes';
 import { inBounds, indexOf } from '../core/grid';
 import { commitDemolish, planBuild, planDemolish, type BuildPlan } from '../core/planning';
 import { serialize, deserialize } from '../core/save';
@@ -38,6 +40,7 @@ import {
   type Rotation,
   type ServiceKind,
   type TurnReport,
+  type Wish,
 } from '../core/types';
 import { BUILD_MENU, BUILDINGS, type BuildingId } from '../data/buildings';
 import { fill, plural, type Strings } from '../data/i18n';
@@ -496,12 +499,57 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
     const date = `${t.season[seasonOf(state.turn)]}, ${t.year} ${yearOf(state.turn)}`;
     el.date.textContent = date;
+    if (state.wish) {
+      const c = node(
+        'span',
+        `♥ ${fill(t.wish.chip, { name: wishName(state.wish) })}`,
+        'chip event',
+      );
+      c.classList.add('clickable', 'wish');
+      c.tabIndex = 0;
+      c.setAttribute('role', 'button');
+      c.title = wishText(state.wish);
+      c.addEventListener('click', showWish);
+      c.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showWish();
+        }
+      });
+      chips.push(c);
+    }
     // On narrow screens the title bar has no room for the date, so it leads the chips instead.
     if (state.event) chips.push(node('span', t.eventNow[state.event.kind], 'chip event'));
     el.resources.replaceChildren(node('span', date, 'chip narrow-only'), ...chips);
   }
 
   type Add = (tag: 'h2' | 'p', text: string, cls?: string) => void;
+
+  const wishName = (w: Wish) => WISH_NAMES[w.name] ?? '';
+
+  /** What a resident wishes for, in words. */
+  function wishText(w: Wish): string {
+    const name = wishName(w);
+    if (w.kind === 'near') {
+      return fill(t.wish.near, { name, thing: nameOf(w.def), r: rules.balance.wishes.radius });
+    }
+    if (w.kind === 'level') {
+      return fill(t.wish.level, { name, level: t.houseLevel[w.level - 1] ?? '' });
+    }
+    const have = wishProgress(state, rules, w).current;
+    return fill(t.wish.count, { name, thing: nameOf(w.def), have, n: w.count });
+  }
+
+  /** Shows the wishing resident's home. */
+  function showWish(): void {
+    const home = state.wish && state.buildings[state.wish.house];
+    if (!home) return;
+    setTool({ kind: 'select' });
+    selected = { x: home.x, y: home.y };
+    centreOn(selected);
+    updateInfo();
+    requestDraw();
+  }
 
   function describeDef(id: BuildingId, add: Add): void {
     const def = rules.buildings[id]!;
@@ -537,6 +585,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
 
   function describeHouse(b: Building, add: Add): void {
     const house = b.house!;
+    if (state.wish?.house === b.id) {
+      add('p', `♥ ${wishText(state.wish)}`, 'good');
+      add('p', fill(t.wish.reward, { gold: state.wish.reward }), 'meta');
+    }
     add('p', `${t.inhabitants}: ${house.pop} / ${houseCapacity(rules, b, house.level)}`);
     const storey = rules.balance.storey;
     if (house.storeys || tool.kind === 'raise') {
@@ -730,6 +782,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       line(`★ ${fill(t.report.star, { goal: goalText(city.goals[i]!) })}`, 'news');
     }
     for (const def of r.completed) line(fill(t.report.completed, { name: nameOf(def) }), 'news');
+    if (r.wishGranted) {
+      const w = r.wishGranted;
+      line(`♥ ${fill(t.wish.granted, { name: wishName(w), gold: w.reward })}`, 'news');
+    }
     if (r.event && !r.event.at) {
       line(
         fill(t.event[r.event.kind], { gold: r.event.gold ?? 0, food: r.event.food ?? 0 }),
@@ -771,8 +827,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       requestDraw();
     };
     const placed = r.event?.at ? r.event : null;
-    if (r.hints.length > 0 || r.fire || placed) {
+    const fresh = r.wishNew && state.wish === r.wishNew ? r.wishNew : null;
+    if (r.hints.length > 0 || r.fire || placed || fresh) {
       const hints = node('div', undefined, 'hints');
+      if (fresh) {
+        const home = state.buildings[fresh.house];
+        if (home) hints.append(button(`♥ ${wishText(fresh)}`, () => jump(home)));
+      }
       if (placed) {
         const text = fill(t.event[placed.kind], { gold: placed.gold ?? 0, food: placed.food ?? 0 });
         hints.append(button(text, () => jump(placed.at!)));
