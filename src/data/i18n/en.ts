@@ -10,6 +10,18 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  market: {
+    title: 'Market',
+    intro:
+      'Merchants sell what the houses do not need – the dearest goods first. Hold a kind of goods back when a better season for it is coming.',
+    noKontor: 'There is no trading house yet. These prices apply once merchants are here.',
+    stock: 'Stock',
+    now: 'Now',
+    sell: 'Sell',
+    hold: 'Hold',
+    held: 'held back',
+    open: 'Market prices',
+  },
   wish: {
     chip: 'Wish: {name}',
     near: '{name} would like this close to home (at most {r} tiles away): {thing}',
@@ -213,7 +225,7 @@ export const en: Strings = {
     ],
     [
       'Crafts',
-      "Weaver, smithy and brewery make goods. A market hall within reach hands them out to the better houses. Merchants in a merchants' office sell what the houses do not need and so bring gold into town.",
+      "Weaver, smithy and brewery make goods. A market hall within reach hands them out to the better houses. Merchants in a merchants' office sell what the houses do not need and so bring gold into town. Prices change with the seasons; tap a kind of goods at the top to see them and to hold goods back.",
     ],
     [
       'Fires and events',

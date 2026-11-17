@@ -738,3 +738,69 @@ button.quiet {
 .chip.wish:focus-visible {
   filter: brightness(1.06);
 }
+
+table.market {
+  width: 100%;
+  margin: 0.5rem 0;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+table.market th,
+table.market td {
+  padding: 0.25rem 0.35rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.market th:first-child,
+table.market td:first-child {
+  text-align: left;
+}
+
+table.market th {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+table.market td.best {
+  font-weight: 700;
+  color: #4d7a35;
+}
+
+table.market td button {
+  padding: 0.15rem 0.6rem;
+}
+
+table.market td button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--gold);
+}
+
+table.market .ico {
+  color: var(--ink);
+  vertical-align: -3px;
+}
+
+.chip.held b {
+  text-decoration: underline dotted;
+}
+
+@media (max-width: 520px) {
+  table.market {
+    font-size: 0.85em;
+  }
+
+  table.market th,
+  table.market td {
+    padding: 0.2rem 0.25rem;
+  }
+
+  table.market .label {
+    display: none;
+  }
+
+  table.market td button {
+    padding: 0.15rem 0.4rem;
+  }
+}

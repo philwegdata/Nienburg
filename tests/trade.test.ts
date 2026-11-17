@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildingAt } from '../src/core/actions';
+import { buildingAt, setHold } from '../src/core/actions';
+import { goodPrice } from '../src/core/market';
 import { analyze } from '../src/core/sim/analyze';
 import { endTurn } from '../src/core/sim/turn';
-import type { GameState, HouseData } from '../src/core/types';
+import { GOODS, type GameState, type Good, type HouseData } from '../src/core/types';
 import { BUILDINGS } from '../src/data/buildings';
 import { strings } from '../src/data/i18n';
 import { RULES } from '../src/data/rules';
@@ -61,10 +62,25 @@ describe('merchants', () => {
     expect(after.goods).toEqual({ cloth: 0, tools: 0, beer: 0 });
   });
 
-  it('take from the fullest store first', () => {
-    const s = withGoods(put(quarter(), 'kontor', 3, 4), 10, 6, 2);
-    // Eight sales: cloth down to 6, then cloth and tools in turn.
-    expect(endTurn(s, RULES).goods).toEqual({ cloth: 4, tools: 4, beer: 2 });
+  it('sell the dearest goods first, the fullest store breaking ties', () => {
+    const s = withGoods(put(quarter(), 'kontor', 3, 4), 10, 10, 10);
+    const price = (g: Good) => goodPrice(s, RULES, BUILDINGS.kontor!.trade!.price, g);
+    const order = [...GOODS].sort((a, b) => price(b) - price(a));
+    const after = endTurn(s, RULES).goods;
+    // Eight sales, taken from the dearest kind first.
+    expect(after[order[0]!]).toBeLessThan(10);
+    expect(after[order[2]!]).toBeGreaterThanOrEqual(after[order[0]!]);
+    const income =
+      (10 - after.cloth) * price('cloth') +
+      (10 - after.tools) * price('tools') +
+      (10 - after.beer) * price('beer');
+    expect(endTurn(s, RULES).lastReport!.tradeIncome).toBe(income);
+  });
+
+  it('keep back what the town holds for a better season', () => {
+    const s = setHold(withGoods(put(quarter(), 'kontor', 3, 4), 10, 10, 10), 'cloth', true);
+    expect(endTurn(s, RULES).goods.cloth).toBe(10);
+    expect(setHold(s, 'cloth', false).hold).toEqual([]);
   });
 
   it('leave the houses what they need for the coming turns', () => {

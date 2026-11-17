@@ -319,6 +319,11 @@ export interface Balance {
     near: readonly string[];
     more: readonly string[];
   };
+  /**
+   * Prices of craft goods: a factor per season (0 = spring) on the merchants' price, and how far
+   * each year's market may stray from that, as a share.
+   */
+  market: { season: Record<Good, [number, number, number, number]>; drift: number };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -479,7 +484,7 @@ export type Wish =
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 7;
+  version: 8;
   cityId: string;
   width: number;
   height: number;
@@ -521,6 +526,8 @@ export interface GameState {
   wish: Wish | null;
   /** Wishes fulfilled so far. */
   wishesGranted: number;
+  /** Craft goods the merchants keep in store instead of selling, waiting for a better price. */
+  hold: Good[];
   lastReport: TurnReport | null;
 }
 

@@ -1,5 +1,6 @@
 import { lockOf, settleLoan } from '../actions';
 import { goalProgress } from '../goals';
+import { goodPrice } from '../market';
 import { rollWish, wishLost, wishProgress } from '../wishes';
 import { indexOf } from '../grid';
 import { rngStep } from '../rng';
@@ -9,6 +10,7 @@ import {
   type Building,
   type GameState,
   type Goal,
+  type Good,
   type Hint,
   type HouseData,
   type HintKind,
@@ -157,14 +159,23 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
 
   // Merchants sell what the houses will not need for a while, fullest store first.
   const reserve = analysis.goodsDemand * balance.goodsReserveTurns;
+  // They sell the dearest goods first, fullest store breaking ties, and leave alone what the
+  // town holds back for a better season.
+  const held = new Set(state.hold ?? []);
+  const price = Object.fromEntries(
+    GOODS.map((g) => [g, goodPrice(state, rules, analysis.tradePrice, g)]),
+  ) as Record<Good, number>;
   let goodsSold = 0;
   while (goodsSold < analysis.tradeCapacity) {
-    const best = GOODS.reduce((a, b) => (goods[b] > goods[a] ? b : a));
-    if (goods[best] <= reserve) break;
+    const forSale = GOODS.filter((g) => !held.has(g) && goods[g] > reserve);
+    if (forSale.length === 0) break;
+    const best = forSale.reduce((a, b) =>
+      price[b] > price[a] || (price[b] === price[a] && goods[b] > goods[a]) ? b : a,
+    );
     goods[best]--;
     goodsSold++;
+    tradeIncome += price[best];
   }
-  tradeIncome += goodsSold * analysis.tradePrice;
 
   // Raw materials: the harvest comes in, the workshops take their share, surplus is sold.
   const raw = { ...(state.raw ?? { grain: 0, wool: 0, wood: 0 }) };

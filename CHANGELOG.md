@@ -319,3 +319,12 @@
   stehen im Rundenbericht.
 - Wünsche ziehen eigene Zufallszahlen, damit Brände und Ereignisse genauso ausfallen wie ohne
   sie. Spielstand Version 7.
+
+## Marktpreise
+
+- Tuch, Werkzeug und Bier haben je Jahreszeit eigene Preise (Tuch teuer im Winter, Werkzeug im
+  Frühling, Bier im Sommer), dazu schwankt jedes Jahr ein wenig (±15 %).
+- Händler verkaufen die gerade teuerste Ware zuerst. Im neuen Markt-Fenster (Tipp auf eine Ware
+  oben oder „Marktpreise“ am Handelskontor) stehen die Preise dieser und der nächsten drei
+  Jahreszeiten; „Lagern“ hält eine Ware zurück, bis eine bessere Jahreszeit kommt.
+- Was nicht mehr ins Lager passt, wird wie bisher an den Toren abgegeben. Spielstand Version 8.

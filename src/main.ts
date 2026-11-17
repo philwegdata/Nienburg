@@ -43,6 +43,7 @@ startApp(
     settings: need<HTMLDialogElement>('#settings'),
     help: need<HTMLDialogElement>('#help'),
     bank: need<HTMLDialogElement>('#bank'),
+    market: need<HTMLDialogElement>('#market'),
     tutorial: need<HTMLElement>('#tutorial'),
   },
   CITIES,

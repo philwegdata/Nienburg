@@ -34,6 +34,15 @@ export const BALANCE: Balance = {
     near: WISH_NEAR,
     more: WISH_MORE,
   },
+  market: {
+    // spring, summer, autumn, winter
+    season: {
+      cloth: [1, 0.75, 1.05, 1.3],
+      tools: [1.2, 1, 0.9, 0.9],
+      beer: [0.85, 1.35, 1.05, 0.8],
+    },
+    drift: 0.15,
+  },
   loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },
   workerShare: 0.4,
   foodPerHead: 0.08,

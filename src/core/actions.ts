@@ -1,5 +1,5 @@
 import { footprint, inBounds, indexOf } from './grid';
-import type { Building, BuildingDef, GameState, LoanTerms, Point, Rotation } from './types';
+import type { Building, BuildingDef, GameState, Good, LoanTerms, Point, Rotation } from './types';
 
 export type PlaceError =
   /** Some tile lies outside the walls or on non-buildable terrain. */
@@ -400,4 +400,11 @@ export function settleLoan(
   const due = Math.min(owed, Math.max(Math.ceil(owed * terms.installment), terms.step / 10));
   const paid = Math.max(0, Math.min(due, gold));
   return { gold: gold - paid, debt: owed - paid, interest, paid };
+}
+
+/** Tells the merchants to keep a kind of craft goods in store, or to sell it again. */
+export function setHold(state: GameState, good: Good, hold: boolean): GameState {
+  const current = state.hold ?? [];
+  if (current.includes(good) === hold) return state;
+  return { ...state, hold: hold ? [...current, good] : current.filter((g) => g !== good) };
 }

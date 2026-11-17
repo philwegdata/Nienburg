@@ -362,7 +362,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 - [x] ★ Produktionsketten mit dem Umland: Felder, Weiden und Wald auf gekauftem Land außerhalb der
       Mauer liefern Getreide, Wolle und Holz; drinnen werden daraus Mehl → Brot, Wolle → Tuch,
       Holz → Möbel. Landkauf bekommt dadurch einen echten Zweck
-- [ ] ★ Schwankende Marktpreise je Ware und Jahreszeit (Tuch teuer im Winter, Bier im Sommer); das
+- [x] ★ Schwankende Marktpreise je Ware und Jahreszeit (Tuch teuer im Winter, Bier im Sommer); das
       Kontor zeigt eine kleine Preiskurve, Lagern lohnt sich
 - [ ] Handelsaufträge von anderen Städten der Weltkarte („Brügge sucht 20 Tuch“), ohne Frist,
       dafür mit Bonus und freigeschalteten Luxuswaren

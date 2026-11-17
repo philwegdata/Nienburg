@@ -8,6 +8,18 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  market: {
+    title: 'Markt',
+    intro:
+      'Händler verkaufen, was die Häuser nicht brauchen – die gerade teuerste Ware zuerst. Halte eine Ware zurück, wenn bald eine bessere Jahreszeit für sie kommt.',
+    noKontor: 'Noch gibt es kein Handelskontor. Die Preise gelten, sobald Händler da sind.',
+    stock: 'Lager',
+    now: 'Jetzt',
+    sell: 'Verkaufen',
+    hold: 'Lagern',
+    held: 'wird gelagert',
+    open: 'Marktpreise',
+  },
   wish: {
     chip: 'Wunsch: {name}',
     near: '{name} wünscht sich nahe dem eigenen Haus (höchstens {r} Felder entfernt): {thing}',
@@ -214,7 +226,7 @@ export const de = {
     ],
     [
       'Handwerk',
-      'Weberei, Schmiede und Brauerei stellen Waren her. Eine Markthalle in Reichweite verteilt sie an die besseren Häuser. Händler in einem Handelskontor verkaufen, was die Häuser nicht brauchen, und bringen so Gold in die Stadt.',
+      'Weberei, Schmiede und Brauerei stellen Waren her. Eine Markthalle in Reichweite verteilt sie an die besseren Häuser. Händler in einem Handelskontor verkaufen, was die Häuser nicht brauchen, und bringen so Gold in die Stadt. Die Preise wechseln mit den Jahreszeiten; ein Tipp auf eine Ware oben zeigt sie, und dort lässt sich eine Ware auch zurückhalten.',
     ],
     [
       'Brände und Ereignisse',

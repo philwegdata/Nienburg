@@ -107,7 +107,7 @@ describe('bank', () => {
     const old: Record<string, unknown> = { ...game(), version: 4 };
     delete old.debt;
     const restored = deserialize(JSON.stringify({ saveVersion: 4, state: old }), [city.id]);
-    expect(restored).toMatchObject({ version: 7, debt: 0 });
+    expect(restored).toMatchObject({ version: 8, debt: 0 });
   });
 
   it('has texts in both languages', () => {

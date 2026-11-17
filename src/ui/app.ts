@@ -4,6 +4,7 @@ import {
   countTiles,
   landError,
   landPrice,
+  setHold,
   outsideWalls,
   borrow,
   loanLimit,
@@ -16,6 +17,7 @@ import {
 import { newGame, parseCity } from '../core/city';
 import { goalProgress } from '../core/goals';
 import { levelForStorey, raiseCost, raiseError, raiseHouse } from '../core/storeys';
+import { goodPrice } from '../core/market';
 import { wishProgress } from '../core/wishes';
 import { WISH_NAMES } from '../data/wishes';
 import { inBounds, indexOf } from '../core/grid';
@@ -124,6 +126,7 @@ export interface Elements {
   settings: HTMLDialogElement;
   help: HTMLDialogElement;
   bank: HTMLDialogElement;
+  market: HTMLDialogElement;
   tutorial: HTMLElement;
 }
 
@@ -487,7 +490,20 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     // Craft goods only matter once the first workshops can be built.
     if (GOODS.some((g) => state.goods[g] > 0 || comingGoods[g] > 0)) {
       for (const g of GOODS) {
-        chips.push(chip(g, t.good[g], String(state.goods[g]), comingGoods[g] - state.goods[g]));
+        const c = chip(g, t.good[g], String(state.goods[g]), comingGoods[g] - state.goods[g]);
+        c.classList.add('clickable');
+        c.tabIndex = 0;
+        c.setAttribute('role', 'button');
+        c.title = `${t.good[g]} · ${t.market.open}`;
+        c.addEventListener('click', showMarket);
+        c.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            showMarket();
+          }
+        });
+        if (state.hold.includes(g)) c.classList.add('held');
+        chips.push(c);
       }
     }
     // Raw materials appear once the countryside yields something.
@@ -701,6 +717,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         add('p', fill(t.idle.damaged, { n: repairCost(def, rules.balance.repairShare) }), 'warn');
       } else if (idle) add('p', t.idle[idle], 'warn');
       else if (def.workers > 0 || def.services) add('p', t.working, 'good');
+      if (def.trade) el.info.append(button(t.market.open, showMarket));
       const supplied = analysis.supplied.get(b.id);
       if (supplied !== undefined && def.consumes) {
         const good = t.raw[def.consumes.good];
@@ -904,6 +921,45 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     actions.append(ok);
     el.bank.append(lend, actions);
     if (!el.bank.open) el.bank.showModal();
+  }
+
+  function showMarket(): void {
+    const kontor = Object.values(rules.buildings).find((d) => d.trade);
+    const base = analysis.tradePrice || kontor?.trade?.price || 0;
+    el.market.replaceChildren(node('h2', t.market.title), node('p', t.market.intro, 'sub'));
+    if (analysis.tradePrice === 0) el.market.append(node('p', t.market.noKontor, 'meta'));
+    const table = node('table', undefined, 'market');
+    const head = node('tr');
+    head.append(node('th', ''), node('th', t.market.stock), node('th', t.market.now));
+    for (let k = 1; k <= 3; k++) head.append(node('th', t.season[seasonOf(state.turn + k)]));
+    head.append(node('th', ''));
+    table.append(head);
+    for (const g of GOODS) {
+      const row = node('tr');
+      const name = node('td');
+      name.title = t.good[g];
+      name.append(icon(g), node('span', ` ${t.good[g]}`, 'label'));
+      row.append(name, node('td', String(state.goods[g])));
+      const prices = [0, 1, 2, 3].map((k) => goodPrice(state, rules, base, g, state.turn + k));
+      const best = Math.max(...prices);
+      for (const p of prices) row.append(node('td', String(p), p === best ? 'best' : undefined));
+      const held = state.hold.includes(g);
+      // One switch per kind of goods: pressed means the merchants keep it in store.
+      const toggle = button(t.market.hold, () => {
+        change(setHold(state, g, !held));
+        showMarket();
+      });
+      toggle.setAttribute('aria-pressed', String(held));
+      toggle.title = held ? t.market.held : t.market.sell;
+      const cell = node('td');
+      cell.append(toggle);
+      row.append(cell);
+      table.append(row);
+    }
+    const actions = node('div', undefined, 'actions');
+    actions.append(button(t.close, () => el.market.close(), 'primary'));
+    el.market.append(table, actions);
+    if (!el.market.open) el.market.showModal();
   }
 
   function showGoals(): void {
@@ -1421,7 +1477,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.cities.open ||
     el.settings.open ||
     el.help.open ||
-    el.bank.open;
+    el.bank.open ||
+    el.market.open;
 
   // ---------- keyboard on the map ----------
 
