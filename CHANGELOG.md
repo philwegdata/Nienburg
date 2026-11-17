@@ -328,3 +328,14 @@
   oben oder „Marktpreise“ am Handelskontor) stehen die Preise dieser und der nächsten drei
   Jahreszeiten; „Lagern“ hält eine Ware zurück, bis eine bessere Jahreszeit kommt.
 - Was nicht mehr ins Lager passt, wird wie bisher an den Toren abgegeben. Spielstand Version 8.
+
+## Wohnen auf der Mauer
+
+- Neues Gebäude „Mauerhaus“ (Reiter Grundlagen): eine kleine Wohnung oben auf der Stadtmauer
+  oder in einem Turm, nie in einem Tor. Braucht einen Weg innen an der Mauer, entwickelt sich wie
+  ein Haus, hat aber nur 60 % des Platzes. Es belegt kein Feld in der Stadt.
+- Auf der Mauer steht ein kleines Haus auf dem Wehrgang, im Turm zeigen beleuchtete Fenster und
+  ein Schornstein, dass dort jemand wohnt.
+- Mauerhäuser bekommen keine Stockwerke und wachsen nicht mit Nachbarn zusammen.
+- Entscheidung: Häuser auf Bögen über Gassen sind zurückgestellt; sie bräuchten Felder mit Weg
+  und Gebäude zugleich, und das würde das Wegenetz grundlegend ändern.

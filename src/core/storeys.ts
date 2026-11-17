@@ -42,7 +42,7 @@ export function raiseError(
   covered: (b: Building) => boolean = (b) => analyze(state, rules).covered.fire.has(b.id),
 ): RaiseError | null {
   const b = buildingAt(state, x, y);
-  if (!b?.house) return 'notHouse';
+  if (!b?.house || rules.buildings[b.def]?.onWall) return 'notHouse';
   if ((b.house.storeys ?? 0) >= rules.balance.storey.max) return 'maxStoreys';
   if (b.house.level < levelForStorey(rules, b)) return 'level';
   if (b.damaged) return 'damaged';

@@ -40,6 +40,13 @@ const list: BuildingDef[] = [
   def('bridge', 'path', [1, 1], [12, 4, 2, 0, 0], { drag: 'line', onCanal: true }),
 
   def('house', 'housing', [1, 1], [15, 3, 2, 0, 0], { drag: 'line', fireRisk: 1 }),
+  def('wallhouse', 'housing', [1, 1], [30, 6, 3, 0, 0], {
+    drag: 'line',
+    onWall: true,
+    capacityFactor: 0.6,
+    fireRisk: 1,
+    unlockPop: 60,
+  }),
 
   // Water
   def('well', 'water', [1, 1], [20, 4, 3, 1, 0], { services: [{ kind: 'water', range: 6 }] }),
@@ -264,6 +271,7 @@ export type BuildingId =
   | 'townhall'
   | 'warehouse'
   | 'buildersyard'
+  | 'wallhouse'
   | 'field'
   | 'woodlot'
   | 'pasture'

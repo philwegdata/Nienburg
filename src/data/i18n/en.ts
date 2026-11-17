@@ -236,6 +236,10 @@ export const en: Strings = {
       'A dug canal brings water from the wall to every building within two tiles – no paths needed. Bridges carry paths across. Outside the gates you can buy countryside and build on it; each further tile costs more than the last.',
     ],
     [
+      'Living on the wall',
+      'Wall dwellings sit on top of the town wall or inside its towers, never in a gate. They need a path along the inside of the wall and hold fewer people than a house, but they take up no ground at all.',
+    ],
+    [
       'Building upwards',
       'With “Add a floor” a house gets up to two more floors: the first from the clay house on, the second from the half-timbered house on. Each holds many more people, but needs a fire watch within reach, catches fire more easily and casts shade that lowers the appeal next door.',
     ],
@@ -355,6 +359,7 @@ export const en: Strings = {
     garden: 'Garden',
     fountain: 'Fountain',
     field: 'Grain field',
+    wallhouse: 'Wall dwelling',
     woodlot: 'Woodcutter',
     pasture: 'Sheep pasture',
   },
@@ -399,6 +404,8 @@ export const en: Strings = {
     tree: 'A little green between the walls.',
     garden: 'Makes the surroundings nicer to live in.',
     fountain: 'A showpiece that improves the neighbourhood far around.',
+    wallhouse:
+      'A small home on top of the town wall or inside a tower. Saves room in town, but holds only a little more than half as many people as a house. Needs a path along the inside of the wall.',
     field:
       'Grain for bakery and brewery. Most of it is harvested in autumn; in winter the field rests.',
     woodlot: 'Wood for smithy, warehouse and builders’ yard.',

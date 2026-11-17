@@ -164,7 +164,9 @@ function openSides(state: GameState, rules: Rules, b: Building): number {
 export function houseCapacity(rules: Rules, b: Building, level: number): number {
   const base = rules.housing[level - 1]?.capacity ?? 0;
   const tiles = b.w * b.h;
-  const plot = tiles === 1 ? base : base * (tiles + rules.balance.mergeBonus);
+  const plot =
+    (tiles === 1 ? base : base * (tiles + rules.balance.mergeBonus)) *
+    (rules.buildings[b.def]?.capacityFactor ?? 1);
   const storeys = b.house?.storeys ?? 0;
   return Math.floor(plot * (1 + rules.balance.storey.capacity * storeys));
 }

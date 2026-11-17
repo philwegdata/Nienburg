@@ -374,7 +374,8 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 
 - [x] ★ In die Höhe bauen: Häuser aufstocken statt mehr Fläche zu belegen; jedes Stockwerk braucht
       Baumaterial und Brandschutz und wirft Schatten auf Nachbarn (Ansehen sinkt)
-- [ ] ★ Überbauen: Häuser auf Bögen über Gassen, Wohnungen in Mauer und Türmen
+- [x] ★ Überbauen: Wohnungen auf der Mauer und in den Türmen (Mauerhaus)
+- [ ] Häuser auf Bögen über Gassen (Schwibbogenhaus)
 - [ ] Zweiter Mauerring als großes Bauprojekt über viele Runden; danach kann die alte Mauer
       abgerissen und zur Prachtstraße werden
 - [ ] Gebäude verschieben statt abreißen (kleine Gebühr, kein Verlust)

@@ -819,6 +819,35 @@ function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
   }
 }
 
+/** A home on the wall: a small house standing on the wall walk; in a tower, lit windows and a chimney. */
+function drawWallHome(g: G, b: Building, into: Emitter[] | null): void {
+  const { pal } = g;
+  const seed = tileHash(b.x * 31 + 7, b.y * 17 + 3);
+  const lived = (b.house?.pop ?? 0) > 0;
+  if (b.inTower) {
+    const tile = rect(b.x, b.y, 1, 1);
+    const glow = lived ? pal.window : '#3b3029';
+    for (const at of [
+      (u: number, z: number) => onLeft(tile, u, z),
+      (u: number, z: number) => onRight(tile, u, z),
+    ]) {
+      for (const u of [0.18, 0.72]) {
+        poly(g, [at(u, 8), at(u + 0.1, 8), at(u + 0.1, 14), at(u, 14)], glow, FRAME);
+      }
+    }
+    stack(g, v(b.x + 0.66, b.y + 0.3, 44), 9, into, lived, seed);
+    return;
+  }
+  // Standing on the wall walk, 18 units up: drawn as an ordinary house, lifted.
+  const lift = 18;
+  const smoke: Emitter[] = [];
+  g.ctx.save();
+  g.ctx.translate(0, -lift);
+  drawHouse(g, b, into ? smoke : null);
+  g.ctx.restore();
+  for (const e of smoke) into?.push({ ...e, y: e.y - lift });
+}
+
 // ---------- everything else ----------
 
 type Draw = (g: G, b: Building, into: Emitter[] | null, seed: number) => void;
@@ -2056,6 +2085,7 @@ export function drawBuilding(g: G, b: Building, into: Emitter[] | null): void {
   const { x, y, w, h } = b;
   if (b.construction) drawSite(g, b);
   else if (b.def === 'house') drawHouse(g, b, into);
+  else if (b.def === 'wallhouse') drawWallHome(g, b, into);
   else {
     const seed = tileHash(x * 31 + 7, y * 17 + 3);
     const draw = DRAW[b.def];

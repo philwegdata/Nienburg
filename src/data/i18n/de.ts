@@ -237,6 +237,10 @@ export const de = {
       'Ein gegrabener Kanal bringt Wasser von der Mauer zu allen Gebäuden im Umkreis von zwei Feldern – ganz ohne Wege. Brücken führen Wege darüber. Vor den Toren kannst du Umland kaufen und bebauen; jedes weitere Feld kostet mehr als das letzte.',
     ],
     [
+      'Wohnen auf der Mauer',
+      'Mauerhäuser stehen oben auf der Stadtmauer oder in den Türmen, nie in einem Tor. Sie brauchen einen Weg innen an der Mauer und haben weniger Platz als ein Haus, nehmen der Stadt aber kein einziges Feld weg.',
+    ],
+    [
       'In die Höhe bauen',
       'Mit „Aufstocken“ bekommt ein Haus bis zu zwei Stockwerke obendrauf: das erste ab dem Lehmhaus, das zweite ab dem Fachwerkhaus. Jedes bringt viel mehr Platz für Bewohner, braucht aber eine Brandwache in Reichweite, brennt leichter und wirft Schatten, der die Wohnlage der Nachbarn senkt.',
     ],
@@ -357,6 +361,7 @@ export const de = {
     garden: 'Garten',
     fountain: 'Zierbrunnen',
     field: 'Kornfeld',
+    wallhouse: 'Mauerhaus',
     woodlot: 'Holzfäller',
     pasture: 'Schafweide',
   },
@@ -401,6 +406,8 @@ export const de = {
     tree: 'Ein wenig Grün zwischen den Mauern.',
     garden: 'Hebt die Wohnlage ringsum.',
     fountain: 'Ein Schmuckstück, das die Wohnlage weithin hebt.',
+    wallhouse:
+      'Eine kleine Wohnung oben auf der Stadtmauer oder in einem Turm. Spart Platz in der Stadt, bietet aber nur gut halb so vielen Menschen Raum wie ein Haus. Braucht einen Weg innen an der Mauer.',
     field:
       'Korn für Bäckerei und Brauerei. Geerntet wird vor allem im Herbst, im Winter ruht das Feld.',
     woodlot: 'Holz für Schmiede, Lagerhaus und Bauhütte.',

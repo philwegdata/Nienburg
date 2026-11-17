@@ -86,8 +86,9 @@ function mergeHouses(
     b.w === 1 &&
     b.h === 1 &&
     !b.damaged &&
-    // Raised houses keep their own floors and stay on their own.
+    // Raised houses keep their own floors and stay on their own, and so do homes on the wall.
     !b.house.storeys &&
+    !rules.buildings[b.def]?.onWall &&
     b.house.lacking === 0 &&
     b.house.level >= rules.balance.mergeLevel;
 

@@ -698,7 +698,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
     const b = buildingAt(state, selected.x, selected.y);
     if (b?.house) {
-      add('h2', t.houseLevel[b.house.level - 1] ?? t.building.house);
+      const level = t.houseLevel[b.house.level - 1] ?? t.building.house;
+      add('h2', b.def === 'house' ? level : `${nameOf(b.def)} · ${level}`);
       describeHouse(b, add);
       return;
     }

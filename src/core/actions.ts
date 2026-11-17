@@ -51,6 +51,12 @@ export function canPlace(
     const terrain = state.terrain[indexOf(state.width, t.x, t.y)];
     const existing = buildingAt(state, t.x, t.y);
     const existingDef = existing && defs[existing.def];
+    if (def.onWall) {
+      // Homes on the wall walk or in a tower; never in a gate.
+      if (terrain !== 'wall' && terrain !== 'tower') return { ok: false, reason: 'notBuildable' };
+      if (existing) return { ok: false, reason: existing.def === def.id ? 'same' : 'occupied' };
+      continue;
+    }
     if (def.onCanal) {
       // Bridges go over canal water: a canal of the map, or one the town has dug.
       if (existing?.def === def.id) return { ok: false, reason: 'same' };
@@ -183,6 +189,7 @@ export function placeBuilding(
   for (const t of check.tiles) occupancy[indexOf(base.width, t.x, t.y)] = id;
   const building: Building = { id, def: def.id, x, y, w, h, rot };
   if (def.category === 'housing') building.house = { level: 1, pop: 0, lacking: 0 };
+  if (def.onWall && base.terrain[indexOf(base.width, x, y)] === 'tower') building.inTower = true;
   if (def.construction) building.construction = def.construction.turns;
   if (overCanal) building.overCanal = true;
   return {

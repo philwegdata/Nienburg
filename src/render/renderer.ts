@@ -396,7 +396,11 @@ export function buildingIcon(
   const alone: Joins = { n: false, e: false, s: false, w: false };
   if (def.canal) drawCanal(g, 0, 0, alone, true);
   else if (flat) drawPath(g, b, alone);
-  else drawBuilding(g, b, null);
+  else {
+    // Homes on the wall are shown standing on a piece of wall.
+    if (def.onWall) drawFortification(g, 'wall', 0, 0, null);
+    drawBuilding(g, b, null);
+  }
   const pixels = sctx.getImageData(0, 0, size, size).data;
   let x0 = size;
   let y0 = size;

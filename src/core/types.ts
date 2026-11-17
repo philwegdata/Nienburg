@@ -192,6 +192,10 @@ export interface BuildingDef {
   delivery?: { food?: number; materials?: number };
   /** Only on land outside the walls (which the town has to buy first). */
   countryside?: boolean;
+  /** Built on top of the town wall or into a tower instead of on the ground. */
+  onWall?: boolean;
+  /** Homes: share of the usual number of inhabitants per level. */
+  capacityFactor?: number;
   /** Raw material gathered per turn while operating, scaled by the season. */
   harvest?: { good: RawGood; amount: number };
   /**
@@ -231,6 +235,8 @@ export interface Building {
   damaged?: boolean;
   /** A bridge built over a dug canal, which reappears when the bridge is removed. */
   overCanal?: boolean;
+  /** A home built into a tower rather than on the wall walk. */
+  inTower?: boolean;
 }
 
 export interface HousingLevel {
