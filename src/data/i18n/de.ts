@@ -7,6 +7,19 @@ export const de = {
   undo: 'Rückgängig',
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
+  toolRaise: 'Aufstocken',
+  hintRaise:
+    'Tippe auf ein Haus, um ein Stockwerk aufzusetzen. Grün markierte Häuser können wachsen.',
+  storeys: 'Stockwerke obendrauf: {n} von {max}',
+  raiseNext: 'Nächstes Stockwerk: {gold} Gold · {materials} Material · {points} Baupunkte',
+  raiseShade: 'Höhere Häuser werfen Schatten auf die Nachbarfelder und brennen leichter.',
+  raiseNo: {
+    notHouse: 'Aufstocken lassen sich nur Wohnhäuser.',
+    maxStoreys: 'Höher geht es nicht.',
+    level: 'Dafür muss das Haus erst zum {level} aufsteigen.',
+    needsFire: 'Für ein höheres Haus muss eine Brandwache in Reichweite sein.',
+    damaged: 'Erst reparieren, dann aufstocken.',
+  },
   hintRepair: 'Tippe auf ein rußgeschwärztes Gebäude, um es zu reparieren.',
   restart: 'Neu beginnen',
   restartConfirm: 'Diese Stadt wirklich neu beginnen? Der jetzige Stand geht verloren.',
@@ -201,6 +214,10 @@ export const de = {
     [
       'Kanäle, Brücken und neues Land',
       'Ein gegrabener Kanal bringt Wasser von der Mauer zu allen Gebäuden im Umkreis von zwei Feldern – ganz ohne Wege. Brücken führen Wege darüber. Vor den Toren kannst du Umland kaufen und bebauen; jedes weitere Feld kostet mehr als das letzte.',
+    ],
+    [
+      'In die Höhe bauen',
+      'Mit „Aufstocken“ bekommt ein Haus bis zu zwei Stockwerke obendrauf: das erste ab dem Lehmhaus, das zweite ab dem Fachwerkhaus. Jedes bringt viel mehr Platz für Bewohner, braucht aber eine Brandwache in Reichweite, brennt leichter und wirft Schatten, der die Wohnlage der Nachbarn senkt.',
     ],
     [
       'Umland und Rohstoffe',

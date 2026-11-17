@@ -210,6 +210,8 @@ export interface HouseData {
   pop: number;
   /** Consecutive turns the needs of the current level went unmet. */
   lacking: number;
+  /** Floors added on top; absent for none. */
+  storeys?: number;
 }
 
 export interface Building {
@@ -284,6 +286,22 @@ export interface Balance {
     /** Gold per unit that no longer fits into storage. */
     price: number;
     season: Record<RawGood, [number, number, number, number]>;
+  };
+  /**
+   * Building upwards: at most `max` extra floors per house. The first needs housing level
+   * `minLevel`, each further one a level more. Each floor costs gold, materials and build points
+   * per tile, adds `capacity` as a share of the plot's inhabitants, raises the fire risk by
+   * `fireRisk`, and casts `shade` (negative appeal) on the tiles right around the house.
+   */
+  storey: {
+    max: number;
+    minLevel: number;
+    gold: number;
+    materials: number;
+    buildPoints: number;
+    capacity: number;
+    fireRisk: number;
+    shade: number;
   };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };

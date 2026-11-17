@@ -372,7 +372,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 
 **B. Platz und Bauen (das Herz des Spiels)**
 
-- [ ] ★ In die Höhe bauen: Häuser aufstocken statt mehr Fläche zu belegen; jedes Stockwerk braucht
+- [x] ★ In die Höhe bauen: Häuser aufstocken statt mehr Fläche zu belegen; jedes Stockwerk braucht
       Baumaterial und Brandschutz und wirft Schatten auf Nachbarn (Ansehen sinkt)
 - [ ] ★ Überbauen: Häuser auf Bögen über Gassen, Wohnungen in Mauer und Türmen
 - [ ] Zweiter Mauerring als großes Bauprojekt über viele Runden; danach kann die alte Mauer

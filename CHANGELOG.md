@@ -297,3 +297,13 @@
 - Fès: Die Tore öffnen sich jetzt nach draußen, damit auch dort Land gekauft werden kann.
 - Entscheidungen: Rohstoffe sind ein Bonus, keine Pflicht, damit alte Städte und Inselstädte wie
   Mont-Saint-Michel spielbar bleiben. Spielstand Version 6 (Feld `raw`).
+
+## In die Höhe bauen
+
+- Neues Werkzeug „Aufstocken“: Ein Haus bekommt bis zu zwei Stockwerke obendrauf, das erste ab
+  dem Lehmhaus, das zweite ab dem Fachwerkhaus. Jedes Stockwerk kostet 40 Gold, 12 Material und
+  4 Baupunkte je Feld und gibt 40 % mehr Platz für Bewohner.
+- Dafür muss eine Brandwache in Reichweite sein. Jedes Stockwerk erhöht die Brandgefahr und wirft
+  Schatten: −1 Wohnlage je Stockwerk auf den Feldern rund um das Haus (nicht auf dem Haus selbst).
+- Aufgestockte Häuser wachsen nicht mit Nachbarn zusammen; Stockwerke gehen nie verloren.
+- Beim Aufstocken markiert die Karte alle Häuser grün, die jetzt wachsen könnten.

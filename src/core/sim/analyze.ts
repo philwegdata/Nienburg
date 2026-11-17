@@ -125,6 +125,22 @@ function appealGrid(state: GameState, rules: Rules): number[] {
     if (!effect || b.construction) continue;
     radiate(b.def, b.x, b.y, b.w, b.h, effect);
   }
+  // Tall houses cast shade on the tiles right around them, not on themselves.
+  const shaded = new Uint8Array(size);
+  for (const b of all) {
+    const storeys = b.house?.storeys ?? 0;
+    if (storeys === 0) continue;
+    for (let y = b.y - 1; y <= b.y + b.h; y++) {
+      for (let x = b.x - 1; x <= b.x + b.w; x++) {
+        const inside = x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+        if (inside || !inBounds(state.width, state.height, x, y)) continue;
+        const i = indexOf(state.width, x, y);
+        if (shaded[i]! >= rules.balance.appeal.stack) continue;
+        shaded[i]!++;
+        total[i]! += rules.balance.storey.shade * storeys;
+      }
+    }
+  }
   return total;
 }
 
@@ -148,7 +164,9 @@ function openSides(state: GameState, rules: Rules, b: Building): number {
 export function houseCapacity(rules: Rules, b: Building, level: number): number {
   const base = rules.housing[level - 1]?.capacity ?? 0;
   const tiles = b.w * b.h;
-  return tiles === 1 ? base : Math.floor(base * (tiles + rules.balance.mergeBonus));
+  const plot = tiles === 1 ? base : base * (tiles + rules.balance.mergeBonus);
+  const storeys = b.house?.storeys ?? 0;
+  return Math.floor(plot * (1 + rules.balance.storey.capacity * storeys));
 }
 
 export function analyze(state: GameState, rules: Rules): Analysis {

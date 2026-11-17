@@ -13,6 +13,16 @@ export const BALANCE: Balance = {
     // spring, summer, autumn, winter
     season: { grain: [0.5, 1, 2, 0], wool: [1.5, 1, 1, 0.5], wood: [1, 1, 1, 1] },
   },
+  storey: {
+    max: 2,
+    minLevel: 2,
+    gold: 40,
+    materials: 12,
+    buildPoints: 4,
+    capacity: 0.4,
+    fireRisk: 1,
+    shade: -1,
+  },
   loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },
   workerShare: 0.4,
   foodPerHead: 0.08,

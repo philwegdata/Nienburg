@@ -82,6 +82,8 @@ function mergeHouses(
     b.w === 1 &&
     b.h === 1 &&
     !b.damaged &&
+    // Raised houses keep their own floors and stay on their own.
+    !b.house.storeys &&
     b.house.lacking === 0 &&
     b.house.level >= rules.balance.mergeLevel;
 
@@ -274,7 +276,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     }
     for (const kind of kinds) hints.add(kind, b);
 
-    buildings[b.id] = { ...b, house: { level, pop, lacking } };
+    buildings[b.id] = { ...b, house: { ...b.house, level, pop, lacking } };
   }
 
   // Neighbouring houses of the upper levels grow together.
@@ -286,7 +288,12 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   if (state.turn >= balance.fire.quietTurns) {
     const atRisk = Object.values(joined.buildings)
       .filter((b) => !b.damaged && !b.construction && !analysis.covered.fire.has(b.id))
-      .map((b) => ({ b, risk: rules.buildings[b.def]?.fireRisk ?? 0 }))
+      .map((b) => ({
+        b,
+        risk:
+          (rules.buildings[b.def]?.fireRisk ?? 0) +
+          (b.house?.storeys ?? 0) * balance.storey.fireRisk,
+      }))
       .filter((r) => r.risk > 0 && (!r.b.house || r.b.house.pop > 0))
       .sort((p, q) => p.b.id - q.b.id);
     const totalRisk = atRisk.reduce((sum, r) => sum + r.risk, 0);

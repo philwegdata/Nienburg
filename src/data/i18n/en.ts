@@ -9,6 +9,18 @@ export const en: Strings = {
   undo: 'Undo',
   endTurn: 'End turn',
   toolRepair: 'Repair',
+  toolRaise: 'Add a floor',
+  hintRaise: 'Tap a house to put another floor on it. Houses marked green can grow.',
+  storeys: 'Floors on top: {n} of {max}',
+  raiseNext: 'Next floor: {gold} gold · {materials} materials · {points} build points',
+  raiseShade: 'Taller houses cast shade on the tiles next to them and catch fire more easily.',
+  raiseNo: {
+    notHouse: 'Only houses can be raised.',
+    maxStoreys: 'It cannot go any higher.',
+    level: 'The house has to become a {level} first.',
+    needsFire: 'A taller house needs a fire watch within reach.',
+    damaged: 'Repair it first, then add a floor.',
+  },
   hintRepair: 'Tap a fire-blackened building to repair it.',
   restart: 'Start over',
   restartConfirm: 'Really start this town over? The current state will be lost.',
@@ -201,6 +213,10 @@ export const en: Strings = {
     [
       'Canals, bridges and new land',
       'A dug canal brings water from the wall to every building within two tiles – no paths needed. Bridges carry paths across. Outside the gates you can buy countryside and build on it; each further tile costs more than the last.',
+    ],
+    [
+      'Building upwards',
+      'With “Add a floor” a house gets up to two more floors: the first from the clay house on, the second from the half-timbered house on. Each holds many more people, but needs a fire watch within reach, catches fire more easily and casts shade that lowers the appeal next door.',
     ],
     [
       'Countryside and raw materials',

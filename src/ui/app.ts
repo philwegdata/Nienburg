@@ -15,6 +15,7 @@ import {
 } from '../core/actions';
 import { newGame, parseCity } from '../core/city';
 import { goalProgress } from '../core/goals';
+import { levelForStorey, raiseCost, raiseError, raiseHouse } from '../core/storeys';
 import { inBounds, indexOf } from '../core/grid';
 import { commitDemolish, planBuild, planDemolish, type BuildPlan } from '../core/planning';
 import { serialize, deserialize } from '../core/save';
@@ -67,6 +68,7 @@ type Tool =
   | { kind: 'select' }
   | { kind: 'demolish' }
   | { kind: 'repair' }
+  | { kind: 'raise' }
   | { kind: 'land' }
   | { kind: 'build'; def: BuildingId };
 
@@ -88,6 +90,8 @@ const GROUP_OF: Record<BuildingDef['category'], Group> = {
   green: 'green',
   farm: 'farm',
 };
+
+const SHORTAGES = new Set<string>(['noGold', 'noMaterials', 'noBuildPoints']);
 
 /** Pointer movement below this many CSS pixels still counts as a click. */
 const CLICK_SLOP = 6;
@@ -296,6 +300,19 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       state.terrain.forEach((terrain, i) => {
         if (terrain === 'buildable' && outside[i] && !state.occupancy[i]) shade.set(i, SHADE.reach);
       });
+    }
+    // Adding floors: mark the houses that could get one, money aside.
+    if (tool.kind === 'raise') {
+      for (const b of Object.values(state.buildings)) {
+        if (!b.house) continue;
+        const error = raiseError(state, rules, b.x, b.y, (h) => analysis.covered.fire.has(h.id));
+        if (error !== null && !SHORTAGES.has(error)) continue;
+        for (let dy = 0; dy < b.h; dy++) {
+          for (let dx = 0; dx < b.w; dx++) {
+            shade.set(indexOf(state.width, b.x + dx, b.y + dy), SHADE.good);
+          }
+        }
+      }
     }
     if (view === 'normal') return shade;
     if (view === 'appeal') {
@@ -521,6 +538,19 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   function describeHouse(b: Building, add: Add): void {
     const house = b.house!;
     add('p', `${t.inhabitants}: ${house.pop} / ${houseCapacity(rules, b, house.level)}`);
+    const storey = rules.balance.storey;
+    if (house.storeys || tool.kind === 'raise') {
+      add('p', fill(t.storeys, { n: house.storeys ?? 0, max: storey.max }), 'meta');
+    }
+    if (tool.kind === 'raise' && (house.storeys ?? 0) < storey.max) {
+      const cost = raiseCost(rules, b);
+      add(
+        'p',
+        fill(t.raiseNext, { gold: cost.gold, materials: cost.materials, points: cost.buildPoints }),
+        'meta',
+      );
+      add('p', t.raiseShade, 'meta');
+    }
     add('p', `${t.appeal}: ${analysis.houseAppeal.get(b.id) ?? 0}`, 'meta');
     if (analysis.boxedIn.has(b.id)) add('p', t.boxedIn, 'meta');
     if (b.damaged) {
@@ -563,6 +593,14 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       add('h2', t.toolLand);
       add('p', fill(t.hintLand, { n: state.sandbox ? 0 : landPrice(state, rules.balance.land) }));
       if (state.landBought > 0) add('p', fill(t.landBought, { n: state.landBought }), 'meta');
+      return;
+    }
+    if (tool.kind === 'raise') {
+      const s = rules.balance.storey;
+      add('h2', t.toolRaise);
+      add('p', t.hintRaise);
+      add('p', fill(t.raiseNext, { gold: s.gold, materials: s.materials, points: s.buildPoints }));
+      add('p', t.raiseShade, 'meta');
       return;
     }
     if (tool.kind === 'build') {
@@ -656,6 +694,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (tool.kind === 'select') el.hint.textContent = t.hintSelect;
     else if (tool.kind === 'demolish') el.hint.textContent = t.hintDemolish;
     else if (tool.kind === 'repair') el.hint.textContent = t.hintRepair;
+    else if (tool.kind === 'raise') el.hint.textContent = t.hintRaise;
     else if (tool.kind === 'land') {
       el.hint.textContent = fill(t.hintLand, {
         n: state.sandbox ? 0 : landPrice(state, rules.balance.land),
@@ -1066,6 +1105,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
     el.tabs.append(node('span', undefined, 'sep'));
     toolButton(t.toolLand, { kind: 'land' }, el.tabs);
+    toolButton(t.toolRaise, { kind: 'raise' }, el.tabs);
     toolButton(t.toolRepair, { kind: 'repair' }, el.tabs);
     toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
 
@@ -1159,6 +1199,17 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const result = repair(state, rules.buildings, rules.balance.repairShare, at.x, at.y);
       if (result.ok) change(result.state);
       else shortOf = result.reason;
+    } else if (tool.kind === 'raise') {
+      const result = raiseHouse(state, rules, at.x, at.y);
+      if (result.ok) change(result.state);
+      else if (SHORTAGES.has(result.reason)) shortOf = result.reason;
+      else {
+        const b = buildingAt(state, at.x, at.y);
+        const level = t.houseLevel[(b ? levelForStorey(rules, b) : 2) - 1] ?? '';
+        note = fill(t.raiseNo[result.reason as keyof typeof t.raiseNo], { level });
+        play('no');
+        return null;
+      }
     } else if (tool.kind === 'land') {
       const result = buyLand(state, rules.balance.land, at.x, at.y);
       landTile = null;
@@ -1261,7 +1312,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       } else {
         const at = pickTile(cam, pos.x, pos.y);
         const shortOf = commit(at);
-        if (e.pointerType === 'mouse' && tool.kind !== 'repair') {
+        if (e.pointerType === 'mouse' && tool.kind !== 'repair' && tool.kind !== 'raise') {
           hover = at;
           refreshPreview(hover, hover);
         } else {

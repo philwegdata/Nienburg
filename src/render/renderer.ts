@@ -364,7 +364,7 @@ export function buildingIcon(
   def: BuildingDef,
   width = 40,
   height = 30,
-  variant: { level?: number; merged?: boolean; season?: number } = {},
+  variant: { level?: number; merged?: boolean; season?: number; storeys?: number } = {},
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const dpr = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
@@ -377,7 +377,10 @@ export function buildingIcon(
   const w = variant.merged ? 2 : def.size.w;
   const h = def.size.h;
   const b: Building = { id: 1, def: def.id, x: 0, y: 0, w, h, rot: 0 };
-  if (def.category === 'housing') b.house = { level: variant.level ?? 3, pop: 1, lacking: 0 };
+  if (def.category === 'housing') {
+    b.house = { level: variant.level ?? 3, pop: 1, lacking: 0 };
+    if (variant.storeys) b.house.storeys = variant.storeys;
+  }
   const flat = def.category === 'path' || def.flat === true;
   // Draw it large on a scratch canvas first, then fit whatever came out into the picture:
   // that way nothing has to know in advance how tall a building is.

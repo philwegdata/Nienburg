@@ -20,6 +20,9 @@ export function showAssetSheet(t: Strings): void {
   });
   add(`${t.houseLevel[3]} ×2`, buildingIcon(house, 190, 130, { level: 4, merged: true }));
   add(`${t.houseLevel[4]} ×2`, buildingIcon(house, 190, 130, { level: 5, merged: true }));
+  for (const level of [2, 3, 4, 5]) {
+    add(`${t.houseLevel[level - 1]} +2`, buildingIcon(house, 150, 170, { level, storeys: 2 }));
+  }
   add(
     `${t.houseLevel[2]} (${t.season.winter})`,
     buildingIcon(house, 150, 130, { level: 3, season: 3 }),

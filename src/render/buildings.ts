@@ -697,14 +697,22 @@ function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
   const smoke = pop > 0;
   const chimneyAt = 0.25 + ((seed >> 6) % 3) * 0.25;
   const shutters = ['#6f8660', '#7a5a48', '#5f7386', '#8a4f43'][(seed >> 9) % 4]!;
-  shadow(g, b, [14, 18, 28, 36, 42][Math.min(level, 5) - 1]!);
+  // Floors added on top: each one a storey of the house's own style, with a row of windows.
+  const storeys = b.house?.storeys ?? 0;
+  const floor = level >= 5 ? 8 : 7;
+  const extra = (rows: number[]): number[] => {
+    const last = rows[rows.length - 1] ?? 3;
+    return [...rows, ...Array.from({ length: storeys }, (_, i) => last + floor * (i + 1))];
+  };
+  const lift = storeys * floor;
+  shadow(g, b, [14, 18, 28, 36, 42][Math.min(level, 5) - 1]! + lift);
 
   if (level === 1) {
     const r = rect(x, y, w, h, 0.2);
     hall(g, r, into, {
       wall: 'wattle',
       tex: 'wattle',
-      h: 5.5,
+      h: 5.5 + lift,
       roof: 'thatch',
       rise: 10,
       hip: true,
@@ -722,11 +730,11 @@ function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
     const r = rect(x, y, w, h, 0.16);
     hall(g, r, into, {
       wall: tinted(pal.walls.clay, seed),
-      h: 8.5,
+      h: 8.5 + lift,
       roof: 'shingle',
       rise: 9.5,
       alongX,
-      rows: [3.2],
+      rows: extra([3.2]),
       win: { h: 3.2 },
       door: 0.5,
       chimney: chimneyAt,
@@ -740,12 +748,12 @@ function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
       jetty: 0.035,
       wall: tinted(pal.walls.plaster, seed),
       timber: true,
-      h: 7.5,
+      h: 7.5 + lift,
       roof: 'tile',
       rise: 11.5,
       alongX,
       attic: true,
-      rows: [2.8, 9.4],
+      rows: extra([2.8, 9.4]),
       win: { shutters },
       door: 0.5,
       chimney: chimneyAt,
@@ -759,12 +767,12 @@ function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
       jetty: 0.04,
       wall: tinted(pal.walls.plaster, seed),
       timber: true,
-      h: 14,
+      h: 14 + lift,
       roof: 'darkTile',
       rise: 13,
       alongX,
       attic: true,
-      rows: [3, 10.4, 17.4],
+      rows: extra([3, 10.4, 17.4]),
       win: { shutters },
       door: 0.5,
       doorArched: true,
@@ -784,12 +792,12 @@ function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
     const info = hall(g, r, into, {
       wall,
       tex: 'plain',
-      h: 27,
+      h: 27 + lift,
       roof: 'slate',
       rise: 13,
       alongX,
       stepped: true,
-      rows: [4, 12, 20],
+      rows: extra([4, 12, 20]),
       win: { arched: true, h: 4.6 },
       door: 0.5,
       doorArched: true,
@@ -799,7 +807,7 @@ function drawHouse(g: G, b: Building, into: Emitter[] | null): void {
     });
     // String courses between the storeys, and an oriel on the long side.
     ctx.beginPath();
-    for (const z of [9.8, 17.8]) {
+    for (const z of [9.8, 17.8, ...Array.from({ length: storeys }, (_, i) => 25.8 + 8 * i)]) {
       line(g, onLeft(r, 0, z), onLeft(r, 1, z));
       line(g, onRight(r, 0, z), onRight(r, 1, z));
     }
