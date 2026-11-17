@@ -56,7 +56,7 @@ describe('homes on the wall', () => {
   });
 
   it('get no extra floors and do not merge', () => {
-    let s = put(put(town(), 'wallhouse', 3, 0), 'wallhouse', 4, 0);
+    const s = put(put(town(), 'wallhouse', 3, 0), 'wallhouse', 4, 0);
     for (const x of [3, 4]) {
       const b = buildingAt(s, x, 0)!;
       s.buildings[b.id] = { ...b, house: { level: 4, pop: 50, lacking: 0 } };
