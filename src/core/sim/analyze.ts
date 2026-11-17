@@ -186,7 +186,8 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     dryCanals: new Set(),
     boxedIn: new Set(),
     population: pop,
-    workforce: Math.floor(pop * balance.workerShare),
+    // Puzzles are about the plan alone: there is always someone to work.
+    workforce: state.puzzle ? Infinity : Math.floor(pop * balance.workerShare),
     workersNeeded: 0,
     foodCap: balance.baseStorage.food,
     materialsCap: balance.baseStorage.materials,

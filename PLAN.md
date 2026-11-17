@@ -394,7 +394,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 
 **D. Herausforderung und Wiederspielwert**
 
-- [ ] ★ Puzzle-Modus: ein fester Grundriss und eine feste Liste von Gebäuden; alles muss so
+- [x] ★ Puzzle-Modus: ein fester Grundriss und eine feste Liste von Gebäuden; alles muss so
       hineinpassen, dass jedes Haus versorgt ist
 - [ ] Szenarien mit Sonderregeln: Inselstadt ohne Landkauf, Stadt ohne Brunnen (nur Kanäle),
       Pilgerstadt

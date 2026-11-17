@@ -5,7 +5,7 @@ Der Platz innerhalb der Stadtmauer ist von Anfang an begrenzt – die Kunst lieg
 
 **Spielen:** https://philwegdata.github.io/Nienburg/
 
-Stand: Phase 7 – zehn Städte aus aller Welt mit je drei Sterne-Zielen, 34 Gebäude, fünf Wohnhaus-Stufen, Jahreszeiten, Ereignisse, Handel und ein Tutorial. Als Nächstes folgt die Veröffentlichung als installierbare App (Phase 8).
+Stand: zehn Städte aus aller Welt mit je drei Sterne-Zielen, fünf Rätsel, Sandbox, 39 Gebäude, fünf Wohnhaus-Stufen mit Aufstocken, Wohnen auf der Mauer, Umland mit Rohstoffen, Bank, Marktpreise, Bürgerwünsche, Jahreszeiten, Ereignisse und ein Tutorial. Die Ideenliste steht in `PLAN.md`; offen ist noch die Veröffentlichung als installierbare App (Phase 8).
 
 ## Lokal starten
 

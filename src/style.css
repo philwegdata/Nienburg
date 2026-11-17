@@ -461,6 +461,14 @@ main {
   opacity: 0.72;
 }
 
+.tools button .count {
+  font-weight: 700;
+}
+
+.tools button.used {
+  opacity: 0.5;
+}
+
 .tutorial {
   position: absolute;
   left: 0.6rem;

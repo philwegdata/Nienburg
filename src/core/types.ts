@@ -488,6 +488,17 @@ export type Wish =
   /** The town has `count` buildings of kind `def`. */
   | { kind: 'count'; house: number; name: number; def: string; count: number; reward: number };
 
+/** A small fixed plan with a fixed set of pieces; solved when everything fits and every house has what it needs. */
+export interface PuzzleDef {
+  id: string;
+  name: Record<Lang, string>;
+  blurb: Record<Lang, string>;
+  /** Same legend as a city map. */
+  map: string[];
+  pieces: Record<string, number>;
+  needs: Need[];
+}
+
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
   version: 8;
@@ -520,6 +531,11 @@ export interface GameState {
    * Absent in a normal game.
    */
   sandbox?: boolean;
+  /**
+   * Puzzle: a fixed set of pieces to fit into the plan, after which every house must have
+   * `needs`. Puzzles are also sandboxes: nothing costs anything. Absent in other games.
+   */
+  puzzle?: { id: string; pieces: Record<string, number>; needs: Need[] };
   /** Tiles of land bought outside the walls so far. */
   landBought: number;
   /** An event in effect during the current turn. */

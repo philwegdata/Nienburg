@@ -339,3 +339,16 @@
 - Mauerhäuser bekommen keine Stockwerke und wachsen nicht mit Nachbarn zusammen.
 - Entscheidung: Häuser auf Bögen über Gassen sind zurückgestellt; sie bräuchten Felder mit Weg
   und Gebäude zugleich, und das würde das Wegenetz grundlegend ändern.
+
+## Rätsel
+
+- Neuer Abschnitt „Rätsel“ in der Stadtauswahl mit fünf kleinen Grundrissen. Jedes Rätsel gibt
+  genau die Bauteile vor, die den Grundriss füllen; gelöst ist es, wenn alles verbaut ist und
+  jedes Haus hat, was das Rätsel verlangt (Weg, Wasser, Nahrung, Glaube, Brandschutz).
+- Keine Runden und keine Kosten; Rückgängig und Abreißen geben Bauteile zurück. Die Werkzeugleiste
+  zeigt nur die Bauteile des Rätsels mit ihrer Restzahl, die Kopfleiste, wie viele Häuser
+  versorgt sind. Versorgte Häuser sehen bewohnt aus.
+- Gelöste Rätsel bekommen einen Stern in der Auswahl. Ein Rätsel ist ein Abstecher: Beim
+  nächsten Start öffnet sich wieder die zuletzt gespielte Stadt.
+- Für jedes Rätsel prüft ein Test eine bekannte Lösung und dass die Bauteile den Grundriss
+  genau füllen.

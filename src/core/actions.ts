@@ -14,7 +14,9 @@ export type PlaceError =
   | 'locked'
   | 'noGold'
   | 'noMaterials'
-  | 'noBuildPoints';
+  | 'noBuildPoints'
+  /** A puzzle has no more pieces of this kind. */
+  | 'noPieces';
 
 export type PlaceCheck = { ok: true; tiles: Point[] } | { ok: false; reason: PlaceError };
 
@@ -125,6 +127,8 @@ export type Lock =
   | { kind: 'elsewhere' };
 
 export function lockOf(state: GameState, def: BuildingDef): Lock | null {
+  // A puzzle offers exactly its own pieces.
+  if (state.puzzle) return state.puzzle.pieces[def.id] ? null : { kind: 'elsewhere' };
   // In a sandbox everything can be built at once, as often as one likes.
   if (state.sandbox) return null;
   if (def.cities && !def.cities.includes(state.cityId)) return { kind: 'elsewhere' };
@@ -171,6 +175,12 @@ export function placeBuilding(
   if (lockOf(state, def)) return { ok: false, reason: 'locked' };
   const short = affordError(state, def);
   if (short) return { ok: false, reason: short };
+  if (state.puzzle) {
+    const allowed = state.puzzle.pieces[def.id] ?? 0;
+    const used = Object.values(state.buildings).filter((b) => b.def === def.id).length;
+    // Paving over a path of the same kind uses no new piece, but a fresh tile does.
+    if (used >= allowed) return { ok: false, reason: 'noPieces' };
+  }
 
   // Paths being paved over simply disappear; there is no refund for them.
   // A bridge over a dug canal remembers the canal beneath it.

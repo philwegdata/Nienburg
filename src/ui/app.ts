@@ -18,6 +18,8 @@ import { newGame, parseCity } from '../core/city';
 import { goalProgress } from '../core/goals';
 import { levelForStorey, raiseCost, raiseError, raiseHouse } from '../core/storeys';
 import { goodPrice } from '../core/market';
+import { newPuzzle, puzzleCity, puzzleStatus, type PuzzleStatus } from '../core/puzzle';
+import { PUZZLES } from '../data/puzzles';
 import { wishProgress } from '../core/wishes';
 import { WISH_NAMES } from '../data/wishes';
 import { inBounds, indexOf } from '../core/grid';
@@ -41,6 +43,7 @@ import {
   type Point,
   type Rotation,
   type ServiceKind,
+  type PuzzleDef,
   type TurnReport,
   type Wish,
 } from '../core/types';
@@ -66,7 +69,9 @@ import {
   lastCity,
   lastWasSandbox,
   loadGame,
+  markPuzzleSolved,
   saveGame,
+  solvedPuzzles,
 } from './storage';
 
 type Tool =
@@ -171,6 +176,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   let analysis: Analysis = analyze(state, rules);
   let outlook: TurnReport = forecast(state, rules, city.goals);
   let comingGoods = state.goods;
+  /** How the puzzle stands, when a puzzle is being played. */
+  let puzzle: PuzzleStatus | null = null;
+  /** What is drawn: the state, with served houses of a puzzle shown lived in. */
+  let shown: GameState = state;
+  /** Tools that make no sense in a puzzle. */
+  const townOnly: HTMLElement[] = [];
   let warnings = new Set<number>();
   let viewShade = new Map<number, string>();
   let rangeShade = new Map<number, string>();
@@ -262,7 +273,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       // For automated tests that need to click on a particular tile.
       el.canvas.dataset.camera = `${cam.x},${cam.y},${cam.zoom}`;
       const time = calm() ? 0 : performance.now() / 1000;
-      scene.render(ctx!, state, cam, screen, overlay, time, city.look);
+      scene.render(ctx!, shown, cam, screen, overlay, time, city.look);
     });
   }
 
@@ -362,16 +373,42 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const missing = missingNeeds(rules, analysis, b.id, b.house.level, needCtx());
       if (b.damaged || missing.length > 0) warnings.add(b.id);
     }
+    const wasSolved = puzzle?.solved ?? true;
+    puzzle = state.puzzle ? puzzleStatus(state, rules) : null;
+    if (puzzle) {
+      warnings = new Set(puzzle.lacking.keys());
+      for (const [id, reason] of analysis.idle) if (reason !== 'construction') warnings.add(id);
+    }
+    el.end.hidden = puzzle !== null;
+    shown = state;
+    if (puzzle) {
+      const lacking = puzzle.lacking;
+      const buildings = { ...state.buildings };
+      for (const b of Object.values(buildings)) {
+        if (b.house && !lacking.has(b.id)) {
+          buildings[b.id] = { ...b, house: { ...b.house, level: 2, pop: 1 } };
+        }
+      }
+      shown = { ...state, buildings };
+    }
+    for (const n of townOnly) n.hidden = puzzle !== null;
     viewShade = computeViewShade();
     updateResources();
     updateInfo();
     updateLocks();
     updateTutorial();
     el.undo.disabled = history.length === 0;
-    el.menu.textContent = state.sandbox
-      ? `${t.sandbox} · ${city.name[lang]}`
-      : `${starText(state.stars)} ${city.name[lang]}`;
+    el.menu.textContent = puzzle
+      ? `${puzzle.solved ? '★' : '☆'} ${t.puzzle.title} · ${city.name[lang]}`
+      : state.sandbox
+        ? `${t.sandbox} · ${city.name[lang]}`
+        : `${starText(state.stars)} ${city.name[lang]}`;
     requestDraw();
+    if (puzzle?.solved && !wasSolved && state.puzzle) {
+      markPuzzleSolved(state.puzzle.id);
+      play('star');
+      showPuzzleSolved();
+    }
   }
 
   /** Applies a planning-phase change that can be undone until the turn ends. */
@@ -424,6 +461,20 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   // ---------- panels ----------
 
   function updateResources(): void {
+    if (puzzle && state.puzzle) {
+      const needs = state.puzzle.needs.map((n) => t.need[n]).join(', ');
+      const left = Object.entries(puzzle.left)
+        .filter(([, n]) => n > 0)
+        .map(([id, n]) => `${n}× ${nameOf(id)}`)
+        .join(', ');
+      const served = fill(t.puzzle.served, { a: puzzle.served, b: puzzle.houses });
+      el.date.textContent = fill(t.puzzle.needs, { list: needs });
+      el.resources.replaceChildren(
+        node('span', served, puzzle.solved ? 'chip event' : 'chip'),
+        node('span', left ? fill(t.puzzle.left, { list: left }) : '✓', 'chip'),
+      );
+      return;
+    }
     const tiles = countTiles(state);
     const chip = (name: IconName, label: string, value: string, delta?: number) => {
       const c = node('span', undefined, 'chip');
@@ -601,6 +652,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
 
   function describeHouse(b: Building, add: Add): void {
     const house = b.house!;
+    if (puzzle) {
+      const lacks = puzzle.lacking.get(b.id);
+      if (lacks) {
+        add('p', fill(t.puzzle.lacks, { list: lacks.map((n) => t.need[n]).join(', ') }), 'warn');
+      } else add('p', t.puzzle.fine, 'good');
+      return;
+    }
     if (state.wish?.house === b.id) {
       add('p', `♥ ${wishText(state.wish)}`, 'good');
       add('p', fill(t.wish.reward, { gold: state.wish.reward }), 'meta');
@@ -680,7 +738,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const cost = [`${def.cost} ${t.res.gold}`];
       if (def.materials > 0) cost.push(`${def.materials} ${t.res.materials}`);
       cost.push(`${def.buildPoints} ${t.res.buildPoints}`);
-      add('p', `${t.costs}: ${cost.join(' · ')}`);
+      if (!state.puzzle) add('p', `${t.costs}: ${cost.join(' · ')}`);
       if (def.construction) {
         const c = def.construction;
         add(
@@ -748,7 +806,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
 
   function showShortage(reason: string | null | undefined): boolean {
     const known = reason === 'noGold' || reason === 'noMaterials' || reason === 'noBuildPoints';
-    el.hint.classList.toggle('warn', known);
+    el.hint.classList.toggle('warn', known || reason === 'noPieces');
+    if (reason === 'noPieces') {
+      el.hint.textContent = t.puzzle.noPieces;
+      play('no');
+      return true;
+    }
     if (known) {
       el.hint.textContent = t.shortOf[reason];
       if (reason === 'noGold' && loanRoom(state, rules.balance.loan) > 0) {
@@ -963,7 +1026,77 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (!el.market.open) el.market.showModal();
   }
 
+  function openPuzzle(def: PuzzleDef, restart = false): void {
+    city = puzzleCity(def);
+    rules = rulesFor(city);
+    const id = city.id;
+    state = (restart ? null : loadGame(id, true)) ?? newPuzzle(def, rules.balance);
+    tutorial = null;
+    history = [];
+    selected = null;
+    puzzle = null;
+    saveGame(state);
+    setTool({ kind: 'select' });
+    cam = fitCamera(state.width, state.height, screen.w, screen.h);
+    showGroup(group);
+    refresh();
+    // A puzzle opened already solved should not cheer again.
+  }
+
+  function showPuzzleSolved(): void {
+    const index = PUZZLES.findIndex((p) => p.id === state.puzzle?.id);
+    const next = PUZZLES[index + 1];
+    const actions = node('div', undefined, 'actions');
+    actions.append(
+      button(t.cities, () => {
+        el.report.close();
+        showCities();
+      }),
+    );
+    if (next) {
+      actions.append(
+        button(
+          t.puzzle.next,
+          () => {
+            el.report.close();
+            openPuzzle(next);
+          },
+          'primary',
+        ),
+      );
+    } else actions.append(button(t.continue, () => el.report.close(), 'primary'));
+    el.report.replaceChildren(
+      node('h2', `★ ${t.puzzle.solved}`),
+      node('p', t.puzzle.solvedText),
+      actions,
+    );
+    el.report.showModal();
+  }
+
   function showGoals(): void {
+    if (state.puzzle) {
+      const def = PUZZLES.find((p) => p.id === state.puzzle!.id);
+      const actions = node('div', undefined, 'actions');
+      actions.append(
+        button(t.puzzle.restart, () => {
+          el.goals.close();
+          if (def) openPuzzle(def, true);
+        }),
+        button(t.cities, () => {
+          el.goals.close();
+          showCities();
+        }),
+        button(t.close, () => el.goals.close(), 'primary'),
+      );
+      el.goals.replaceChildren(
+        node('h2', `${t.puzzle.title} · ${city.name[lang]}`),
+        node('p', city.blurb[lang], 'sub'),
+        node('p', el.date.textContent ?? ''),
+        actions,
+      );
+      el.goals.showModal();
+      return;
+    }
     el.goals.replaceChildren(
       node('h2', city.name[lang]),
       node('p', city.region[lang], 'sub'),
@@ -1048,10 +1181,38 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       );
       grid.append(card);
     });
+    // Puzzles: small plans to fill exactly.
+    const solved = solvedPuzzles();
+    const puzzles = node('div', undefined, 'cities');
+    PUZZLES.forEach((def, i) => {
+      const card = node('div', undefined, 'city');
+      const title = node('h3');
+      title.append(node('span', String(i + 1), 'number'), def.name[lang]);
+      const needs = def.needs.map((n) => t.need[n]).join(', ');
+      const current = state.puzzle?.id === def.id;
+      card.append(
+        title,
+        node('p', def.blurb[lang]),
+        node('p', fill(t.puzzle.needs, { list: needs }), 'meta'),
+        node('p', solved.includes(def.id) ? '★' : '☆', 'stars'),
+        button(
+          loadGame(puzzleCity(def).id, true) ? t.resume : t.play,
+          () => {
+            el.cities.close();
+            openPuzzle(def);
+          },
+          current ? 'primary' : undefined,
+        ),
+      );
+      puzzles.append(card);
+    });
     el.cities.replaceChildren(
       node('h2', t.chooseCity),
       worldMap(pins, lang, { world: t.worldMap, europe: t.europe }, pick),
       grid,
+      node('h2', t.puzzle.title),
+      node('p', t.puzzle.intro, 'sub'),
+      puzzles,
     );
     el.cities.showModal();
     el.cities.scrollTop = 0;
@@ -1158,6 +1319,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     for (const b of toolButtons) {
       if (b.tool.kind !== 'build') continue;
       b.node.classList.toggle('locked', lockOf(state, rules.buildings[b.tool.def]!) !== null);
+      const count = b.node.querySelector('.count');
+      if (count && puzzle) {
+        const left = puzzle.left[b.tool.def] ?? 0;
+        count.textContent = ` ×${left}`;
+        b.node.classList.toggle('used', left <= 0);
+      }
     }
   }
 
@@ -1169,7 +1336,11 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const def = rules.buildings[b.tool.def]!;
       // In a sandbox even other towns' specialities are on offer.
       const foreign = !state.sandbox && def.cities !== undefined && !def.cities.includes(city.id);
-      b.node.hidden = foreign || GROUP_OF[def.category] !== group;
+      // A puzzle shows all of its pieces at once, and nothing else.
+      const pieces = state.puzzle?.pieces;
+      b.node.hidden = pieces ? !pieces[def.id] : foreign || GROUP_OF[def.category] !== group;
+      const count = b.node.querySelector('.count');
+      if (count) count.textContent = pieces ? ` ×${puzzle?.left[def.id] ?? pieces[def.id]}` : '';
       // Some towns have their own names for buildings.
       const label = b.node.querySelector('.name');
       if (label) label.textContent = nameOf(b.tool.def);
@@ -1220,11 +1391,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const tab = button(t.category[g], () => showGroup(g));
       tabButtons.set(g, tab);
       el.tabs.append(tab);
+      townOnly.push(tab);
     }
     el.tabs.append(node('span', undefined, 'sep'));
     toolButton(t.toolLand, { kind: 'land' }, el.tabs);
     toolButton(t.toolRaise, { kind: 'raise' }, el.tabs);
     toolButton(t.toolRepair, { kind: 'repair' }, el.tabs);
+    townOnly.push(...toolButtons.slice(-3).map((b) => b.node));
     toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
 
     for (const id of BUILD_MENU) {
@@ -1232,6 +1405,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       toolButtons[toolButtons.length - 1]!.node.append(
         buildingIcon(rules.buildings[id]!),
         node('span', t.building[id], 'name'),
+        node('span', '', 'count'),
       );
     }
     rotateButton = button(t.rotate, rotate);

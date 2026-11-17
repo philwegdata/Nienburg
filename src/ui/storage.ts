@@ -48,9 +48,28 @@ export function loadGame(cityId: string, sandbox = false): GameState | null {
   return state && Boolean(state.sandbox) === sandbox ? state : null;
 }
 
+const SOLVED = 'nienburg.puzzles';
+
+/** Ids of the puzzles solved so far. */
+export function solvedPuzzles(): string[] {
+  try {
+    const list = JSON.parse(read(SOLVED) ?? '[]') as unknown;
+    return Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export function markPuzzleSolved(id: string): void {
+  const list = solvedPuzzles();
+  if (!list.includes(id)) write(SOLVED, JSON.stringify([...list, id]));
+}
+
 export function saveGame(state: GameState): void {
   const sandbox = state.sandbox === true;
   write(slot(state.cityId, sandbox), serialize(state));
+  // A puzzle is a side trip: the next start still opens the town played last.
+  if (state.puzzle) return;
   write(LAST_CITY, state.cityId);
   write(LAST_MODE, sandbox ? 'sandbox' : 'normal');
   if (sandbox) return;

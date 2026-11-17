@@ -10,6 +10,21 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  puzzle: {
+    title: 'Puzzles',
+    intro:
+      'Small plans with exactly the right pieces. Everything has to fit, and in the end every house must have what it needs. There are no turns and no costs.',
+    needs: 'Every house needs: {list}',
+    served: 'Served: {a} of {b} houses',
+    left: 'Left: {list}',
+    solved: 'Solved!',
+    solvedText: 'Everything fits, and every house has what it needs.',
+    next: 'Next puzzle',
+    restart: 'Start over',
+    noPieces: 'There are no pieces of this kind left.',
+    lacks: 'Lacks: {list}',
+    fine: 'This house has everything.',
+  },
   market: {
     title: 'Market',
     intro:

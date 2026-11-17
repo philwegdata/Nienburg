@@ -8,6 +8,21 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  puzzle: {
+    title: 'Rätsel',
+    intro:
+      'Kleine Grundrisse mit genau den passenden Bauteilen. Alles muss hinein, und jedes Haus muss am Ende versorgt sein. Es gibt keine Runden und keine Kosten.',
+    needs: 'Jedes Haus braucht: {list}',
+    served: 'Versorgt: {a} von {b} Häusern',
+    left: 'Übrig: {list}',
+    solved: 'Gelöst!',
+    solvedText: 'Alles passt, und jedes Haus hat, was es braucht.',
+    next: 'Nächstes Rätsel',
+    restart: 'Neu beginnen',
+    noPieces: 'Von diesem Bauteil ist keins mehr übrig.',
+    lacks: 'Fehlt: {list}',
+    fine: 'Dieses Haus hat alles.',
+  },
   market: {
     title: 'Markt',
     intro:
