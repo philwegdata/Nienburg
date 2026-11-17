@@ -225,6 +225,14 @@ export interface HousingLevel {
   taxPerHead: number;
 }
 
+export interface LoanTerms {
+  step: number;
+  base: number;
+  perHead: number;
+  interest: number;
+  installment: number;
+}
+
 export interface Balance {
   start: { gold: number; food: number; materials: number };
   /** Extra capacity of two merged house plots, as a share of one plot. */
@@ -246,6 +254,12 @@ export interface Balance {
   canalReach: number;
   /** Price of a tile of land outside the walls: `base` plus `step` for each one already bought. */
   land: { base: number; step: number };
+  /**
+   * The bank lends gold in steps of `step`, up to `base` plus `perHead` per inhabitant.
+   * Each turn `interest` of the debt is added to it, then `installment` of it is paid back
+   * from whatever gold the treasury has left.
+   */
+  loan: LoanTerms;
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -352,6 +366,10 @@ export interface TurnReport {
   upkeep: number;
   /** The treasury ran dry and the sovereign covered the gap. */
   subsidy: boolean;
+  /** Interest added to the debt this turn. */
+  loanInterest: number;
+  /** Gold paid back to the bank this turn. */
+  loanPaid: number;
   foodDelivered: number;
   foodWasted: number;
   foodEaten: number;
@@ -386,7 +404,7 @@ export interface TurnReport {
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 4;
+  version: 5;
   cityId: string;
   width: number;
   height: number;
@@ -420,6 +438,8 @@ export interface GameState {
   event: ActiveEvent | null;
   /** How often the sovereign had to cover an empty treasury. */
   subsidies: number;
+  /** Gold owed to the bank. */
+  debt: number;
   lastReport: TurnReport | null;
 }
 

@@ -4,6 +4,10 @@ import {
   countTiles,
   landError,
   landPrice,
+  borrow,
+  loanLimit,
+  loanRoom,
+  repayLoan,
   lockOf,
   repair,
   repairCost,
@@ -109,6 +113,7 @@ export interface Elements {
   cities: HTMLDialogElement;
   settings: HTMLDialogElement;
   help: HTMLDialogElement;
+  bank: HTMLDialogElement;
   tutorial: HTMLElement;
 }
 
@@ -395,12 +400,31 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       return c;
     };
     const goldDelta =
-      outlook.taxes + outlook.tradeIncome - outlook.upkeep - outlook.constructionCost;
+      outlook.taxes +
+      outlook.tradeIncome -
+      outlook.upkeep -
+      outlook.constructionCost -
+      outlook.loanPaid;
+    // The gold opens the bank.
+    const bankChip = (c: HTMLElement) => {
+      c.classList.add('clickable');
+      c.tabIndex = 0;
+      c.setAttribute('role', 'button');
+      c.title = t.bank.title;
+      c.addEventListener('click', showBank);
+      c.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showBank();
+        }
+      });
+      return c;
+    };
     const chips = [
       // In a sandbox nothing runs out.
       state.sandbox
         ? chip('gold', t.res.gold, '∞')
-        : chip('gold', t.res.gold, String(state.gold), goldDelta),
+        : bankChip(chip('gold', t.res.gold, String(state.gold), goldDelta)),
       chip(
         'food',
         t.res.food,
@@ -424,6 +448,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       chip('buildPoints', t.res.buildPoints, state.sandbox ? '∞' : String(state.buildPoints)),
       chip('free', t.res.free, `${tiles.free}/${tiles.buildable}`),
     ];
+    if (state.debt > 0) {
+      chips.splice(1, 0, bankChip(node('span', `${t.bank.chip} ${state.debt}`, 'chip debt')));
+    }
     // Craft goods only matter once the first workshops can be built.
     if (GOODS.some((g) => state.goods[g] > 0 || comingGoods[g] > 0)) {
       for (const g of GOODS) {
@@ -578,6 +605,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.hint.classList.toggle('warn', known);
     if (known) {
       el.hint.textContent = t.shortOf[reason];
+      if (reason === 'noGold' && loanRoom(state, rules.balance.loan) > 0) {
+        el.hint.textContent += ` ${t.bank.tip}`;
+      }
       play('no');
     }
     return known;
@@ -638,6 +668,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (r.downgraded > 0) line(plural(t.report.downgraded, r.downgraded));
     if (r.merged > 0) line(plural(t.report.merged, r.merged));
     if (r.subsidy) line(t.report.subsidy);
+    // Reports saved before the bank existed have no such entry.
+    if ((r.loanPaid ?? 0) > 0 || (r.loanInterest ?? 0) > 0) {
+      line(fill(t.report.loan, { a: r.loanInterest, b: r.loanPaid, n: state.debt }));
+    }
 
     const title = fill(t.report.title, {
       season: t.season[seasonOf(r.turn)],
@@ -680,6 +714,54 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     ok.focus();
   }
 
+  function showBank(): void {
+    const terms = rules.balance.loan;
+    const room = loanRoom(state, terms);
+    const take = (next: { ok: true; state: GameState } | { ok: false }) => {
+      if (!next.ok) return;
+      change(next.state);
+      showBank();
+    };
+    const percent = (share: number) => String(Math.round(share * 100));
+    el.bank.replaceChildren(
+      node('h2', t.bank.title),
+      node('p', t.bank.intro, 'sub'),
+      node('p', fill(t.bank.gold, { n: state.gold })),
+      node('p', fill(t.bank.debt, { n: state.debt })),
+      node('p', fill(t.bank.limit, { n: loanLimit(state, terms) }), 'meta'),
+      node(
+        'p',
+        fill(t.bank.terms, { p: percent(terms.interest), q: percent(terms.installment) }),
+        'meta',
+      ),
+    );
+    if (state.debt > 0) {
+      el.bank.append(
+        node('p', fill(t.bank.next, { a: outlook.loanInterest, b: outlook.loanPaid })),
+      );
+    }
+    const lend = node('div', undefined, 'hints');
+    const sums = [terms.step, terms.step * 3, room].filter(
+      (n, i, all) => n > 0 && n <= room && all.indexOf(n) === i,
+    );
+    for (const n of sums) {
+      lend.append(button(fill(t.bank.borrow, { n }), () => take(borrow(state, terms, n))));
+    }
+    if (room <= 0) lend.append(node('p', t.bank.full, 'meta'));
+    if (state.debt > 0 && state.gold > 0) {
+      const part = Math.min(terms.step, state.debt, state.gold);
+      lend.append(button(fill(t.bank.repay, { n: part }), () => take(repayLoan(state, part))));
+      if (state.gold >= state.debt && state.debt > part) {
+        lend.append(button(t.bank.repayAll, () => take(repayLoan(state, state.debt))));
+      }
+    }
+    const actions = node('div', undefined, 'actions');
+    const ok = button(t.close, () => el.bank.close(), 'primary');
+    actions.append(ok);
+    el.bank.append(lend, actions);
+    if (!el.bank.open) el.bank.showModal();
+  }
+
   function showGoals(): void {
     el.goals.replaceChildren(
       node('h2', city.name[lang]),
@@ -697,6 +779,14 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       el.goals.append(row);
     });
     const actions = node('div', undefined, 'actions');
+    if (!state.sandbox) {
+      actions.append(
+        button(t.bank.title, () => {
+          el.goals.close();
+          showBank();
+        }),
+      );
+    }
     actions.append(
       button(t.cities, () => {
         el.goals.close();
@@ -1169,7 +1259,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   );
 
   const dialogOpen = () =>
-    el.report.open || el.goals.open || el.cities.open || el.settings.open || el.help.open;
+    el.report.open ||
+    el.goals.open ||
+    el.cities.open ||
+    el.settings.open ||
+    el.help.open ||
+    el.bank.open;
 
   // ---------- keyboard on the map ----------
 

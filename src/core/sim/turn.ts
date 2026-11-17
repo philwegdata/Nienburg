@@ -1,4 +1,4 @@
-import { lockOf } from '../actions';
+import { lockOf, settleLoan } from '../actions';
 import { goalProgress } from '../goals';
 import { indexOf } from '../grid';
 import { rngStep } from '../rng';
@@ -306,6 +306,9 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   gold += taxes + tradeIncome - upkeep;
   const subsidy = gold < 0;
   if (subsidy) gold = 0;
+  // The bank takes its due from what is left; it never empties the treasury below zero.
+  const loan = settleLoan(gold, state.debt ?? 0, balance.loan);
+  gold = loan.gold;
 
   const settled: GameState = {
     ...state,
@@ -320,6 +323,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     peakPop: Math.max(state.peakPop, popAfter),
     buildPoints: analysis.buildPoints,
     subsidies: state.subsidies + (subsidy ? 1 : 0),
+    debt: loan.debt,
   };
 
   // Now and then something happens: a windfall at once, or a change for the coming season.
@@ -355,6 +359,8 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     taxes,
     upkeep,
     subsidy,
+    loanInterest: loan.interest,
+    loanPaid: loan.paid,
     foodDelivered,
     foodWasted: foodArriving - foodDelivered,
     foodEaten,

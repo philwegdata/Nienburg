@@ -1,5 +1,5 @@
 import { footprint, inBounds, indexOf } from './grid';
-import type { Building, BuildingDef, GameState, Point, Rotation } from './types';
+import type { Building, BuildingDef, GameState, LoanTerms, Point, Rotation } from './types';
 
 export type PlaceError =
   /** Some tile lies outside the walls or on non-buildable terrain. */
@@ -305,4 +305,58 @@ export function population(state: GameState): number {
   let total = 0;
   for (const b of Object.values(state.buildings)) total += b.house?.pop ?? 0;
   return total;
+}
+
+/** The most the bank will have lent at once; grows with the town. */
+export function loanLimit(state: GameState, terms: LoanTerms): number {
+  const raw = terms.base + terms.perHead * population(state);
+  return Math.floor(raw / terms.step) * terms.step;
+}
+
+/** How much more the town could borrow right now. */
+export function loanRoom(state: GameState, terms: LoanTerms): number {
+  if (state.sandbox) return 0;
+  return Math.max(0, loanLimit(state, terms) - state.debt);
+}
+
+export type LoanError =
+  /** The bank will not lend more than the limit. */
+  | 'loanLimit'
+  /** Nothing to pay back, or no gold to pay with. */
+  | 'nothingToRepay'
+  | 'noGold';
+
+export type LoanResult = { ok: true; state: GameState } | { ok: false; reason: LoanError };
+
+/** Borrows `amount` gold from the bank. */
+export function borrow(state: GameState, terms: LoanTerms, amount: number): LoanResult {
+  const sum = Math.floor(amount);
+  if (sum <= 0 || sum > loanRoom(state, terms)) return { ok: false, reason: 'loanLimit' };
+  return { ok: true, state: { ...state, gold: state.gold + sum, debt: state.debt + sum } };
+}
+
+/** Pays back up to `amount` gold; never more than the debt or the gold there is. */
+export function repayLoan(state: GameState, amount: number): LoanResult {
+  if (state.debt <= 0) return { ok: false, reason: 'nothingToRepay' };
+  const sum = Math.min(Math.floor(amount), state.debt, state.gold);
+  if (sum <= 0) return { ok: false, reason: 'noGold' };
+  return { ok: true, state: { ...state, gold: state.gold - sum, debt: state.debt - sum } };
+}
+
+/**
+ * The bank's share of the end of a turn: interest goes onto the debt, then an instalment is paid
+ * from the gold left over. A treasury that has nothing left simply pays nothing this time.
+ */
+export function settleLoan(
+  gold: number,
+  debt: number,
+  terms: LoanTerms,
+): { gold: number; debt: number; interest: number; paid: number } {
+  if (debt <= 0) return { gold, debt: 0, interest: 0, paid: 0 };
+  const interest = Math.ceil(debt * terms.interest);
+  const owed = debt + interest;
+  // Small sums are paid off in one go, so a debt never lingers on forever.
+  const due = Math.min(owed, Math.max(Math.ceil(owed * terms.installment), terms.step / 10));
+  const paid = Math.max(0, Math.min(due, gold));
+  return { gold: gold - paid, debt: owed - paid, interest, paid };
 }

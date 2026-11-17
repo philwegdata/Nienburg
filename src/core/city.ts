@@ -85,7 +85,7 @@ export function newGame(def: CityDef, seed: number, balance: Balance, sandbox = 
   const { width, height, terrain } = parseCity(def);
   return {
     ...(sandbox ? { sandbox: true } : {}),
-    version: 4,
+    version: 5,
     cityId: def.id,
     width,
     height,
@@ -105,6 +105,7 @@ export function newGame(def: CityDef, seed: number, balance: Balance, sandbox = 
     landBought: 0,
     event: null,
     subsidies: 0,
+    debt: 0,
     lastReport: null,
   };
 }

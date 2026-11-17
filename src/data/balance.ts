@@ -7,6 +7,7 @@ export const BALANCE: Balance = {
   repairShare: 0.3,
   canalReach: 2,
   land: { base: 80, step: 12 },
+  loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },
   workerShare: 0.4,
   foodPerHead: 0.08,
   goodsPerHead: 0.008,

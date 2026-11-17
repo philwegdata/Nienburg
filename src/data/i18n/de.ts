@@ -227,6 +227,22 @@ export const de = {
   sandboxInfo:
     'Sandbox: Alles ist kostenlos und von Anfang an verfügbar. Es gibt keine Ziele und keine Sterne.',
   sandboxResume: 'Sandbox fortsetzen',
+  bank: {
+    title: 'Bank',
+    intro: 'Ist die Stadtkasse knapp, leiht dir die Bank Gold. Du zahlst es nach und nach zurück.',
+    gold: 'In der Kasse: {n} Gold',
+    debt: 'Schulden: {n} Gold',
+    limit: 'Kreditrahmen: {n} Gold. Er wächst mit der Einwohnerzahl.',
+    terms:
+      'Jede Runde kommen {p} % Zinsen auf die Schulden. Danach zahlt die Stadt {q} % davon zurück, soweit Gold übrig ist.',
+    next: 'Nächste Runde: {a} Gold Zinsen, {b} Gold Rückzahlung.',
+    borrow: '{n} leihen',
+    repay: '{n} zurückzahlen',
+    repayAll: 'Alles zurückzahlen',
+    full: 'Mehr leiht die Bank gerade nicht. Mit mehr Einwohnern wächst der Rahmen.',
+    tip: 'Tippe auf das Gold oben, um dir bei der Bank etwas zu leihen.',
+    chip: 'Schulden',
+  },
   need: {
     road: 'Weg',
     water: 'Wasser',
@@ -364,6 +380,7 @@ export const de = {
     unlocked: 'Neu im Baumenü: {names}',
     star: 'Ein Ziel ist erreicht: {goal}',
     subsidy: 'Die Stadtkasse war leer. Der Landesherr hat ausgeholfen.',
+    loan: 'Bank: {b} Gold zurückgezahlt ({a} Gold Zinsen), noch {n} Gold Schulden',
     allGood: 'Alles ruhig in der Stadt.',
     hintsTitle: 'Was die Stadt braucht',
   },

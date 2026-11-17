@@ -349,6 +349,63 @@ Nicht mit der nächsten Phase beginnen, bevor die Abnahmekriterien erfüllt sind
 
 **Abnahme:** Version 1.0 getaggt, live auf GitHub Pages, auf Handy installierbar.
 
+### Phase 9 und weiter – Ideenliste
+
+Gesammelt nach Phase 7 und dem Sandbox-Modus. Mit ★ markiert sind die Punkte, die am meisten
+Spielspaß versprechen. Grundsatz bleibt: kein Kampf, kein Zeitdruck, kein endgültiger Verlust.
+Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Strafen.
+
+**A. Wirtschaft**
+
+- [x] Bank: Kredite bis zu einem Rahmen, der mit der Einwohnerzahl wächst; Zinsen und
+      automatische Rückzahlung aus dem übrigen Gold, nie unter null
+- [ ] ★ Produktionsketten mit dem Umland: Felder, Weiden und Wald auf gekauftem Land außerhalb der
+      Mauer liefern Getreide, Wolle und Holz; drinnen werden daraus Mehl → Brot, Wolle → Tuch,
+      Holz → Möbel. Landkauf bekommt dadurch einen echten Zweck
+- [ ] ★ Schwankende Marktpreise je Ware und Jahreszeit (Tuch teuer im Winter, Bier im Sommer); das
+      Kontor zeigt eine kleine Preiskurve, Lagern lohnt sich
+- [ ] Handelsaufträge von anderen Städten der Weltkarte („Brügge sucht 20 Tuch“), ohne Frist,
+      dafür mit Bonus und freigeschalteten Luxuswaren
+- [ ] Luxuswaren (Wein, Gewürze, Seide) nur über Fernhandel; die höchsten Hausstufen wollen sie
+- [ ] Steuersatz in drei Stufen (mild, üblich, hoch): mehr Gold oder schnellerer Zuzug
+- [ ] Zunftviertel: drei gleiche Werkstätten nebeneinander produzieren mehr
+
+**B. Platz und Bauen (das Herz des Spiels)**
+
+- [ ] ★ In die Höhe bauen: Häuser aufstocken statt mehr Fläche zu belegen; jedes Stockwerk braucht
+      Baumaterial und Brandschutz und wirft Schatten auf Nachbarn (Ansehen sinkt)
+- [ ] ★ Überbauen: Häuser auf Bögen über Gassen, Wohnungen in Mauer und Türmen
+- [ ] Zweiter Mauerring als großes Bauprojekt über viele Runden; danach kann die alte Mauer
+      abgerissen und zur Prachtstraße werden
+- [ ] Gebäude verschieben statt abreißen (kleine Gebühr, kein Verlust)
+- [ ] Gerüche und Geräusche: Gerberei und Schmiede stören, Bäckerei und Garten machen beliebt;
+      sichtbar in einer eigenen Ansicht
+
+**C. Leben und Geschichten**
+
+- [ ] ★ Bürgerwünsche: Bewohner mit Namen bitten um Dinge („Meisterin Gesa wünscht sich einen
+      Brunnen bei der Weberei“); erfüllte Wünsche bringen Gold, Ansehen oder neue Gebäude
+- [ ] Feste selbst ausrichten: Erntedank, Wintermarkt, Johannisfeuer; kosten Vorräte, bringen
+      Zuzug und Ansehen
+- [ ] Stadtchronik: ein Buch, das sich selbst schreibt (Gründung, erste Kathedrale, große Feste),
+      zum Nachlesen und Teilen
+- [ ] Berühmte Reisende besuchen die Stadt, wenn sie bestimmte Gebäude hat
+
+**D. Herausforderung und Wiederspielwert**
+
+- [ ] ★ Puzzle-Modus: ein fester Grundriss und eine feste Liste von Gebäuden; alles muss so
+      hineinpassen, dass jedes Haus versorgt ist
+- [ ] Szenarien mit Sonderregeln: Inselstadt ohne Landkauf, Stadt ohne Brunnen (nur Kanäle),
+      Pilgerstadt
+- [ ] Tägliche Herausforderung mit festem Seed und lokaler Bestenliste
+- [ ] Erfolge und ein Stadtwert über die drei Sterne hinaus
+- [ ] Städte per Link teilen (Spielstand im URL-Hash)
+
+**E. Atmosphäre**
+
+- [ ] Leise Musik je Region, Tag und Nacht mit Laternen, Fotomodus
+- [ ] Karteneditor im Browser für eigene Grundrisse
+
 ### Ideen für später (nicht Teil von 1.0)
 
 Karteneditor im Browser · Teilen von Städten per Link (State im URL-Hash) · tägliche Herausforderung mit festem Seed ·

@@ -477,8 +477,9 @@ describe('saves from before craft goods existed', () => {
     const restored = deserialize(JSON.stringify({ saveVersion: 1, state: old }), ['test']);
     expect(restored).not.toBeNull();
     expect(restored).toMatchObject({
-      version: 4,
+      version: 5,
       landBought: 0,
+      debt: 0,
       event: null,
       goods: { cloth: 0, tools: 0, beer: 0 },
       peakPop: population(state),

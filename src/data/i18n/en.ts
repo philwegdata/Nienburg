@@ -225,6 +225,22 @@ export const en: Strings = {
   sandbox: 'Sandbox',
   sandboxInfo:
     'Sandbox: everything is free and available from the start. There are no goals and no stars.',
+  bank: {
+    title: 'Bank',
+    intro: 'When the treasury runs low, the bank lends you gold. You pay it back bit by bit.',
+    gold: 'In the treasury: {n} gold',
+    debt: 'Debt: {n} gold',
+    limit: 'Credit limit: {n} gold. It grows with the population.',
+    terms:
+      'Each turn {p} % interest is added to the debt. Then the town pays back {q} % of it, as far as gold is left.',
+    next: 'Next turn: {a} gold interest, {b} gold paid back.',
+    borrow: 'Borrow {n}',
+    repay: 'Pay back {n}',
+    repayAll: 'Pay back all',
+    full: 'The bank will not lend more right now. The limit grows with the population.',
+    tip: 'Tap the gold at the top to borrow some from the bank.',
+    chip: 'Debt',
+  },
   sandboxResume: 'Continue sandbox',
   need: {
     road: 'path',
@@ -363,6 +379,7 @@ export const en: Strings = {
     unlocked: 'New in the build menu: {names}',
     star: 'A goal has been reached: {goal}',
     subsidy: 'The treasury was empty. The sovereign helped out.',
+    loan: 'Bank: {b} gold paid back ({a} gold interest), {n} gold still owed',
     allGood: 'All is quiet in town.',
     hintsTitle: 'What the town needs',
   },

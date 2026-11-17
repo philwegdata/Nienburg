@@ -272,3 +272,14 @@
 - Entscheidung: Alles andere läuft wie gewohnt weiter – Einwohner brauchen Wasser, Nahrung und
   Dienste, Gebäude brauchen Arbeitskräfte, Brände und Ereignisse kommen vor. Die Sandbox nimmt
   die Knappheit weg, nicht die Stadt.
+
+## Bank und Kredite
+
+- Ein Tipp auf das Gold (oder „Bank“ im Menü) öffnet die Bank. Sie leiht Gold in Schritten von
+  100, bis zu 300 Gold plus 2 Gold je Einwohner.
+- Jede Runde kommen 3 % Zinsen auf die Schulden, danach werden 10 % (mindestens 10 Gold) aus dem
+  übrigen Gold zurückgezahlt. Ist die Kasse leer, wird nichts fällig; die Bank treibt die Kasse nie
+  ins Minus. Zurückzahlen geht jederzeit von Hand.
+- Schulden stehen in der Kopfleiste und im Rundenbericht. In der Sandbox gibt es keine Bank.
+- Spielstand Version 5 (Feld `debt`).
+- Ideenliste für die Zeit nach Phase 8 in `PLAN.md`.

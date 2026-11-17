@@ -146,6 +146,22 @@ button.quiet {
   white-space: nowrap;
 }
 
+.chip.clickable {
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.chip.clickable:hover,
+.chip.clickable:focus-visible {
+  background: rgb(255 255 255 / 12%);
+}
+
+.chip.debt {
+  padding: 0 0.45rem;
+  color: #f3d9c4;
+  border: 1px solid rgb(243 217 196 / 40%);
+}
+
 .chip.narrow-only {
   display: none;
 }
