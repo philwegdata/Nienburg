@@ -4,6 +4,7 @@ import { indexOf } from '../grid';
 import { rngStep } from '../rng';
 import {
   GOODS,
+  RAW_GOODS,
   type Building,
   type GameState,
   type Goal,
@@ -160,6 +161,17 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     goodsSold++;
   }
   tradeIncome += goodsSold * analysis.tradePrice;
+
+  // Raw materials: the harvest comes in, the workshops take their share, surplus is sold.
+  const raw = { ...(state.raw ?? { grain: 0, wool: 0, wood: 0 }) };
+  let rawSold = 0;
+  for (const g of RAW_GOODS) {
+    raw[g] += analysis.harvest[g] - analysis.rawUsed[g];
+    const surplus = Math.max(0, raw[g] - balance.raw.cap);
+    raw[g] -= surplus;
+    rawSold += surplus;
+  }
+  tradeIncome += rawSold * balance.raw.price;
 
   // 2. Long building projects advance if the town can pay this season's share.
   const buildings: Record<number, Building> = {};
@@ -320,6 +332,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     food,
     materials,
     goods,
+    raw,
     peakPop: Math.max(state.peakPop, popAfter),
     buildPoints: analysis.buildPoints,
     subsidies: state.subsidies + (subsidy ? 1 : 0),

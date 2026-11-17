@@ -6,6 +6,8 @@ export type PlaceError =
   | 'notBuildable'
   /** Some tile is already taken by another building. */
   | 'occupied'
+  /** Fields and the like only go on land outside the walls. */
+  | 'notCountryside'
   /** The very same path type is already there; nothing to do. */
   | 'same'
   /** Not available yet, or a one-of-a-kind building that already stands. */
@@ -58,6 +60,9 @@ export function canPlace(
       continue;
     }
     if (terrain !== 'buildable') return { ok: false, reason: 'notBuildable' };
+    if (def.countryside && !isCountryside(state, t.x, t.y)) {
+      return { ok: false, reason: 'notCountryside' };
+    }
     if (!existing) continue;
     // A path may be laid over a different kind of path (e.g. paving an alley).
     if (def.category === 'path' && existingDef?.category === 'path') {
@@ -67,6 +72,42 @@ export function canPlace(
     return { ok: false, reason: 'occupied' };
   }
   return { ok: true, tiles };
+}
+
+const BARRIERS = new Set(['wall', 'tower', 'gate', 'canal']);
+const outsideCache = new WeakMap<readonly string[], Uint8Array>();
+
+/**
+ * Tiles outside the walls: everything reachable from the edge of the map without crossing a
+ * wall, tower, gate or canal. Cached per terrain array, which only changes when land is bought.
+ */
+export function outsideWalls(state: GameState): Uint8Array {
+  const cached = outsideCache.get(state.terrain);
+  if (cached) return cached;
+  const { width, height, terrain } = state;
+  const out = new Uint8Array(width * height);
+  const stack: number[] = [];
+  for (let x = 0; x < width; x++) stack.push(x, (height - 1) * width + x);
+  for (let y = 0; y < height; y++) stack.push(y * width, y * width + width - 1);
+  while (stack.length > 0) {
+    const i = stack.pop()!;
+    if (out[i] || BARRIERS.has(terrain[i]!)) continue;
+    out[i] = 1;
+    const x = i % width;
+    if (x > 0) stack.push(i - 1);
+    if (x < width - 1) stack.push(i + 1);
+    if (i >= width) stack.push(i - width);
+    if (i < width * (height - 1)) stack.push(i + width);
+  }
+  outsideCache.set(state.terrain, out);
+  return out;
+}
+
+/** Building ground outside the walls: land the town has bought. */
+export function isCountryside(state: GameState, x: number, y: number): boolean {
+  if (!inBounds(state.width, state.height, x, y)) return false;
+  const i = indexOf(state.width, x, y);
+  return state.terrain[i] === 'buildable' && outsideWalls(state)[i] === 1;
 }
 
 /** Why a building cannot be chosen at the moment. */

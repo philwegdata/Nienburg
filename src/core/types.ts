@@ -76,6 +76,10 @@ export type Goal =
 export type Good = 'cloth' | 'tools' | 'beer';
 export const GOODS: readonly Good[] = ['cloth', 'tools', 'beer'];
 
+/** Raw materials from the countryside, which make workshops in town work better. */
+export type RawGood = 'grain' | 'wool' | 'wood';
+export const RAW_GOODS: readonly RawGood[] = ['grain', 'wool', 'wood'];
+
 export type BuildingCategory =
   | 'path'
   | 'housing'
@@ -87,7 +91,9 @@ export type BuildingCategory =
   | 'culture'
   | 'craft'
   | 'admin'
-  | 'green';
+  | 'green'
+  /** Fields, pastures and woods on land outside the walls. */
+  | 'farm';
 
 /** How a tool behaves when the pointer is dragged across the map. */
 export type DragMode = 'none' | 'line' | 'rect';
@@ -184,6 +190,15 @@ export interface BuildingDef {
   storage?: { food?: number; materials?: number };
   /** Extra goods per turn while connected to a gate by paths. */
   delivery?: { food?: number; materials?: number };
+  /** Only on land outside the walls (which the town has to buy first). */
+  countryside?: boolean;
+  /** Raw material gathered per turn while operating, scaled by the season. */
+  harvest?: { good: RawGood; amount: number };
+  /**
+   * Uses `amount` of a raw material per turn if there is enough in store; while supplied, what
+   * the building makes (goods, gold, food, build points) grows by `bonus` as a share.
+   */
+  consumes?: { good: RawGood; amount: number; bonus: number };
 }
 
 /** 0 = as defined, 1 = footprint turned by 90 degrees. */
@@ -260,6 +275,16 @@ export interface Balance {
    * from whatever gold the treasury has left.
    */
   loan: LoanTerms;
+  /**
+   * Raw materials: how much the town can store of each, and the harvest factor per season
+   * (0 = spring).
+   */
+  raw: {
+    cap: number;
+    /** Gold per unit that no longer fits into storage. */
+    price: number;
+    season: Record<RawGood, [number, number, number, number]>;
+  };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -404,7 +429,7 @@ export interface TurnReport {
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 5;
+  version: 6;
   cityId: string;
   width: number;
   height: number;
@@ -421,6 +446,8 @@ export interface GameState {
   food: number;
   materials: number;
   goods: Record<Good, number>;
+  /** Raw materials in store. */
+  raw: Record<RawGood, number>;
   /** Most inhabitants the town ever had; unlocks buildings. */
   peakPop: number;
   /** Which of the city's three goals have been reached. */

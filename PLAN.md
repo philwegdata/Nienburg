@@ -359,7 +359,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 
 - [x] Bank: Kredite bis zu einem Rahmen, der mit der Einwohnerzahl wächst; Zinsen und
       automatische Rückzahlung aus dem übrigen Gold, nie unter null
-- [ ] ★ Produktionsketten mit dem Umland: Felder, Weiden und Wald auf gekauftem Land außerhalb der
+- [x] ★ Produktionsketten mit dem Umland: Felder, Weiden und Wald auf gekauftem Land außerhalb der
       Mauer liefern Getreide, Wolle und Holz; drinnen werden daraus Mehl → Brot, Wolle → Tuch,
       Holz → Möbel. Landkauf bekommt dadurch einen echten Zweck
 - [ ] ★ Schwankende Marktpreise je Ware und Jahreszeit (Tuch teuer im Winter, Bier im Sommer); das

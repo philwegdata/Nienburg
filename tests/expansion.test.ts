@@ -267,7 +267,12 @@ describe('buying land outside the walls', () => {
     const old: Record<string, unknown> = { ...town(), version: 3 };
     delete old.landBought;
     const back = deserialize(JSON.stringify({ saveVersion: 3, state: old }), ['test']);
-    expect(back).toMatchObject({ version: 5, landBought: 0, debt: 0 });
+    expect(back).toMatchObject({
+      version: 6,
+      landBought: 0,
+      debt: 0,
+      raw: { grain: 0, wool: 0, wood: 0 },
+    });
   });
 });
 

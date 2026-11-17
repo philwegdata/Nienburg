@@ -61,6 +61,7 @@ const list: BuildingDef[] = [
   }),
   def('bakery', 'food', [1, 2], [50, 10, 5, 3, 3], {
     yields: { food: 12 },
+    consumes: { good: 'grain', amount: 4, bonus: 1 },
     fireRisk: 3,
     unlockPop: 60,
   }),
@@ -130,16 +131,19 @@ const list: BuildingDef[] = [
   // Craft
   def('weaver', 'craft', [2, 2], [90, 20, 8, 4, 5], {
     produces: { good: 'cloth', amount: 4 },
+    consumes: { good: 'wool', amount: 3, bonus: 1 },
     unlockPop: 150,
   }),
   def('smithy', 'craft', [2, 2], [100, 25, 8, 4, 5], {
     produces: { good: 'tools', amount: 4 },
+    consumes: { good: 'wood', amount: 3, bonus: 1 },
     appeal: { value: -2, radius: 2 },
     fireRisk: 3,
     unlockPop: 150,
   }),
   def('brewery', 'craft', [2, 2], [90, 20, 8, 4, 4], {
     produces: { good: 'beer', amount: 4 },
+    consumes: { good: 'grain', amount: 3, bonus: 1 },
     appeal: { value: -1, radius: 2 },
     fireRisk: 2,
     unlockPop: 150,
@@ -151,6 +155,7 @@ const list: BuildingDef[] = [
   }),
   def('manufactory', 'craft', [3, 2], [260, 50, 14, 8, 8], {
     produces: { good: 'cloth', amount: 9 },
+    consumes: { good: 'wool', amount: 6, bonus: 1 },
     appeal: { value: -1, radius: 2 },
     fireRisk: 2,
     unlockPop: 260,
@@ -182,11 +187,31 @@ const list: BuildingDef[] = [
   def('warehouse', 'admin', [2, 2], [60, 15, 8, 5, 3], {
     storage: { materials: 120 },
     delivery: { materials: 6 },
+    consumes: { good: 'wood', amount: 2, bonus: 1 },
     appeal: { value: -1, radius: 1 },
     unlockPop: 20,
   }),
   def('buildersyard', 'admin', [2, 2], [120, 20, 8, 5, 4], {
     buildPointsBonus: 10,
+    consumes: { good: 'wood', amount: 3, bonus: 0.5 },
+    unlockPop: 150,
+  }),
+
+  // Countryside: only on land bought outside the walls
+  def('field', 'farm', [2, 2], [25, 2, 4, 1, 2], {
+    countryside: true,
+    harvest: { good: 'grain', amount: 6 },
+    unlockPop: 60,
+  }),
+  def('woodlot', 'farm', [2, 2], [30, 2, 4, 1, 2], {
+    countryside: true,
+    harvest: { good: 'wood', amount: 4 },
+    appeal: { value: 1, radius: 2 },
+    unlockPop: 60,
+  }),
+  def('pasture', 'farm', [2, 2], [35, 4, 4, 1, 2], {
+    countryside: true,
+    harvest: { good: 'wool', amount: 4 },
     unlockPop: 150,
   }),
 
@@ -239,6 +264,9 @@ export type BuildingId =
   | 'townhall'
   | 'warehouse'
   | 'buildersyard'
+  | 'field'
+  | 'woodlot'
+  | 'pasture'
   | 'tree'
   | 'garden'
   | 'fountain';

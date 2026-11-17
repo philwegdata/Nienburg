@@ -38,6 +38,7 @@ export const de = {
     services: 'Dienste',
     craft: 'Handwerk & Rat',
     green: 'Grün',
+    farm: 'Umland',
   },
   goal: {
     population: '{n} Einwohner',
@@ -51,6 +52,13 @@ export const de = {
     unique: 'Steht bereits. Davon gibt es nur eines.',
   },
   good: { cloth: 'Tuch', tools: 'Werkzeug', beer: 'Bier' },
+  raw: { grain: 'Korn', wool: 'Wolle', wood: 'Holz' },
+  rawHarvest: 'Erntet: {n} {good} pro Runde, je nach Jahreszeit',
+  rawConsumes: 'Mit {n} {good} pro Runde: +{p} %',
+  rawSupplied: 'Bekommt {good} aus dem Umland und schafft mehr.',
+  rawMissing: 'Mit {good} aus dem Umland würde hier mehr entstehen.',
+  hintCountryside: 'Nur auf gekauftem Land vor der Mauer. Tippen platziert das Gebäude.',
+  notCountryside: 'Das geht nur auf gekauftem Land vor der Mauer.',
   goods: 'Waren',
   makes: 'Stellt her',
   appeal: 'Wohnlage',
@@ -194,6 +202,10 @@ export const de = {
       'Kanäle, Brücken und neues Land',
       'Ein gegrabener Kanal bringt Wasser von der Mauer zu allen Gebäuden im Umkreis von zwei Feldern – ganz ohne Wege. Brücken führen Wege darüber. Vor den Toren kannst du Umland kaufen und bebauen; jedes weitere Feld kostet mehr als das letzte.',
     ],
+    [
+      'Umland und Rohstoffe',
+      'Auf gekauftem Land vor der Mauer gedeihen Kornfelder, Schafweiden und Holzfäller. Mit ihrem Korn, ihrer Wolle und ihrem Holz arbeiten Bäckerei, Brauerei, Weberei, Schmiede und andere doppelt so gut. Auch sie brauchen einen Weg und Arbeitskräfte. Was nicht ins Lager passt, kaufen Händler.',
+    ],
   ],
   helpLevels: 'Was die Häuser brauchen',
   helpKeys: 'Tasten',
@@ -306,6 +318,9 @@ export const de = {
     tree: 'Baum',
     garden: 'Garten',
     fountain: 'Zierbrunnen',
+    field: 'Kornfeld',
+    woodlot: 'Holzfäller',
+    pasture: 'Schafweide',
   },
   buildingInfo: {
     alley: 'Schmal und günstig. Dienste kommen hier nur halb so weit.',
@@ -348,6 +363,10 @@ export const de = {
     tree: 'Ein wenig Grün zwischen den Mauern.',
     garden: 'Hebt die Wohnlage ringsum.',
     fountain: 'Ein Schmuckstück, das die Wohnlage weithin hebt.',
+    field:
+      'Korn für Bäckerei und Brauerei. Geerntet wird vor allem im Herbst, im Winter ruht das Feld.',
+    woodlot: 'Holz für Schmiede, Lagerhaus und Bauhütte.',
+    pasture: 'Wolle für Weberei und Manufaktur.',
   },
   terrain: {
     outside: 'Umland',

@@ -85,7 +85,7 @@ export function newGame(def: CityDef, seed: number, balance: Balance, sandbox = 
   const { width, height, terrain } = parseCity(def);
   return {
     ...(sandbox ? { sandbox: true } : {}),
-    version: 5,
+    version: 6,
     cityId: def.id,
     width,
     height,
@@ -99,6 +99,7 @@ export function newGame(def: CityDef, seed: number, balance: Balance, sandbox = 
     food: balance.start.food,
     materials: balance.start.materials,
     goods: { cloth: 0, tools: 0, beer: 0 },
+    raw: { grain: 0, wool: 0, wood: 0 },
     peakPop: 0,
     stars: [false, false, false],
     buildPoints: balance.buildPointsPerTurn,

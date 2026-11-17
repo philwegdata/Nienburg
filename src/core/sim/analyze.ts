@@ -6,6 +6,7 @@ import {
   type BuildingDef,
   type GameState,
   type Good,
+  type RawGood,
   type Need,
   type Point,
   type Rules,
@@ -56,6 +57,12 @@ export interface Analysis {
   foodYield: number;
   materialsDelivery: number;
   production: Record<Good, number>;
+  /** Raw materials gathered in the countryside this turn. */
+  harvest: Record<RawGood, number>;
+  /** Raw materials the workshops use this turn. */
+  rawUsed: Record<RawGood, number>;
+  /** Buildings that use raw materials, and whether they get them this turn. */
+  supplied: Map<number, boolean>;
   goldYield: number;
   /** Craft goods the town's merchants can sell per turn, and the best price they get. */
   tradeCapacity: number;
@@ -167,6 +174,9 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     foodYield: 0,
     materialsDelivery: 0,
     production: { cloth: 0, tools: 0, beer: 0 },
+    harvest: { grain: 0, wool: 0, wood: 0 },
+    rawUsed: { grain: 0, wool: 0, wood: 0 },
+    supplied: new Map(),
     goldYield: 0,
     tradeCapacity: 0,
     tradePrice: 0,
@@ -233,7 +243,8 @@ export function analyze(state: GameState, rules: Rules): Analysis {
       !def.delivery &&
       !def.produces &&
       !def.yields &&
-      !def.trade;
+      !def.trade &&
+      !def.harvest;
     if (passive) continue;
     analysis.workersNeeded += def.workers;
     if (paths.length === 0) {
@@ -271,6 +282,16 @@ export function analyze(state: GameState, rules: Rules): Analysis {
   });
   const guildhalls = operating.filter(({ def }) => def.guildBoost);
 
+  // The countryside's harvest comes first, so that the workshops can use it at once.
+  const season = state.turn % 4;
+  for (const { def } of operating) {
+    if (!def.harvest) continue;
+    const factor = balance.raw.season[def.harvest.good][season]!;
+    analysis.harvest[def.harvest.good] += Math.round(def.harvest.amount * factor);
+  }
+  const stock = { ...(state.raw ?? { grain: 0, wool: 0, wood: 0 }) };
+  for (const g of Object.keys(stock) as RawGood[]) stock[g] += analysis.harvest[g];
+
   // Pass 3: everything else operating buildings do.
   for (const entry of operating) {
     const { b, def, paths } = entry;
@@ -284,10 +305,22 @@ export function analyze(state: GameState, rules: Rules): Analysis {
       analysis.tradePrice = Math.max(analysis.tradePrice, def.trade.price);
     }
     spread(entry, false);
+    // Workshops with their raw material at hand do more, oldest first while stocks last.
+    let supply = 0;
+    if (def.consumes) {
+      const { good, amount } = def.consumes;
+      const enough = stock[good] >= amount;
+      analysis.supplied.set(b.id, enough);
+      if (enough) {
+        stock[good] -= amount;
+        analysis.rawUsed[good] += amount;
+        supply = def.consumes.bonus;
+      }
+    }
     if (def.delivery) {
       if (connected) {
-        analysis.foodDelivery += def.delivery.food ?? 0;
-        analysis.materialsDelivery += def.delivery.materials ?? 0;
+        analysis.foodDelivery += Math.floor((def.delivery.food ?? 0) * (1 + supply));
+        analysis.materialsDelivery += Math.floor((def.delivery.materials ?? 0) * (1 + supply));
       }
     }
     let boost = 0;
@@ -297,11 +330,13 @@ export function analyze(state: GameState, rules: Rules): Analysis {
       }
     }
     if (def.produces) {
-      analysis.production[def.produces.good] += Math.floor(def.produces.amount * (1 + boost));
+      analysis.production[def.produces.good] += Math.floor(
+        def.produces.amount * (1 + boost + supply),
+      );
     }
-    analysis.goldYield += Math.floor((def.yields?.gold ?? 0) * (1 + boost));
-    analysis.foodYield += def.yields?.food ?? 0;
-    analysis.buildPoints += def.buildPointsBonus ?? 0;
+    analysis.goldYield += Math.floor((def.yields?.gold ?? 0) * (1 + boost + supply));
+    analysis.foodYield += Math.floor((def.yields?.food ?? 0) * (1 + supply));
+    analysis.buildPoints += Math.floor((def.buildPointsBonus ?? 0) * (1 + supply));
     analysis.taxFactor += def.taxBonus ?? 0;
   }
 

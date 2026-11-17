@@ -183,7 +183,13 @@ describe('saves from before events existed', () => {
     const old: Record<string, unknown> = { ...state, version: 2 };
     delete old.event;
     const restored = deserialize(JSON.stringify({ saveVersion: 2, state: old }), ['test']);
-    expect(restored).toMatchObject({ version: 5, event: null, landBought: 0, debt: 0 });
+    expect(restored).toMatchObject({
+      version: 6,
+      event: null,
+      landBought: 0,
+      debt: 0,
+      raw: { grain: 0, wool: 0, wood: 0 },
+    });
     expect(endTurn(restored!, RULES).turn).toBe(5);
   });
 });

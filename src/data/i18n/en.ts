@@ -40,6 +40,7 @@ export const en: Strings = {
     services: 'Services',
     craft: 'Crafts & council',
     green: 'Green',
+    farm: 'Countryside',
   },
   goal: {
     population: '{n} inhabitants',
@@ -52,6 +53,13 @@ export const en: Strings = {
     requires: 'First needs: {name}.',
     unique: 'Already built. There can be only one.',
   },
+  raw: { grain: 'Grain', wool: 'Wool', wood: 'Wood' },
+  rawHarvest: 'Harvests: {n} {good} per turn, depending on the season',
+  rawConsumes: 'With {n} {good} per turn: +{p} %',
+  rawSupplied: 'Gets {good} from the countryside and makes more.',
+  rawMissing: 'With {good} from the countryside more would be made here.',
+  hintCountryside: 'Only on land bought outside the walls. Tap to place the building.',
+  notCountryside: 'That only goes on land bought outside the walls.',
   good: { cloth: 'Cloth', tools: 'Tools', beer: 'Beer' },
   goods: 'Goods',
   makes: 'Makes',
@@ -194,6 +202,10 @@ export const en: Strings = {
       'Canals, bridges and new land',
       'A dug canal brings water from the wall to every building within two tiles – no paths needed. Bridges carry paths across. Outside the gates you can buy countryside and build on it; each further tile costs more than the last.',
     ],
+    [
+      'Countryside and raw materials',
+      'On land bought outside the walls you can lay out grain fields, sheep pastures and woodcutters. With their grain, wool and wood, bakery, brewery, weaver, smithy and others work twice as well. They too need a path and workers. Whatever does not fit into storage is bought by traders.',
+    ],
   ],
   helpLevels: 'What the houses need',
   helpKeys: 'Keys',
@@ -305,6 +317,9 @@ export const en: Strings = {
     tree: 'Tree',
     garden: 'Garden',
     fountain: 'Fountain',
+    field: 'Grain field',
+    woodlot: 'Woodcutter',
+    pasture: 'Sheep pasture',
   },
   buildingInfo: {
     alley: 'Narrow and cheap. Services reach only half as far here.',
@@ -347,6 +362,10 @@ export const en: Strings = {
     tree: 'A little green between the walls.',
     garden: 'Makes the surroundings nicer to live in.',
     fountain: 'A showpiece that improves the neighbourhood far around.',
+    field:
+      'Grain for bakery and brewery. Most of it is harvested in autumn; in winter the field rests.',
+    woodlot: 'Wood for smithy, warehouse and builders’ yard.',
+    pasture: 'Wool for weaver and manufactory.',
   },
   terrain: {
     outside: 'Countryside',

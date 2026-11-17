@@ -1835,6 +1835,158 @@ const garden: Draw = (g, b) => {
   }
 };
 
+/** A wooden fence around a footprint, as in the builders' yard. */
+function fence(g: G, r: Rect, height = 6, posts = 8): void {
+  const { ctx, pal } = g;
+  ctx.beginPath();
+  for (const z of [height * 0.45, height]) {
+    line(g, onLeft(r, 0, z), onLeft(r, 1, z));
+    line(g, onRight(r, 0, z), onRight(r, 1, z));
+  }
+  for (let i = 0; i <= posts; i++) {
+    line(g, onLeft(r, i / posts, 0), onLeft(r, i / posts, height + 1));
+    line(g, onRight(r, i / posts, 0), onRight(r, i / posts, height + 1));
+  }
+  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = pal.trunk;
+  ctx.stroke();
+}
+
+const field: Draw = (g, b, _into, seed) => {
+  const { ctx, pal } = g;
+  const { x, y, w, h } = b;
+  const crop = pal.fields[seed % pal.fields.length]!;
+  poly(g, diamond(x, y, w, h, 0.06), crop, OUTLINE);
+  // Furrows along the longer side.
+  ctx.beginPath();
+  const rows = 9;
+  for (let i = 1; i < rows; i++) {
+    const t = 0.06 + ((w - 0.12) * i) / rows;
+    line(g, v(x + t, y + 0.06), v(x + t, y + h - 0.06));
+  }
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = pal.furrow;
+  ctx.stroke();
+  // Ripe ears stand up in summer; sheaves wait in autumn; a scarecrow keeps watch.
+  if (pal.season === 1) {
+    ctx.beginPath();
+    for (let i = 0; i < 40; i++) {
+      const s = tileHash(x * 11 + i, y * 5 + i * 7);
+      const p = v(
+        x + 0.12 + ((s % 100) / 100) * (w - 0.24),
+        y + 0.12 + (((s >>> 8) % 100) / 100) * (h - 0.24),
+      );
+      line(g, p, { x: p.x, y: p.y - 3 });
+    }
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = shade(crop, -0.18);
+    ctx.stroke();
+  }
+  if (pal.season === 2) {
+    for (const [u, t] of [
+      [0.35, 0.4],
+      [0.7, 0.55],
+      [0.45, 0.78],
+    ] as const) {
+      const p = v(x + u * w, y + t * h);
+      poly(
+        g,
+        [
+          { x: p.x - 3.5, y: p.y },
+          { x: p.x, y: p.y - 9 },
+          { x: p.x + 3.5, y: p.y },
+        ],
+        '#d8b25a',
+        OUTLINE,
+      );
+    }
+  }
+  const pole = v(x + w * 0.62, y + h * 0.3);
+  ctx.beginPath();
+  line(g, pole, { x: pole.x, y: pole.y - 15 });
+  line(g, { x: pole.x - 5, y: pole.y - 11 }, { x: pole.x + 5, y: pole.y - 11 });
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = pal.trunk;
+  ctx.stroke();
+  ctx.fillStyle = '#9a4a32';
+  ctx.beginPath();
+  ctx.arc(pole.x, pole.y - 16, 2, 0, Math.PI * 2);
+  ctx.fill();
+};
+
+const pasture: Draw = (g, b, _into, seed) => {
+  const { ctx, pal } = g;
+  const { x, y, w, h } = b;
+  poly(g, diamond(x, y, w, h, 0.05), shade(pal.meadow[0]!, 0.06), OUTLINE);
+  const a = along(b);
+  const pen = rect(x, y, w, h, 0.06);
+  // A little shelter in the back corner.
+  const shed = a.R(0.1, 0.1, a.U * 0.34, a.V * 0.3);
+  hall(g, shed, null, {
+    wall: 'darkWood',
+    tex: 'plank',
+    h: 6,
+    roof: 'shingle',
+    rise: 6,
+    rows: [],
+    door: 0.5,
+    chimney: null,
+    seed,
+  });
+  // Sheep, scattered by the seed.
+  const winter = pal.season === 3;
+  for (let i = 0; i < (winter ? 3 : 6); i++) {
+    const s = tileHash(seed + i * 13, i * 7 + 1);
+    const p = v(
+      x + 0.35 + ((s % 100) / 100) * (w - 0.6),
+      y + 0.45 + (((s >>> 8) % 100) / 100) * (h - 0.7),
+    );
+    ctx.fillStyle = 'rgba(40, 30, 20, 0.25)';
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 1, 4.5, 1.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f2eee4';
+    ctx.strokeStyle = OUTLINE;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y - 2.5, 4.2, 2.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    const dir = s % 2 === 0 ? 1 : -1;
+    ctx.fillStyle = '#3b3029';
+    ctx.beginPath();
+    ctx.ellipse(p.x + dir * 4.2, p.y - 3.2, 1.6, 1.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  fence(g, pen, 5, 10);
+};
+
+const woodlot: Draw = (g, b, _into, seed) => {
+  const { pal } = g;
+  const { x, y, w, h } = b;
+  poly(g, diamond(x, y, w, h, 0.05), shade(pal.meadow[1] ?? pal.meadow[0]!, -0.08));
+  // The woodcutter's hut in the back corner, standing wood around it, logs out in front.
+  drawTree(g, x + w * 0.78, y + h * 0.2, 1.1);
+  hall(g, rect(x + 0.12, y + 0.12, 0.75, 0.6), null, {
+    wall: 'darkWood',
+    tex: 'plank',
+    h: 7,
+    roof: 'shingle',
+    rise: 7,
+    rows: [],
+    door: 0.5,
+    chimney: null,
+    seed,
+  });
+  drawTree(g, x + w * 0.2, y + h * 0.78, 1.05);
+  for (let i = 0; i < 3; i++) {
+    const log = rect(x + w * 0.45, y + h * 0.5 + i * 0.09, 0.55, 0.08);
+    walls(g, log, i * 0.4, 2.6 + i * 0.4, pal.walls.wood);
+    lid(g, log, 2.6 + i * 0.4, pal.walls.wood.top);
+  }
+  drawTree(g, x + w * 0.8, y + h * 0.75, 1.15);
+};
+
 /** A building site: foundations and scaffolding. */
 function drawSite(g: G, b: Building): void {
   const { ctx, pal } = g;
@@ -1886,6 +2038,9 @@ const DRAW: Record<string, Draw> = {
   warehouse,
   buildersyard,
   garden,
+  field,
+  pasture,
+  woodlot,
   tree: (g, b) => drawTree(g, b.x + 0.5, b.y + 0.5, 1.15),
 };
 

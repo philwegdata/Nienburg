@@ -4,6 +4,7 @@ import {
   countTiles,
   landError,
   landPrice,
+  outsideWalls,
   borrow,
   loanLimit,
   loanRoom,
@@ -23,6 +24,7 @@ import { endTurn, forecast, seasonOf, yearOf } from '../core/sim/turn';
 import { TUTORIAL_STEPS, tutorialProgress, type TutorialStepId } from '../core/tutorial';
 import {
   GOODS,
+  RAW_GOODS,
   SERVICES,
   type Building,
   type BuildingDef,
@@ -69,9 +71,9 @@ type Tool =
   | { kind: 'build'; def: BuildingId };
 
 type View = 'normal' | 'appeal' | ServiceKind;
-type Group = 'basics' | 'supply' | 'services' | 'craft' | 'green';
+type Group = 'basics' | 'supply' | 'services' | 'craft' | 'farm' | 'green';
 
-const GROUPS: readonly Group[] = ['basics', 'supply', 'services', 'craft', 'green'];
+const GROUPS: readonly Group[] = ['basics', 'supply', 'services', 'craft', 'farm', 'green'];
 const GROUP_OF: Record<BuildingDef['category'], Group> = {
   path: 'basics',
   housing: 'basics',
@@ -84,6 +86,7 @@ const GROUP_OF: Record<BuildingDef['category'], Group> = {
   craft: 'craft',
   admin: 'craft',
   green: 'green',
+  farm: 'farm',
 };
 
 /** Pointer movement below this many CSS pixels still counts as a click. */
@@ -185,6 +188,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     cistern: 0,
     tannery: 12,
     buildersyard: 10,
+    field: 0,
+    pasture: 0,
+    woodlot: 18,
   };
   const scene = new Scene((id) => {
     const def = rules.buildings[id];
@@ -284,6 +290,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   /** Colours for the chosen view: who is served, and where the neighbourhood is nice. */
   function computeViewShade(): Map<number, string> {
     const shade = new Map<number, string>();
+    // Fields and the like: show the land outside the walls that is free for them.
+    if (tool.kind === 'build' && rules.buildings[tool.def]?.countryside) {
+      const outside = outsideWalls(state);
+      state.terrain.forEach((terrain, i) => {
+        if (terrain === 'buildable' && outside[i] && !state.occupancy[i]) shade.set(i, SHADE.reach);
+      });
+    }
     if (view === 'normal') return shade;
     if (view === 'appeal') {
       state.terrain.forEach((terrain, i) => {
@@ -457,6 +470,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         chips.push(chip(g, t.good[g], String(state.goods[g]), comingGoods[g] - state.goods[g]));
       }
     }
+    // Raw materials appear once the countryside yields something.
+    const raw = state.raw;
+    if (RAW_GOODS.some((g) => raw[g] > 0 || analysis.harvest[g] > 0)) {
+      for (const g of RAW_GOODS) {
+        chips.push(chip(g, t.raw[g], String(raw[g]), analysis.harvest[g] - analysis.rawUsed[g]));
+      }
+    }
     const date = `${t.season[seasonOf(state.turn)]}, ${t.year} ${yearOf(state.turn)}`;
     el.date.textContent = date;
     // On narrow screens the title bar has no room for the date, so it leads the chips instead.
@@ -475,6 +495,15 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (range && range < 100) parts.push(`${t.range}: ${range}`);
     if (def.produces) {
       parts.push(`${t.makes}: ${def.produces.amount} ${t.good[def.produces.good]} ${t.perTurn}`);
+    }
+    if (def.harvest) {
+      parts.push(fill(t.rawHarvest, { n: def.harvest.amount, good: t.raw[def.harvest.good] }));
+    }
+    if (def.consumes) {
+      const c = def.consumes;
+      parts.push(
+        fill(t.rawConsumes, { n: c.amount, good: t.raw[c.good], p: Math.round(c.bonus * 100) }),
+      );
     }
     if (def.trade) {
       parts.push(fill(t.tradeInfo, { n: def.trade.capacity, gold: def.trade.price }));
@@ -582,6 +611,15 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         add('p', fill(t.idle.damaged, { n: repairCost(def, rules.balance.repairShare) }), 'warn');
       } else if (idle) add('p', t.idle[idle], 'warn');
       else if (def.workers > 0 || def.services) add('p', t.working, 'good');
+      const supplied = analysis.supplied.get(b.id);
+      if (supplied !== undefined && def.consumes) {
+        const good = t.raw[def.consumes.good];
+        add(
+          'p',
+          fill(supplied ? t.rawSupplied : t.rawMissing, { good }),
+          supplied ? 'good' : 'meta',
+        );
+      }
       describeDef(id, add);
       return;
     }
@@ -623,9 +661,15 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         n: state.sandbox ? 0 : landPrice(state, rules.balance.land),
       });
     } else {
-      const drag = rules.buildings[tool.def]!.drag;
-      el.hint.textContent =
-        drag === 'line' ? t.hintLine : drag === 'rect' ? t.hintRect : t.hintSingle;
+      const def = rules.buildings[tool.def]!;
+      const drag = def.drag;
+      el.hint.textContent = def.countryside
+        ? t.hintCountryside
+        : drag === 'line'
+          ? t.hintLine
+          : drag === 'rect'
+            ? t.hintRect
+            : t.hintSingle;
     }
   }
 
@@ -985,6 +1029,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     plan = null;
     demolition = null;
     rangeShade = new Map();
+    viewShade = computeViewShade();
     for (const b of toolButtons) {
       b.node.setAttribute('aria-pressed', String(sameTool(b.tool, tool)));
     }

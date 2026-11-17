@@ -7,6 +7,12 @@ export const BALANCE: Balance = {
   repairShare: 0.3,
   canalReach: 2,
   land: { base: 80, step: 12 },
+  raw: {
+    cap: 60,
+    price: 1,
+    // spring, summer, autumn, winter
+    season: { grain: [0.5, 1, 2, 0], wool: [1.5, 1, 1, 0.5], wood: [1, 1, 1, 1] },
+  },
   loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },
   workerShare: 0.4,
   foodPerHead: 0.08,

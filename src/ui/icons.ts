@@ -14,6 +14,10 @@ const SHAPES = {
   tools:
     '<path d="M4 13l5-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 3.500l6 1.5-1 3.5-6-1.500z" fill="#8d8676" stroke="currentColor"/>',
   beer: '<path d="M4 5h6v8.500H4z" fill="#e3b04a" stroke="currentColor"/><path d="M10 7h2v4h-2" fill="none" stroke="currentColor"/><path d="M4 5c0-2 6-2 6 0" fill="#f6f1e0" stroke="currentColor"/>',
+  grain:
+    '<path d="M8 15V4" stroke="currentColor" stroke-width="1.1"/><path d="M8 3c1.4.8 1.4 2.2 0 3-1.4-.8-1.4-2.2 0-3zM5.6 5.6c1.6.3 2.3 1.4 2.1 2.9-1.6-.3-2.3-1.4-2.1-2.9zM10.4 5.6c-1.6.3-2.3 1.4-2.1 2.9 1.6-.3 2.3-1.4 2.1-2.9zM5.6 9c1.6.3 2.3 1.4 2.1 2.9-1.6-.3-2.3-1.4-2.1-2.9zM10.4 9c-1.6.3-2.3 1.4-2.1 2.9 1.6-.3 2.3-1.4 2.1-2.9z" fill="#d9a441" stroke="currentColor" stroke-width=".6"/>',
+  wool: '<circle cx="6" cy="8" r="3" fill="#f1ece0" stroke="currentColor"/><circle cx="10" cy="7" r="3" fill="#f1ece0" stroke="currentColor"/><circle cx="8.5" cy="10.5" r="3" fill="#f1ece0" stroke="currentColor"/>',
+  wood: '<rect x="2" y="9" width="12" height="4" rx="2" fill="#a0703f" stroke="currentColor"/><rect x="3" y="4.5" width="10" height="4" rx="2" fill="#b5834d" stroke="currentColor"/><circle cx="4.5" cy="11" r="1.1" fill="#e2c08a"/><circle cx="5" cy="6.5" r="1.1" fill="#e2c08a"/>',
 } as const;
 
 export type IconName = keyof typeof SHAPES;

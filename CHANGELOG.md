@@ -283,3 +283,17 @@
 - Schulden stehen in der Kopfleiste und im Rundenbericht. In der Sandbox gibt es keine Bank.
 - Spielstand Version 5 (Feld `debt`).
 - Ideenliste für die Zeit nach Phase 8 in `PLAN.md`.
+
+## Umland und Rohstoffe
+
+- Neuer Reiter „Umland“ mit Kornfeld, Holzfäller und Schafweide (je 2×2). Sie stehen nur auf
+  gekauftem Land vor der Mauer und brauchen wie alle Betriebe einen Weg und Arbeitskräfte.
+- Neue Rohstoffe Korn, Wolle und Holz mit eigenem Lager (je 60). Geerntet wird je nach
+  Jahreszeit: Korn vor allem im Herbst und gar nicht im Winter, Wolle vor allem im Frühling.
+- Werkstätten mit ihrem Rohstoff schaffen mehr: Bäckerei und Brauerei mit Korn, Weberei und
+  Manufaktur mit Wolle, Schmiede, Lagerhaus und Bauhütte mit Holz. Ohne Rohstoff arbeiten sie wie
+  bisher; niemand wird schlechter gestellt. Überschuss kaufen Händler für 1 Gold je Einheit.
+- Beim Bauen zeigt die Karte, wo freies eigenes Land vor der Mauer liegt.
+- Fès: Die Tore öffnen sich jetzt nach draußen, damit auch dort Land gekauft werden kann.
+- Entscheidungen: Rohstoffe sind ein Bonus, keine Pflicht, damit alte Städte und Inselstädte wie
+  Mont-Saint-Michel spielbar bleiben. Spielstand Version 6 (Feld `raw`).
