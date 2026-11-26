@@ -378,3 +378,15 @@
 - Drei oder mehr gleiche Werkstätten (Weberei, Schmiede, Brauerei, Gerberei, Manufaktur), die
   aneinandergrenzen, bilden ein Zunftviertel und schaffen 25 % mehr. Das zählt zusätzlich zum
   Gildenhaus. Das Infofeld der Werkstatt sagt, ob sie dazugehört.
+
+## Zweiter Mauerring
+
+- Neues Großprojekt „Mauerbauhütte“ im Reiter Umland (ab 300 Einwohnern, nur auf gekauftem Land,
+  einmalig, acht Runden Bauzeit). Ist sie fertig, umschließt ein neuer, niedrigerer Mauerring das
+  gekaufte Land.
+- Danach erscheint das Werkzeug „Mauer abtragen“: Gerade Stücke der alten Mauer werden für
+  30 Gold zu Bauland, 8 Material kommen als Steine zurück. Das geht nur, wo vor der Mauer eigenes
+  Land liegt; Türme, Tore und bewohnte Mauerstücke bleiben.
+- Wo die alte Mauer stand, gilt weiter als innen: Dort entstehen Häuser, keine Felder.
+- Entscheidung: Eine eigene Prachtstraße gibt es nicht; das neue Bauland lässt sich mit Straßen
+  und Plätzen frei gestalten. Spielstand Version 11.

@@ -8,6 +8,16 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  toolRaze: 'Mauer abtragen',
+  hintRaze:
+    'Tippe auf ein Stück der alten Mauer, um es abzutragen: {gold} Gold, und {materials} Material kommen zurück.',
+  razeNo: {
+    noRing: 'Erst muss der neue Mauerring stehen (Mauerbauhütte im Umland).',
+    notWall: 'Abtragen lassen sich nur gerade Mauerstücke, keine Türme und Tore.',
+    occupied: 'Auf diesem Mauerstück wohnt noch jemand.',
+    notEnclosed: 'Dieses Stück grenzt noch an offenes Land. Kaufe erst das Land davor.',
+    noGold: 'Dafür reicht das Gold nicht.',
+  },
   quarter: 'Teil eines Zunftviertels: {p} % mehr.',
   tax: {
     title: 'Steuersatz',
@@ -282,6 +292,10 @@ export const de = {
       'Mauerhäuser stehen oben auf der Stadtmauer oder in den Türmen, nie in einem Tor. Sie brauchen einen Weg innen an der Mauer und haben weniger Platz als ein Haus, nehmen der Stadt aber kein einziges Feld weg.',
     ],
     [
+      'Ein neuer Mauerring',
+      'Mit vielen Einwohnern lässt sich im Umland eine Mauerbauhütte errichten. Ist sie nach acht Runden fertig, umschließt ein neuer Mauerring das gekaufte Land. Dann kann die alte Mauer Stück für Stück abgetragen werden, wo vor ihr eigenes Land liegt; sie wird zu Bauland.',
+    ],
+    [
       'In die Höhe bauen',
       'Mit „Aufstocken“ bekommt ein Haus bis zu zwei Stockwerke obendrauf: das erste ab dem Lehmhaus, das zweite ab dem Fachwerkhaus. Jedes bringt viel mehr Platz für Bewohner, braucht aber eine Brandwache in Reichweite, brennt leichter und wirft Schatten, der die Wohnlage der Nachbarn senkt.',
     ],
@@ -403,6 +417,7 @@ export const de = {
     fountain: 'Zierbrunnen',
     field: 'Kornfeld',
     wallhouse: 'Mauerhaus',
+    wallworks: 'Mauerbauhütte',
     woodlot: 'Holzfäller',
     pasture: 'Schafweide',
   },
@@ -447,6 +462,8 @@ export const de = {
     tree: 'Ein wenig Grün zwischen den Mauern.',
     garden: 'Hebt die Wohnlage ringsum.',
     fountain: 'Ein Schmuckstück, das die Wohnlage weithin hebt.',
+    wallworks:
+      'Ein großes Bauprojekt vor der Mauer: Über viele Runden entsteht ein neuer Mauerring um das gekaufte Land. Steht er, lässt sich die alte Mauer Stück für Stück abtragen.',
     wallhouse:
       'Eine kleine Wohnung oben auf der Stadtmauer oder in einem Turm. Spart Platz in der Stadt, bietet aber nur gut halb so vielen Menschen Raum wie ein Haus. Braucht einen Weg innen an der Mauer.',
     field:

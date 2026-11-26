@@ -216,6 +216,13 @@ const list: BuildingDef[] = [
     appeal: { value: 1, radius: 2 },
     unlockPop: 60,
   }),
+  def('wallworks', 'farm', [2, 2], [200, 40, 10, 2, 0], {
+    countryside: true,
+    outerWall: true,
+    unique: true,
+    unlockPop: 300,
+    construction: { turns: 8, gold: 40, materials: 15 },
+  }),
   def('pasture', 'farm', [2, 2], [35, 4, 4, 1, 2], {
     countryside: true,
     harvest: { good: 'wool', amount: 4 },
@@ -275,6 +282,7 @@ export type BuildingId =
   | 'field'
   | 'woodlot'
   | 'pasture'
+  | 'wallworks'
   | 'tree'
   | 'garden'
   | 'fountain';

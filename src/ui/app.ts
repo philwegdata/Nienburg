@@ -5,6 +5,8 @@ import {
   landError,
   landPrice,
   setHold,
+  razeWall,
+  hasOuterWall,
   setTaxRate,
   outsideWalls,
   borrow,
@@ -81,6 +83,7 @@ type Tool =
   | { kind: 'demolish' }
   | { kind: 'repair' }
   | { kind: 'raise' }
+  | { kind: 'raze' }
   | { kind: 'land' }
   | { kind: 'build'; def: BuildingId };
 
@@ -184,6 +187,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   let shown: GameState = state;
   /** Tools that make no sense in a puzzle. */
   const townOnly: HTMLElement[] = [];
+  /** Only offered once the new ring of walls stands. */
+  let razeButton: HTMLElement | null = null;
   let warnings = new Set<number>();
   let viewShade = new Map<number, string>();
   let rangeShade = new Map<number, string>();
@@ -394,6 +399,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       shown = { ...state, buildings };
     }
     for (const n of townOnly) n.hidden = puzzle !== null;
+    if (razeButton && !puzzle) razeButton.hidden = !hasOuterWall(state, rules.buildings);
     viewShade = computeViewShade();
     updateResources();
     updateInfo();
@@ -870,7 +876,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     else if (tool.kind === 'demolish') el.hint.textContent = t.hintDemolish;
     else if (tool.kind === 'repair') el.hint.textContent = t.hintRepair;
     else if (tool.kind === 'raise') el.hint.textContent = t.hintRaise;
-    else if (tool.kind === 'land') {
+    else if (tool.kind === 'raze') {
+      el.hint.textContent = fill(t.hintRaze, rules.balance.razing);
+    } else if (tool.kind === 'land') {
       el.hint.textContent = fill(t.hintLand, {
         n: state.sandbox ? 0 : landPrice(state, rules.balance.land),
       });
@@ -1514,7 +1522,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     toolButton(t.toolLand, { kind: 'land' }, el.tabs);
     toolButton(t.toolRaise, { kind: 'raise' }, el.tabs);
     toolButton(t.toolRepair, { kind: 'repair' }, el.tabs);
-    townOnly.push(...toolButtons.slice(-3).map((b) => b.node));
+    toolButton(t.toolRaze, { kind: 'raze' }, el.tabs);
+    razeButton = toolButtons[toolButtons.length - 1]!.node;
+    townOnly.push(...toolButtons.slice(-4).map((b) => b.node));
     toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
 
     for (const id of BUILD_MENU) {
@@ -1608,6 +1618,14 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const result = repair(state, rules.buildings, rules.balance.repairShare, at.x, at.y);
       if (result.ok) change(result.state);
       else shortOf = result.reason;
+    } else if (tool.kind === 'raze') {
+      const result = razeWall(state, rules.buildings, rules.balance.razing, at.x, at.y);
+      if (result.ok) change(result.state);
+      else {
+        note = t.razeNo[result.reason];
+        play('no');
+        return null;
+      }
     } else if (tool.kind === 'raise') {
       const result = raiseHouse(state, rules, at.x, at.y);
       if (result.ok) change(result.state);
@@ -1721,7 +1739,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       } else {
         const at = pickTile(cam, pos.x, pos.y);
         const shortOf = commit(at);
-        if (e.pointerType === 'mouse' && tool.kind !== 'repair' && tool.kind !== 'raise') {
+        if (e.pointerType === 'mouse' && !['repair', 'raise', 'raze'].includes(tool.kind)) {
           hover = at;
           refreshPreview(hover, hover);
         } else {

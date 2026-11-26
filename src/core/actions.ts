@@ -102,13 +102,15 @@ export function outsideWalls(state: GameState): Uint8Array {
   const cached = outsideCache.get(state.terrain);
   if (cached) return cached;
   const { width, height, terrain } = state;
+  // Where the old wall stood is still the town's inner edge, even without stones.
+  const razed = new Set(state.razed ?? []);
   const out = new Uint8Array(width * height);
   const stack: number[] = [];
   for (let x = 0; x < width; x++) stack.push(x, (height - 1) * width + x);
   for (let y = 0; y < height; y++) stack.push(y * width, y * width + width - 1);
   while (stack.length > 0) {
     const i = stack.pop()!;
-    if (out[i] || BARRIERS.has(terrain[i]!)) continue;
+    if (out[i] || BARRIERS.has(terrain[i]!) || razed.has(i)) continue;
     out[i] = 1;
     const x = i % width;
     if (x > 0) stack.push(i - 1);
@@ -438,4 +440,76 @@ export function setHold(state: GameState, good: Good, hold: boolean): GameState 
 /** Sets how hard the town is taxed: milder taxes bring newcomers faster. */
 export function setTaxRate(state: GameState, rate: TaxRate): GameState {
   return state.taxRate === rate ? state : { ...state, taxRate: rate };
+}
+
+/** Whether the town has finished its new ring of walls around the land outside the old one. */
+export function hasOuterWall(state: GameState, defs: Defs): boolean {
+  return Object.values(state.buildings).some((b) => defs[b.def]?.outerWall && !b.construction);
+}
+
+export type RazeError =
+  /** The new ring of walls has to stand first. */
+  | 'noRing'
+  /** Only plain stretches of wall; towers and gates stay. */
+  | 'notWall'
+  /** A home on the wall has to go first. */
+  | 'occupied'
+  /** The wall still faces open country or water on some side. */
+  | 'notEnclosed'
+  | 'noGold';
+
+export type RazeResult = { ok: true; state: GameState } | { ok: false; reason: RazeError };
+
+/** Why the tile of wall at (x, y) cannot be taken down right now, if anything stands in the way. */
+export function razeError(
+  state: GameState,
+  defs: Defs,
+  costs: { gold: number },
+  x: number,
+  y: number,
+): RazeError | null {
+  if (!hasOuterWall(state, defs)) return 'noRing';
+  if (!inBounds(state.width, state.height, x, y)) return 'notWall';
+  if (state.terrain[indexOf(state.width, x, y)] !== 'wall') return 'notWall';
+  if (buildingAt(state, x, y)) return 'occupied';
+  for (const [dx, dy] of [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ] as const) {
+    if (!inBounds(state.width, state.height, x + dx, y + dy)) return 'notEnclosed';
+    const t = state.terrain[indexOf(state.width, x + dx, y + dy)];
+    if (t === 'outside' || t === 'water' || t === 'rock') return 'notEnclosed';
+  }
+  if (!state.sandbox && state.gold < costs.gold) return 'noGold';
+  return null;
+}
+
+/**
+ * Takes down a tile of the old wall once the new ring stands: it becomes building ground, and
+ * some of its stones come back as materials.
+ */
+export function razeWall(
+  state: GameState,
+  defs: Defs,
+  costs: { gold: number; materials: number },
+  x: number,
+  y: number,
+): RazeResult {
+  const error = razeError(state, defs, costs, x, y);
+  if (error) return { ok: false, reason: error };
+  const i = indexOf(state.width, x, y);
+  const terrain = state.terrain.slice();
+  terrain[i] = 'buildable';
+  return {
+    ok: true,
+    state: {
+      ...state,
+      terrain,
+      razed: [...(state.razed ?? []), i],
+      gold: state.gold - (state.sandbox ? 0 : costs.gold),
+      materials: state.materials + costs.materials,
+    },
+  };
 }

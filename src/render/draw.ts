@@ -658,3 +658,23 @@ export function drawGlint(g: G, x: number, y: number, time: number): void {
   ctx.strokeStyle = `rgba(255, 255, 255, ${(strength * 0.55).toFixed(3)})`;
   ctx.stroke();
 }
+
+/**
+ * The new ring of walls: a lower wall along each side of a tile of bought land that faces open
+ * country or water.
+ */
+export function drawRingWall(
+  g: G,
+  x: number,
+  y: number,
+  sides: { n: boolean; e: boolean; s: boolean; w: boolean },
+): void {
+  const stone = g.pal.walls.stone;
+  const t = 0.24;
+  const parts: Rect[] = [];
+  if (sides.n) parts.push(rect(x, y, 1, t));
+  if (sides.w) parts.push(rect(x, y, t, 1));
+  if (sides.e) parts.push(rect(x + 1 - t, y, t, 1));
+  if (sides.s) parts.push(rect(x, y + 1 - t, 1, t));
+  for (const r of parts) box(g, r, 0, 13, stone, 'rgba(46, 32, 22, 0.35)');
+}

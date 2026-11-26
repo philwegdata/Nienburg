@@ -10,6 +10,16 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  toolRaze: 'Take down wall',
+  hintRaze:
+    'Tap a stretch of the old wall to take it down: {gold} gold, and {materials} materials come back.',
+  razeNo: {
+    noRing: 'The new ring of walls has to stand first (wall works in the countryside).',
+    notWall: 'Only plain stretches of wall can be taken down, not towers or gates.',
+    occupied: 'Someone still lives on this stretch of wall.',
+    notEnclosed: 'This stretch still faces open country. Buy the land in front of it first.',
+    noGold: 'There is not enough gold for that.',
+  },
   quarter: 'Part of a guild quarter: {p} % more.',
   tax: {
     title: 'Tax rate',
@@ -281,6 +291,10 @@ export const en: Strings = {
       'Wall dwellings sit on top of the town wall or inside its towers, never in a gate. They need a path along the inside of the wall and hold fewer people than a house, but they take up no ground at all.',
     ],
     [
+      'A new ring of walls',
+      'A large town can set up wall works in the countryside. Once they are done after eight turns, a new ring of walls encloses the land bought. Then the old wall can be taken down piece by piece wherever the town owns the land in front of it; it becomes building ground.',
+    ],
+    [
       'Building upwards',
       'With “Add a floor” a house gets up to two more floors: the first from the clay house on, the second from the half-timbered house on. Each holds many more people, but needs a fire watch within reach, catches fire more easily and casts shade that lowers the appeal next door.',
     ],
@@ -401,6 +415,7 @@ export const en: Strings = {
     fountain: 'Fountain',
     field: 'Grain field',
     wallhouse: 'Wall dwelling',
+    wallworks: 'Wall works',
     woodlot: 'Woodcutter',
     pasture: 'Sheep pasture',
   },
@@ -445,6 +460,8 @@ export const en: Strings = {
     tree: 'A little green between the walls.',
     garden: 'Makes the surroundings nicer to live in.',
     fountain: 'A showpiece that improves the neighbourhood far around.',
+    wallworks:
+      'A great project outside the walls: over many turns a new ring of walls rises around the land bought. Once it stands, the old wall can be taken down piece by piece.',
     wallhouse:
       'A small home on top of the town wall or inside a tower. Saves room in town, but holds only a little more than half as many people as a house. Needs a path along the inside of the wall.',
     field:

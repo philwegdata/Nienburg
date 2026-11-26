@@ -1,3 +1,4 @@
+import { isCountryside } from '../core/actions';
 import { indexOf } from '../core/grid';
 import type { Building, BuildingDef, CityLook, GameState, Point, Terrain } from '../core/types';
 import {
@@ -8,6 +9,7 @@ import {
   drawGlint,
   drawGroundTile,
   drawPath,
+  drawRingWall,
   drawWarning,
   drawWoodland,
   poly,
@@ -209,6 +211,27 @@ export class Scene {
         const t = state.terrain[indexOf(state.width, x, y)]!;
         if (t === 'wall' || t === 'tower' || t === 'gate' || t === 'landmark' || t === 'rock') {
           raised.push({ depth: x + y, draw: () => drawFortification(g, t, x, y, emitters) });
+        }
+      }
+    }
+    // Once the new ring of walls stands, it runs around the land bought outside the old one.
+    if (Object.values(state.buildings).some((b) => b.def === 'wallworks' && !b.construction)) {
+      const open = (x: number, y: number) => {
+        if (x < 0 || y < 0 || x >= state.width || y >= state.height) return true;
+        const t = state.terrain[indexOf(state.width, x, y)];
+        return t === 'outside' || t === 'water';
+      };
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          if (!isCountryside(state, x, y)) continue;
+          const sides = {
+            n: open(x, y - 1),
+            e: open(x + 1, y),
+            s: open(x, y + 1),
+            w: open(x - 1, y),
+          };
+          if (!sides.n && !sides.e && !sides.s && !sides.w) continue;
+          raised.push({ depth: x + y - 0.01, draw: () => drawRingWall(g, x, y, sides) });
         }
       }
     }

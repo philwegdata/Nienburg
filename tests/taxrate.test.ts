@@ -48,7 +48,7 @@ describe('tax rate', () => {
     const old: Record<string, unknown> = { ...town(2), version: 9 };
     delete old.taxRate;
     const back = deserialize(JSON.stringify({ saveVersion: 9, state: old }), ['test']);
-    expect(back).toMatchObject({ version: 10, taxRate: 1 });
+    expect(back).toMatchObject({ version: 11, taxRate: 1 });
   });
 
   it('has texts in both languages', () => {

@@ -2074,6 +2074,7 @@ const DRAW: Record<string, Draw> = {
   townhall,
   warehouse,
   buildersyard,
+  wallworks: buildersyard,
   garden,
   field,
   pasture,

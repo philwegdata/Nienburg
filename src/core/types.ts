@@ -194,6 +194,8 @@ export interface BuildingDef {
   countryside?: boolean;
   /** Built on top of the town wall or into a tower instead of on the ground. */
   onWall?: boolean;
+  /** Once finished, a new ring of walls encloses the land bought outside the old one. */
+  outerWall?: boolean;
   /** Homes: share of the usual number of inhabitants per level. */
   capacityFactor?: number;
   /** Raw material gathered per turn while operating, scaled by the season. */
@@ -362,6 +364,8 @@ export interface Balance {
   taxRates: [TaxRateDef, TaxRateDef, TaxRateDef];
   /** Workshops of one kind in a touching group of at least `size` make `bonus` more. */
   guildQuarter: { size: number; bonus: number };
+  /** Taking down a tile of the old wall: gold it costs, and materials won from the stones. */
+  razing: { gold: number; materials: number };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -551,7 +555,7 @@ export type TaxRate = 0 | 1 | 2;
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 10;
+  version: 11;
   cityId: string;
   width: number;
   height: number;
@@ -608,6 +612,8 @@ export interface GameState {
   luxury: number;
   /** 0 = mild, 1 = usual, 2 = high; see Balance.taxRates. */
   taxRate: TaxRate;
+  /** Tiles (by index) where the old town wall has been taken down. */
+  razed: number[];
   lastReport: TurnReport | null;
 }
 
