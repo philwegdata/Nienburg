@@ -1,5 +1,14 @@
 import { footprint, inBounds, indexOf } from './grid';
-import type { Building, BuildingDef, GameState, Good, LoanTerms, Point, Rotation } from './types';
+import type {
+  Building,
+  BuildingDef,
+  GameState,
+  Good,
+  LoanTerms,
+  Point,
+  Rotation,
+  TaxRate,
+} from './types';
 
 export type PlaceError =
   /** Some tile lies outside the walls or on non-buildable terrain. */
@@ -424,4 +433,9 @@ export function setHold(state: GameState, good: Good, hold: boolean): GameState 
   const current = state.hold ?? [];
   if (current.includes(good) === hold) return state;
   return { ...state, hold: hold ? [...current, good] : current.filter((g) => g !== good) };
+}
+
+/** Sets how hard the town is taxed: milder taxes bring newcomers faster. */
+export function setTaxRate(state: GameState, rate: TaxRate): GameState {
+  return state.taxRate === rate ? state : { ...state, taxRate: rate };
 }

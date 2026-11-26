@@ -248,6 +248,11 @@ export interface HousingLevel {
   taxPerHead: number;
 }
 
+export interface TaxRateDef {
+  tax: number;
+  growth: number;
+}
+
 export interface LoanTerms {
   step: number;
   base: number;
@@ -350,6 +355,11 @@ export interface Balance {
    * turn, and the extra share of taxes those houses pay while they get it.
    */
   luxury: { perHead: number; taxBonus: number };
+  /**
+   * Tax rates the player can choose: a factor on taxes, and the share of the free room in a house
+   * that fills with newcomers each turn.
+   */
+  taxRates: [TaxRateDef, TaxRateDef, TaxRateDef];
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -535,9 +545,11 @@ export interface TradeOrder {
   luxury: number;
 }
 
+export type TaxRate = 0 | 1 | 2;
+
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 9;
+  version: 10;
   cityId: string;
   width: number;
   height: number;
@@ -592,6 +604,8 @@ export interface GameState {
   ordersDone: number;
   /** Wine, spices and silk from far away, which only come in return for orders. */
   luxury: number;
+  /** 0 = mild, 1 = usual, 2 = high; see Balance.taxRates. */
+  taxRate: TaxRate;
   lastReport: TurnReport | null;
 }
 

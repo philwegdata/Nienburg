@@ -367,7 +367,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 - [x] Handelsaufträge von anderen Städten der Weltkarte („Brügge sucht 20 Tuch“), ohne Frist,
       dafür mit Bonus und freigeschalteten Luxuswaren
 - [x] Luxuswaren (Wein, Gewürze, Seide) nur über Fernhandel; die höchsten Hausstufen wollen sie
-- [ ] Steuersatz in drei Stufen (mild, üblich, hoch): mehr Gold oder schnellerer Zuzug
+- [x] Steuersatz in drei Stufen (mild, üblich, hoch): mehr Gold oder schnellerer Zuzug
 - [ ] Zunftviertel: drei gleiche Werkstätten nebeneinander produzieren mehr
 
 **B. Platz und Bauen (das Herz des Spiels)**

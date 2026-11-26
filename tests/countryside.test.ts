@@ -138,7 +138,7 @@ describe('countryside', () => {
     const old: Record<string, unknown> = { ...richGame(MAP), version: 5 };
     delete old.raw;
     const restored = deserialize(JSON.stringify({ saveVersion: 5, state: old }), ['test']);
-    expect(restored).toMatchObject({ version: 9, raw: { grain: 0, wool: 0, wood: 0 } });
+    expect(restored).toMatchObject({ version: 10, raw: { grain: 0, wool: 0, wood: 0 } });
   });
 
   it('has texts in both languages', () => {

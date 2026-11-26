@@ -268,7 +268,7 @@ describe('buying land outside the walls', () => {
     delete old.landBought;
     const back = deserialize(JSON.stringify({ saveVersion: 3, state: old }), ['test']);
     expect(back).toMatchObject({
-      version: 9,
+      version: 10,
       landBought: 0,
       debt: 0,
       raw: { grain: 0, wool: 0, wood: 0 },

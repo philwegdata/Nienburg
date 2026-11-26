@@ -10,6 +10,15 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  tax: {
+    title: 'Tax rate',
+    rates: ['mild', 'usual', 'high'],
+    info: [
+      'Mild: three quarters of the taxes, but newcomers move in faster.',
+      'Usual: full taxes, newcomers as usual.',
+      'High: 30 % more taxes, but newcomers come only slowly.',
+    ],
+  },
   order: {
     chip: 'Order: {city}',
     title: 'Order from {city}',

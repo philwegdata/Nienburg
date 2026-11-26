@@ -8,6 +8,15 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  tax: {
+    title: 'Steuersatz',
+    rates: ['mild', 'üblich', 'hoch'],
+    info: [
+      'Mild: drei Viertel der Steuern, dafür ziehen neue Bewohner schneller zu.',
+      'Üblich: volle Steuern, Zuzug wie gewohnt.',
+      'Hoch: 30 % mehr Steuern, aber neue Bewohner kommen nur zögerlich.',
+    ],
+  },
   order: {
     chip: 'Auftrag: {city}',
     title: 'Auftrag aus {city}',

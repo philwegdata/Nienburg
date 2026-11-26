@@ -5,6 +5,7 @@ import {
   landError,
   landPrice,
   setHold,
+  setTaxRate,
   outsideWalls,
   borrow,
   loanLimit,
@@ -1024,6 +1025,21 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       lend.append(button(fill(t.bank.borrow, { n }), () => take(borrow(state, terms, n))));
     }
     if (room <= 0) lend.append(node('p', t.bank.full, 'meta'));
+    // How hard the town is taxed.
+    const rates = node('div', undefined, 'rates');
+    ([0, 1, 2] as const).forEach((r) => {
+      const b = button(t.tax.rates[r]!, () => {
+        change(setTaxRate(state, r));
+        showBank();
+      });
+      b.setAttribute('aria-pressed', String((state.taxRate ?? 1) === r));
+      rates.append(b);
+    });
+    const taxBox = [
+      node('h3', t.tax.title),
+      rates,
+      node('p', t.tax.info[state.taxRate ?? 1]!, 'meta'),
+    ];
     if (state.debt > 0 && state.gold > 0) {
       const part = Math.min(terms.step, state.debt, state.gold);
       lend.append(button(fill(t.bank.repay, { n: part }), () => take(repayLoan(state, part))));
@@ -1034,7 +1050,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     const actions = node('div', undefined, 'actions');
     const ok = button(t.close, () => el.bank.close(), 'primary');
     actions.append(ok);
-    el.bank.append(lend, actions);
+    el.bank.append(lend, ...taxBox, actions);
     if (!el.bank.open) el.bank.showModal();
   }
 

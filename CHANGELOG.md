@@ -365,3 +365,10 @@
   für alle, wird nichts verbraucht.
 - Entscheidung: Luxuswaren sind ein Bonus, kein Bedürfnis, damit kein Haus deshalb absteigt.
   Aufträge ziehen eigene Zufallszahlen. Spielstand Version 9.
+
+## Steuersatz
+
+- Im Bank-Fenster (Tipp auf das Gold) lässt sich der Steuersatz wählen: mild (75 % der Steuern,
+  freie Plätze füllen sich zu drei Vierteln je Runde), üblich (wie bisher, zur Hälfte) oder hoch
+  (130 % der Steuern, nur zu einem Viertel). Rückgängig machen geht wie beim Bauen.
+- Spielstand Version 10; alte Spielstände starten mit „üblich“.

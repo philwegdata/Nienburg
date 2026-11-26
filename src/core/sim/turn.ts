@@ -129,6 +129,8 @@ function mergeHouses(
 export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] = []): GameState {
   const { balance, housing } = rules;
   const season = state.turn % 4;
+  /** How hard the town is taxed, and how fast people move in because of it. */
+  const rate = balance.taxRates[state.taxRate ?? 1];
   const analysis = analyze(state, rules);
   const hints = new HintList();
   const maxLevel = housing.length;
@@ -276,7 +278,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
 
     const capacity = houseCapacity(rules, b, level);
     if (!hasRoad) pop = 0;
-    else if (pop < capacity) pop += Math.ceil((capacity - pop) / 2);
+    else if (pop < capacity) pop += Math.ceil((capacity - pop) * rate.growth);
     else pop = capacity;
 
     // Tell the player what stands between this house and the next level.
@@ -345,7 +347,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     if (luxuryUsed > 0 && fine) luxuryBase += due;
   }
   const luxuryTaxes = Math.floor(luxuryBase * balance.luxury.taxBonus * analysis.taxFactor);
-  taxes = Math.floor(taxes * analysis.taxFactor) + luxuryTaxes;
+  taxes = Math.floor(taxes * analysis.taxFactor * rate.tax) + luxuryTaxes;
   gold += taxes + tradeIncome - upkeep;
   const subsidy = gold < 0;
   if (subsidy) gold = 0;

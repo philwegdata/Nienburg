@@ -812,3 +812,17 @@ table.market .ico {
     padding: 0.15rem 0.4rem;
   }
 }
+
+.rates {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.rates button {
+  flex: 1;
+}
+
+.rates button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--gold);
+}
