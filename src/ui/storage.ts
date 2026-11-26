@@ -1,4 +1,5 @@
 import { deserialize, serialize } from '../core/save';
+import type { CustomPlan } from '../core/editor';
 import type { GameState } from '../core/types';
 
 const SAVE_PREFIX = 'nienburg.save.';
@@ -46,6 +47,35 @@ export function loadGame(cityId: string, sandbox = false): GameState | null {
   const state = text ? deserialize(text, [cityId]) : null;
   // A save in the wrong slot is not trusted to be what the slot says.
   return state && Boolean(state.sandbox) === sandbox ? state : null;
+}
+
+const CUSTOM = 'nienburg.plans';
+
+/** Plans the player has drawn, oldest first. */
+export function customPlans(): CustomPlan[] {
+  try {
+    const list = JSON.parse(read(CUSTOM) ?? '[]') as unknown;
+    if (!Array.isArray(list)) return [];
+    return list.filter(
+      (p): p is CustomPlan =>
+        typeof p === 'object' &&
+        p !== null &&
+        typeof (p as CustomPlan).id === 'string' &&
+        typeof (p as CustomPlan).name === 'string' &&
+        Array.isArray((p as CustomPlan).map),
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function storeCustomPlan(plan: CustomPlan): void {
+  const others = customPlans().filter((p) => p.id !== plan.id);
+  write(CUSTOM, JSON.stringify([...others, plan]));
+}
+
+export function deleteCustomPlan(id: string): void {
+  write(CUSTOM, JSON.stringify(customPlans().filter((p) => p.id !== id)));
 }
 
 const ACHIEVED = 'nienburg.achievements';

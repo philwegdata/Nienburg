@@ -47,6 +47,7 @@ startApp(
     festival: need<HTMLDialogElement>('#festival'),
     chronicle: need<HTMLDialogElement>('#chronicle'),
     achievements: need<HTMLDialogElement>('#achievements'),
+    editor: need<HTMLDialogElement>('#editor'),
     tutorial: need<HTMLElement>('#tutorial'),
   },
   CITIES,

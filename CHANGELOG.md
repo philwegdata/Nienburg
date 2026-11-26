@@ -468,3 +468,13 @@
   in den Einstellungen; bei reduzierter Bewegung immer Tag.
 - Fotomodus im Menü: Die ganze Bedienung und die Warnzeichen verschwinden; „Bild speichern“ lädt das
   Bild als PNG herunter, Escape oder „Zurück“ beendet ihn.
+
+## Karteneditor
+
+- Neuer Abschnitt „Eigene Grundrisse“ in der Stadtauswahl. „Neuer Grundriss“ öffnet einen
+  Editor in Draufsicht: Geländeart wählen (Baugrund, Mauer, Turm, Tor, Umland, Fluss, Fels, Kanal,
+  altes Bauwerk) und mit Maus oder Finger malen; Größe 10 bis 48 Felder je Seite, eigener Name.
+- Der Editor prüft laufend, ob der Grundriss spielbar ist: Tor vorhanden, genug Baugrund (mindestens
+  20 Felder), alles von einem Tor erreichbar, Mauer geschlossen (ein Teich innerhalb ist erlaubt).
+- Eigene Grundrisse werden auf dem Gerät gespeichert und lassen sich spielen (mit Zielen, die mit
+  der Größe wachsen), weiter bearbeiten und löschen.

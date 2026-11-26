@@ -890,3 +890,71 @@ body.photo .tutorial {
   gap: 0.5rem;
   opacity: 0.85;
 }
+
+/* Map editor */
+.plan-grid {
+  display: grid;
+  gap: 1px;
+  max-height: 50vh;
+  margin: 0.5rem 0;
+  overflow: auto;
+  background: #4f463c;
+  border: 1px solid #4f463c;
+  touch-action: none;
+  user-select: none;
+}
+
+.plan-cell {
+  aspect-ratio: 1;
+  min-width: 8px;
+}
+
+.plan-brushes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.plan-brushes button {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+}
+
+.plan-brushes button[aria-pressed='true'] {
+  background: var(--gold);
+}
+
+.plan-brushes .swatch {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 1px solid rgb(0 0 0 / 30%);
+  border-radius: 2px;
+}
+
+.plan-sizes {
+  display: flex;
+  gap: 1rem;
+}
+
+.plan-size {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0.2rem 0;
+}
+
+.plan-size input {
+  width: 4.5rem;
+  font: inherit;
+}
+
+.plan-size input.plan-name {
+  width: 14rem;
+}
+
+.plan-problems {
+  margin: 0.2rem 0;
+  padding-left: 1.1rem;
+}

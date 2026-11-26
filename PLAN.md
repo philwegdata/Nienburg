@@ -405,7 +405,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 **E. Atmosphäre**
 
 - [x] Leise Musik je Region, Tag und Nacht mit Laternen, Fotomodus
-- [ ] Karteneditor im Browser für eigene Grundrisse
+- [x] Karteneditor im Browser für eigene Grundrisse
 
 ### Ideen für später (nicht Teil von 1.0)
 

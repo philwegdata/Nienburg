@@ -29,6 +29,8 @@ import { goodPrice } from '../core/market';
 import { deliverOrder } from '../core/orders';
 import { newPuzzle, puzzleCity, puzzleStatus, type PuzzleStatus } from '../core/puzzle';
 import { PUZZLES } from '../data/puzzles';
+import { blankPlan, customCity, type CustomPlan } from '../core/editor';
+import { showEditor } from './editor';
 import { packTown, unpackTown, type SharedTown } from '../core/share';
 import { decodeShare, encodeShare } from './share';
 import { ACHIEVEMENTS, newAchievements, townValue } from '../core/achievements';
@@ -96,6 +98,9 @@ import {
   achieved,
   addAchieved,
   addDailyScore,
+  customPlans,
+  deleteCustomPlan,
+  storeCustomPlan,
   dailyScores,
   loadGame,
   markPuzzleSolved,
@@ -166,6 +171,7 @@ export interface Elements {
   festival: HTMLDialogElement;
   chronicle: HTMLDialogElement;
   achievements: HTMLDialogElement;
+  editor: HTMLDialogElement;
   tutorial: HTMLElement;
 }
 
@@ -213,8 +219,11 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (sc) return newScenario(sc.def, sc.base, Date.now(), rulesFor(def).balance);
     return newGame(def, Date.now(), rulesFor(def).balance, sandbox);
   };
+  /** The player's own plans, as cities. */
+  const ownCities = () => customPlans().map(customCity);
   const remembered =
     cities.find((c) => c.id === lastCity()) ??
+    ownCities().find((c) => c.id === lastCity()) ??
     scenarios.find((s) => s.city.id === lastCity())?.city ??
     (lastCity() === 'daily' ? challengeCity(dailyBase()) : undefined);
 
@@ -775,7 +784,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   type Add = (tag: 'h2' | 'p', text: string, cls?: string) => void;
 
   const wishName = (w: Wish) => WISH_NAMES[w.name] ?? '';
-  const cityName = (id: string) => cities.find((c) => c.id === id)?.name[lang] ?? id;
+  const cityName = (id: string) =>
+    [...cities, ...ownCities()].find((c) => c.id === id)?.name[lang] ?? id;
 
   /** The open order, in words. */
   function orderText(): string {
@@ -1537,7 +1547,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     window.history.replaceState(null, '', location.pathname + location.search);
     const shared = (await decodeShare(code)) as SharedTown | null;
     const id = shared?.s?.cityId;
-    const def = cities.find((c) => c.id === id) ?? scenarios.find((s) => s.city.id === id)?.city;
+    const def =
+      cities.find((c) => c.id === id) ??
+      ownCities().find((c) => c.id === id) ??
+      scenarios.find((s) => s.city.id === id)?.city;
     const town = shared && def ? unpackTown(shared, planOf(def), [def.id]) : null;
     const actions = node('div', undefined, 'actions');
     if (!town || !def) {
@@ -1745,6 +1758,53 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       );
       grid.append(card);
     });
+    // The player's own plans.
+    const own = node('div', undefined, 'cities');
+    const edit = (plan: CustomPlan) => {
+      el.cities.close();
+      showEditor(el.editor, t, plan, {
+        save(p) {
+          storeCustomPlan(p);
+        },
+        play(p) {
+          storeCustomPlan(p);
+          el.editor.close();
+          openCity(customCity(p), true);
+        },
+      });
+    };
+    for (const plan of customPlans()) {
+      const def = customCity(plan);
+      const card = node('div', undefined, 'city');
+      card.append(
+        node('h3', plan.name),
+        node('p', starText(bestStars(def.id)), 'stars'),
+        button(
+          loadGame(def.id) ? t.resume : t.play,
+          () => pick(def),
+          def.id === city.id ? 'primary' : undefined,
+        ),
+        button(t.editor.edit, () => edit(plan), 'quiet'),
+        button(
+          t.editor.remove,
+          () => {
+            if (!window.confirm(fill(t.editor.removeAsk, { name: plan.name }))) return;
+            deleteCustomPlan(plan.id);
+            showCities();
+          },
+          'quiet',
+        ),
+      );
+      own.append(card);
+    }
+    const newPlan = button(t.editor.new, () =>
+      edit({
+        id: `custom-${Date.now().toString(36)}`,
+        name: t.editor.defaultName,
+        map: blankPlan(),
+      }),
+    );
+
     // Today's challenge.
     const daily = node('div', undefined, 'cities');
     {
@@ -1830,11 +1890,15 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       node('h2', t.scenario.title),
       node('p', t.scenario.intro, 'sub'),
       special,
+      node('h2', t.editor.section),
+      node('p', t.editor.sectionIntro, 'sub'),
+      own,
+      newPlan,
       node('h2', t.puzzle.title),
       node('p', t.puzzle.intro, 'sub'),
       puzzles,
     );
-    el.cities.showModal();
+    if (!el.cities.open) el.cities.showModal();
     el.cities.scrollTop = 0;
   }
 
@@ -2336,7 +2400,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.market.open ||
     el.festival.open ||
     el.chronicle.open ||
-    el.achievements.open;
+    el.achievements.open ||
+    el.editor.open;
 
   // ---------- keyboard on the map ----------
 
