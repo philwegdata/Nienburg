@@ -10,6 +10,36 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  festival: {
+    open: 'Hold a festival',
+    title: 'A festival on the square',
+    name: {
+      mayday: 'May festival',
+      midsummer: 'Midsummer fires',
+      harvest: 'Harvest festival',
+      wintermarket: 'Winter market',
+    },
+    effect: {
+      mayday: 'The whole town celebrates, and newcomers move in faster.',
+      midsummer:
+        'The whole town celebrates, and fires and garlands raise the appeal of every house.',
+      harvest: 'The whole town celebrates, and farmers from all around fill the granaries.',
+      wintermarket: 'The whole town celebrates, and the market brings a fifth more taxes.',
+    },
+    intro:
+      'Every season has its festival. It lasts until the end of the turn: every house is entertained, and there is something special besides.',
+    cost: 'Cost: {gold} gold · {food} food · {materials} materials',
+    hold: 'Hold it',
+    no: {
+      noPlaza: 'A festival needs a square in town.',
+      already: 'The town is already celebrating this season.',
+      noGold: 'There is not enough gold for that.',
+      noFood: 'There is not enough food for that.',
+      noMaterials: 'There are not enough materials for that.',
+    },
+    now: 'Festival: {name}',
+    report: 'The {name} was a lovely celebration.',
+  },
   toolMove: 'Move',
   hintMove: 'Tap a building to pick it up. Paths and canals are simply built anew.',
   moveWhere: 'Where should {name} go? Tap the new place. Cost: {gold} gold.',

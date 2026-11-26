@@ -74,6 +74,18 @@ export const BALANCE: Balance = {
     { tax: 1.3, growth: 0.25 },
   ],
   guildQuarter: { size: 3, bonus: 0.25 },
+  festivals: {
+    cost: {
+      mayday: { gold: 40, food: 15, materials: 0 },
+      midsummer: { gold: 40, food: 10, materials: 15 },
+      harvest: { gold: 30, food: 30, materials: 0 },
+      wintermarket: { gold: 60, food: 10, materials: 0 },
+    },
+    growth: 0.85,
+    appeal: 2,
+    harvestFood: 50,
+    tax: 0.2,
+  },
   moveShare: 0.25,
   razing: { gold: 30, materials: 8 },
   loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },

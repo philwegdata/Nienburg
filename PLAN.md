@@ -386,7 +386,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
 
 - [x] ★ Bürgerwünsche: Bewohner mit Namen bitten um Dinge („Meisterin Gesa wünscht sich einen
       Brunnen bei der Weberei“); erfüllte Wünsche bringen Gold, Ansehen oder neue Gebäude
-- [ ] Feste selbst ausrichten: Erntedank, Wintermarkt, Johannisfeuer; kosten Vorräte, bringen
+- [x] Feste selbst ausrichten: Erntedank, Wintermarkt, Johannisfeuer; kosten Vorräte, bringen
       Zuzug und Ansehen
 - [ ] Stadtchronik: ein Buch, das sich selbst schreibt (Gründung, erste Kathedrale, große Feste),
       zum Nachlesen und Teilen

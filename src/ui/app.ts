@@ -5,6 +5,9 @@ import {
   landError,
   landPrice,
   setHold,
+  festivalError,
+  festivalNow,
+  holdFestival,
   moveBuilding,
   moveCost,
   razeWall,
@@ -140,6 +143,7 @@ export interface Elements {
   help: HTMLDialogElement;
   bank: HTMLDialogElement;
   market: HTMLDialogElement;
+  festival: HTMLDialogElement;
   tutorial: HTMLElement;
 }
 
@@ -256,7 +260,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   const needCtx = () => ({
     hungry: outlook.hungry,
     goodsTypes: outlook.goodsTypes,
-    festive: state.event?.kind === 'jugglers',
+    festive: state.event?.kind === 'jugglers' || !!state.festival,
   });
   /** A building's name here: some towns have their own words for things. */
   const nameOf = (defId: string) =>
@@ -620,6 +624,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       });
       chips.push(c);
     }
+    if (state.festival) {
+      const name = t.festival.name[state.festival];
+      chips.push(node('span', fill(t.festival.now, { name }), 'chip event'));
+    }
     // On narrow screens the title bar has no room for the date, so it leads the chips instead.
     if (state.event) chips.push(node('span', t.eventNow[state.event.kind], 'chip event'));
     el.resources.replaceChildren(node('span', date, 'chip narrow-only'), ...chips);
@@ -825,6 +833,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       } else if (idle) add('p', t.idle[idle], 'warn');
       else if (def.workers > 0 || def.services) add('p', t.working, 'good');
       if (def.trade) el.info.append(button(t.market.open, showMarket));
+      if (b.def === rules.balance.plazaPath) el.info.append(button(t.festival.open, showFestival));
       if (analysis.quarter.has(b.id)) {
         add(
           'p',
@@ -933,6 +942,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if ((r.luxuryUsed ?? 0) > 0) {
       line(fill(t.luxury.report, { n: r.luxuryUsed ?? 0, gold: r.luxuryTaxes ?? 0 }));
     }
+    if (r.festival) line(fill(t.festival.report, { name: t.festival.name[r.festival] }), 'news');
     if (r.wishGranted) {
       const w = r.wishGranted;
       line(`♥ ${fill(t.wish.granted, { name: wishName(w), gold: w.reward })}`, 'news');
@@ -1215,6 +1225,39 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.report.showModal();
   }
 
+  function showFestival(): void {
+    const kind = festivalNow(state);
+    const fest = rules.balance.festivals;
+    const cost = state.sandbox ? { gold: 0, food: 0, materials: 0 } : fest.cost[kind];
+    const error = festivalError(state, rules.buildings, fest.cost, rules.balance.plazaPath);
+    const actions = node('div', undefined, 'actions');
+    const hold = button(
+      t.festival.hold,
+      () => {
+        const r = holdFestival(state, rules.buildings, fest.cost, rules.balance.plazaPath);
+        if (!r.ok) return;
+        change(r.state);
+        play('star');
+        el.festival.close();
+      },
+      'primary',
+    );
+    hold.disabled = error !== null;
+    actions.append(
+      button(t.close, () => el.festival.close()),
+      hold,
+    );
+    el.festival.replaceChildren(
+      node('h2', `${t.festival.name[kind]}`),
+      node('p', t.festival.intro, 'sub'),
+      node('p', t.festival.effect[kind]),
+      node('p', fill(t.festival.cost, { ...cost }), 'meta'),
+    );
+    if (error) el.festival.append(node('p', t.festival.no[error], 'warn'));
+    el.festival.append(actions);
+    el.festival.showModal();
+  }
+
   function showGoals(): void {
     if (state.puzzle) {
       const def = PUZZLES.find((p) => p.id === state.puzzle!.id);
@@ -1263,6 +1306,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         }),
       );
     }
+    actions.append(
+      button(t.festival.open, () => {
+        el.goals.close();
+        showFestival();
+      }),
+    );
     actions.append(
       button(t.cities, () => {
         el.goals.close();
@@ -1852,7 +1901,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.settings.open ||
     el.help.open ||
     el.bank.open ||
-    el.market.open;
+    el.market.open ||
+    el.festival.open;
 
   // ---------- keyboard on the map ----------
 

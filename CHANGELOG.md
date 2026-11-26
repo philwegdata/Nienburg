@@ -397,3 +397,14 @@
   ab (größere Gebäude lassen sich dabei drehen). Bewohner, Stockwerke, Baufortschritt und alles
   andere ziehen mit. Kosten: ein Viertel des Baupreises; in Sandbox und Rätseln kostenlos.
 - Wege und Kanäle werden nicht verschoben, sondern einfach neu gebaut.
+
+## Feste
+
+- Jede Jahreszeit hat ihr Fest: Maifest, Johannisfeuer, Erntedank, Wintermarkt. Ausrichten lässt
+  es sich über „Fest ausrichten“ im Menü oder am Platz, sobald die Stadt einen Platz hat; einmal je
+  Jahreszeit.
+- Ein Fest kostet Gold und Nahrung (das Johannisfeuer auch Material) und wirkt bis zum Rundenende:
+  Alle Häuser sind unterhalten. Dazu kommt beim Maifest schnellerer Zuzug, beim Johannisfeuer
+  +2 Wohnlage für jedes Haus, beim Erntedank 50 Nahrung von den Bauern und beim Wintermarkt ein
+  Fünftel mehr Steuern.
+- In der Sandbox kostenlos. Spielstand Version 12.

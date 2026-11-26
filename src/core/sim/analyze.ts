@@ -246,7 +246,9 @@ export function analyze(state: GameState, rules: Rules): Analysis {
       const best = Math.max(
         ...tilesOf(b).map((t) => analysis.appeal[indexOf(state.width, t.x, t.y)]!),
       );
-      analysis.houseAppeal.set(b.id, best + (boxed ? balance.appeal.boxedIn : 0));
+      // Midsummer night: garlands and fires make every street a fine place to live.
+      const feast = state.festival === 'midsummer' ? balance.festivals.appeal : 0;
+      analysis.houseAppeal.set(b.id, best + (boxed ? balance.appeal.boxedIn : 0) + feast);
       continue;
     }
     if (b.construction) {

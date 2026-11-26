@@ -130,7 +130,12 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   const { balance, housing } = rules;
   const season = state.turn % 4;
   /** How hard the town is taxed, and how fast people move in because of it. */
-  const rate = balance.taxRates[state.taxRate ?? 1];
+  const taxRate = balance.taxRates[state.taxRate ?? 1];
+  // A May festival brings newcomers faster.
+  const rate =
+    state.festival === 'mayday'
+      ? { ...taxRate, growth: Math.max(taxRate.growth, balance.festivals.growth) }
+      : taxRate;
   const analysis = analyze(state, rules);
   const hints = new HintList();
   const maxLevel = housing.length;
@@ -146,6 +151,10 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     Math.min(materialsArriving, analysis.materialsCap - state.materials),
   );
   let food = state.food + foodDelivered;
+  // Farmers from all around bring their best to a harvest festival.
+  if (state.festival === 'harvest') {
+    food = Math.max(food, Math.min(analysis.foodCap, food + balance.festivals.harvestFood));
+  }
   let materials = state.materials + materialsDelivered;
   let gold = state.gold;
 
@@ -229,7 +238,11 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   const foodEaten = hungry ? food : demand;
   food -= foodEaten;
   if (hungry) hints.add('hungry', centre);
-  const ctx = { hungry, goodsTypes, festive: state.event?.kind === 'jugglers' };
+  const ctx = {
+    hungry,
+    goodsTypes,
+    festive: state.event?.kind === 'jugglers' || !!state.festival,
+  };
 
   for (const id of analysis.dryCanals) {
     const b = state.buildings[id];
@@ -347,7 +360,8 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     if (luxuryUsed > 0 && fine) luxuryBase += due;
   }
   const luxuryTaxes = Math.floor(luxuryBase * balance.luxury.taxBonus * analysis.taxFactor);
-  taxes = Math.floor(taxes * analysis.taxFactor * rate.tax) + luxuryTaxes;
+  const market = state.festival === 'wintermarket' ? 1 + balance.festivals.tax : 1;
+  taxes = Math.floor(taxes * analysis.taxFactor * rate.tax * market) + luxuryTaxes;
   gold += taxes + tradeIncome - upkeep;
   const subsidy = gold < 0;
   if (subsidy) gold = 0;
@@ -370,6 +384,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     buildPoints: analysis.buildPoints,
     subsidies: state.subsidies + (subsidy ? 1 : 0),
     luxury: (state.luxury ?? 0) - luxuryUsed,
+    festival: null,
     debt: loan.debt,
   };
 
@@ -441,6 +456,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     luxuryUsed,
     luxuryTaxes,
     orderNew,
+    festival: state.festival ?? null,
     foodDelivered,
     foodWasted: foodArriving - foodDelivered,
     foodEaten,

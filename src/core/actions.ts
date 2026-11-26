@@ -1,13 +1,15 @@
 import { footprint, inBounds, indexOf } from './grid';
-import type {
-  Building,
-  BuildingDef,
-  GameState,
-  Good,
-  LoanTerms,
-  Point,
-  Rotation,
-  TaxRate,
+import {
+  FESTIVALS,
+  type Building,
+  type BuildingDef,
+  type FestivalKind,
+  type GameState,
+  type Good,
+  type LoanTerms,
+  type Point,
+  type Rotation,
+  type TaxRate,
 } from './types';
 
 export type PlaceError =
@@ -558,6 +560,56 @@ export function moveBuilding(
       occupancy,
       gold: state.gold - cost,
       buildings: { ...lifted.buildings, [id]: moved },
+    },
+  };
+}
+
+/** The festival that belongs to the current season. */
+export function festivalNow(state: GameState): FestivalKind {
+  return FESTIVALS[state.turn % 4]!;
+}
+
+export type FestivalError = 'noPlaza' | 'already' | 'noGold' | 'noFood' | 'noMaterials';
+export type FestivalResult = { ok: true; state: GameState } | { ok: false; reason: FestivalError };
+
+/** Why the season's festival cannot be held right now, if anything stands in the way. */
+export function festivalError(
+  state: GameState,
+  defs: Defs,
+  costs: Record<FestivalKind, { gold: number; food: number; materials: number }>,
+  plazaDef: string,
+): FestivalError | null {
+  if (state.festival) return 'already';
+  if (!Object.values(state.buildings).some((b) => b.def === plazaDef && defs[b.def])) {
+    return 'noPlaza';
+  }
+  if (state.sandbox) return null;
+  const cost = costs[festivalNow(state)];
+  if (state.gold < cost.gold) return 'noGold';
+  if (state.food < cost.food) return 'noFood';
+  if (state.materials < cost.materials) return 'noMaterials';
+  return null;
+}
+
+/** Holds the season's festival on the plaza; its effects come as the turn ends. */
+export function holdFestival(
+  state: GameState,
+  defs: Defs,
+  costs: Record<FestivalKind, { gold: number; food: number; materials: number }>,
+  plazaDef: string,
+): FestivalResult {
+  const error = festivalError(state, defs, costs, plazaDef);
+  if (error) return { ok: false, reason: error };
+  const cost = state.sandbox ? { gold: 0, food: 0, materials: 0 } : costs[festivalNow(state)];
+  return {
+    ok: true,
+    state: {
+      ...state,
+      gold: state.gold - cost.gold,
+      food: state.food - cost.food,
+      materials: state.materials - cost.materials,
+      festival: festivalNow(state),
+      festivals: (state.festivals ?? 0) + 1,
     },
   };
 }

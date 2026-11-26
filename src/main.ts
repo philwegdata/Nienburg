@@ -44,6 +44,7 @@ startApp(
     help: need<HTMLDialogElement>('#help'),
     bank: need<HTMLDialogElement>('#bank'),
     market: need<HTMLDialogElement>('#market'),
+    festival: need<HTMLDialogElement>('#festival'),
     tutorial: need<HTMLElement>('#tutorial'),
   },
   CITIES,

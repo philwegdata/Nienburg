@@ -364,6 +364,19 @@ export interface Balance {
   taxRates: [TaxRateDef, TaxRateDef, TaxRateDef];
   /** Workshops of one kind in a touching group of at least `size` make `bonus` more. */
   guildQuarter: { size: number; bonus: number };
+  /**
+   * Festivals on the plaza: what each costs. Every festival entertains the whole town for the
+   * turn; besides, the May festival brings newcomers faster (`growth`), midsummer raises the
+   * appeal of every house (`appeal`), the harvest festival fills the stores (`food` back) and the
+   * winter market brings extra taxes (`tax`).
+   */
+  festivals: {
+    cost: Record<FestivalKind, FestivalDef>;
+    growth: number;
+    appeal: number;
+    harvestFood: number;
+    tax: number;
+  };
   /** Share of a building's cost charged for moving it. */
   moveShare: number;
   /** Taking down a tile of the old wall: gold it costs, and materials won from the stones. */
@@ -483,6 +496,8 @@ export interface TurnReport {
   luxuryTaxes?: number;
   /** An order that came in this turn. */
   orderNew?: TradeOrder | null;
+  /** A festival held this turn. */
+  festival?: FestivalKind | null;
   /** A wish fulfilled this turn, with the gold it brought. */
   wishGranted?: Wish | null;
   /** A wish spoken this turn. */
@@ -555,9 +570,24 @@ export interface TradeOrder {
 
 export type TaxRate = 0 | 1 | 2;
 
+/** One festival for each season, from spring to winter. */
+export type FestivalKind = 'mayday' | 'midsummer' | 'harvest' | 'wintermarket';
+export const FESTIVALS: readonly FestivalKind[] = [
+  'mayday',
+  'midsummer',
+  'harvest',
+  'wintermarket',
+];
+
+export interface FestivalDef {
+  gold: number;
+  food: number;
+  materials: number;
+}
+
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 11;
+  version: 12;
   cityId: string;
   width: number;
   height: number;
@@ -616,6 +646,10 @@ export interface GameState {
   taxRate: TaxRate;
   /** Tiles (by index) where the old town wall has been taken down. */
   razed: number[];
+  /** A festival held this turn, if any; its effects come as the turn ends. */
+  festival: FestivalKind | null;
+  /** Festivals held so far. */
+  festivals: number;
   lastReport: TurnReport | null;
 }
 

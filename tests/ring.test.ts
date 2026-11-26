@@ -97,7 +97,7 @@ describe('a new ring of walls', () => {
     const old: Record<string, unknown> = { ...richGame(MAP), version: 10 };
     delete old.razed;
     const back = deserialize(JSON.stringify({ saveVersion: 10, state: old }), ['test']);
-    expect(back).toMatchObject({ version: 11, razed: [] });
+    expect(back).toMatchObject({ version: 12, razed: [] });
   });
 
   it('has texts in both languages', () => {
