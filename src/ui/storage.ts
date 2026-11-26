@@ -48,6 +48,23 @@ export function loadGame(cityId: string, sandbox = false): GameState | null {
   return state && Boolean(state.sandbox) === sandbox ? state : null;
 }
 
+const ACHIEVED = 'nienburg.achievements';
+
+/** Ids of the achievements earned so far, in any game. */
+export function achieved(): string[] {
+  try {
+    const list = JSON.parse(read(ACHIEVED) ?? '[]') as unknown;
+    return Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addAchieved(ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  write(ACHIEVED, JSON.stringify([...new Set([...achieved(), ...ids])]));
+}
+
 const DAILY = 'nienburg.daily';
 
 /** Best scores of each day's challenge, best first; only the last two weeks are kept. */

@@ -29,6 +29,7 @@ import { goodPrice } from '../core/market';
 import { deliverOrder } from '../core/orders';
 import { newPuzzle, puzzleCity, puzzleStatus, type PuzzleStatus } from '../core/puzzle';
 import { PUZZLES } from '../data/puzzles';
+import { ACHIEVEMENTS, newAchievements, townValue } from '../core/achievements';
 import { SCENARIOS } from '../data/scenarios';
 import { newScenario, scenarioCity } from '../core/scenario';
 import {
@@ -87,6 +88,8 @@ import {
   bestStars,
   lastCity,
   lastWasSandbox,
+  achieved,
+  addAchieved,
   addDailyScore,
   dailyScores,
   loadGame,
@@ -157,6 +160,7 @@ export interface Elements {
   market: HTMLDialogElement;
   festival: HTMLDialogElement;
   chronicle: HTMLDialogElement;
+  achievements: HTMLDialogElement;
   tutorial: HTMLElement;
 }
 
@@ -460,6 +464,21 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
           ? `${t.sandbox} · ${city.name[lang]}`
           : `${starText(state.stars)} ${city.name[lang]}`;
     requestDraw();
+    // Achievements: told once, kept across all games.
+    const earned = newAchievements(
+      state,
+      analysis,
+      { puzzlesSolved: solvedPuzzles().length, puzzles: PUZZLES.length },
+      achieved(),
+    );
+    if (earned.length > 0) {
+      addAchieved(earned);
+      el.hint.classList.remove('warn');
+      el.hint.textContent = earned
+        .map((id) => fill(t.achievements.new, { name: t.achievements.list[id][0] ?? id }))
+        .join(' · ');
+      play('star');
+    }
     if (puzzle?.solved && !wasSolved && state.puzzle) {
       markPuzzleSolved(state.puzzle.id);
       play('star');
@@ -1425,6 +1444,28 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     book.scrollTop = book.scrollHeight;
   }
 
+  function showAchievements(): void {
+    const have = achieved();
+    const grid = node('div', undefined, 'achievements');
+    for (const a of ACHIEVEMENTS) {
+      const [name, text] = t.achievements.list[a.id];
+      const done = have.includes(a.id);
+      const card = node('div', undefined, done ? 'achievement done' : 'achievement');
+      card.append(node('strong', `${done ? '★' : '☆'} ${name}`), node('span', text, 'meta'));
+      grid.append(card);
+    }
+    const count = have.filter((id) => ACHIEVEMENTS.some((a) => a.id === id)).length;
+    const actions = node('div', undefined, 'actions');
+    actions.append(button(t.close, () => el.achievements.close(), 'primary'));
+    el.achievements.replaceChildren(
+      node('h2', t.achievements.title),
+      node('p', fill(t.achievements.count, { n: count, m: ACHIEVEMENTS.length }), 'sub'),
+      grid,
+      actions,
+    );
+    el.achievements.showModal();
+  }
+
   function showGoals(): void {
     if (state.puzzle) {
       const def = PUZZLES.find((p) => p.id === state.puzzle!.id);
@@ -1464,6 +1505,11 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       );
       el.goals.append(row);
     });
+    if (!state.sandbox) {
+      const worth = node('p', fill(t.achievements.value, { n: townValue(state, rules) }), 'meta');
+      worth.title = t.achievements.valueInfo;
+      el.goals.append(worth);
+    }
     const actions = node('div', undefined, 'actions');
     if (!state.sandbox) {
       actions.append(
@@ -1481,6 +1527,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       button(t.chronicle.open, () => {
         el.goals.close();
         showChronicle();
+      }),
+      button(t.achievements.open, () => {
+        el.goals.close();
+        showAchievements();
       }),
     );
     actions.append(
@@ -2130,7 +2180,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.bank.open ||
     el.market.open ||
     el.festival.open ||
-    el.chronicle.open;
+    el.chronicle.open ||
+    el.achievements.open;
 
   // ---------- keyboard on the map ----------
 

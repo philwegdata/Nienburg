@@ -46,6 +46,7 @@ startApp(
     market: need<HTMLDialogElement>('#market'),
     festival: need<HTMLDialogElement>('#festival'),
     chronicle: need<HTMLDialogElement>('#chronicle'),
+    achievements: need<HTMLDialogElement>('#achievements'),
     tutorial: need<HTMLElement>('#tutorial'),
   },
   CITIES,

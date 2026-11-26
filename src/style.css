@@ -841,3 +841,27 @@ table.market .ico {
 .chronicle li {
   margin: 0.15rem 0;
 }
+
+.achievements {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.5rem;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.achievement {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px dashed rgb(80 60 40 / 35%);
+  border-radius: 6px;
+  opacity: 0.7;
+}
+
+.achievement.done {
+  border-style: solid;
+  background: rgb(232 198 106 / 25%);
+  opacity: 1;
+}

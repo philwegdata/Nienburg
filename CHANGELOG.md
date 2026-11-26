@@ -437,3 +437,13 @@
   Tages. Die Bestenliste liegt nur auf dem eigenen Gerät und hält die letzten zwei Wochen.
 - Entscheidung: Die Rundenzahl ist ein freiwilliges Spiel im Spiel; im normalen Spiel bleibt es
   ohne Zeitdruck. Ein Versuch von gestern wird nicht fortgesetzt.
+
+## Erfolge und Stadtwert
+
+- 18 Erfolge, die über alle Städte hinweg gelten und auf dem Gerät gespeichert werden (zum Beispiel
+  erstes Patrizierhaus, zwei Stockwerke obendrauf, Umland mit Feld, Weide und Wald, Zunftviertel,
+  fünf erfüllte Wünsche, zweiter Mauerring, alle Rätsel gelöst). Ein neuer Erfolg erscheint in der
+  Hinweiszeile; „Erfolge“ im Menü zeigt alle. In Sandbox und Rätseln gibt es keine Erfolge, außer
+  dem für alle gelösten Rätsel.
+- Der Stadtwert im Menü zählt Bewohner nach Hausstufe, die Gebäude, erfüllte Wünsche, Lieferungen
+  und Feste: ein Maß für die Pracht der Stadt über die drei Sterne hinaus.
