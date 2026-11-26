@@ -8,6 +8,9 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  photo: { open: 'Fotomodus', save: 'Bild speichern', back: 'Zurück' },
+  musicSetting: 'Leise Musik',
+  dayNight: 'Tag und Nacht',
   share: {
     open: 'Stadt teilen',
     title: 'Stadt teilen',

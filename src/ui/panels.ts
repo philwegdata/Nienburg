@@ -1,7 +1,17 @@
 import type { Lang, Rules } from '../core/types';
 import { fill, type Strings } from '../data/i18n';
 import { button, node } from './dom';
-import { motionOff, soundOn, storeLang, storeMotionOff, storeSoundOn } from './prefs';
+import {
+  dayNightOn,
+  motionOff,
+  musicOn,
+  soundOn,
+  storeDayNightOn,
+  storeLang,
+  storeMotionOff,
+  storeMusicOn,
+  storeSoundOn,
+} from './prefs';
 
 export interface SettingsActions {
   exportSave(): void;
@@ -90,6 +100,14 @@ export function showSettings(
       actions.changed();
     }),
     checkbox(t.sound, soundOn(), storeSoundOn),
+    checkbox(t.musicSetting, musicOn(), (on) => {
+      storeMusicOn(on);
+      actions.changed();
+    }),
+    checkbox(t.dayNight, dayNightOn(), (on) => {
+      storeDayNightOn(on);
+      actions.changed();
+    }),
     node('h3', t.saveGame),
     saves,
     footer,

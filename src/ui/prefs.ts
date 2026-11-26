@@ -4,6 +4,8 @@ const KEYS = {
   lang: 'nienburg.lang',
   motion: 'nienburg.motion',
   sound: 'nienburg.sound',
+  music: 'nienburg.music',
+  daynight: 'nienburg.daynight',
   tutorial: 'nienburg.tutorial',
 } as const;
 
@@ -48,6 +50,24 @@ export function soundOn(): boolean {
 
 export function storeSoundOn(on: boolean): void {
   write(KEYS.sound, on ? 'on' : 'off');
+}
+
+/** Quiet music; off until the player switches it on, like sounds. */
+export function musicOn(): boolean {
+  return read(KEYS.music) === 'on';
+}
+
+export function storeMusicOn(on: boolean): void {
+  write(KEYS.music, on ? 'on' : 'off');
+}
+
+/** Day and night pass while the picture moves; on unless switched off. */
+export function dayNightOn(): boolean {
+  return read(KEYS.daynight) !== 'off';
+}
+
+export function storeDayNightOn(on: boolean): void {
+  write(KEYS.daynight, on ? 'on' : 'off');
 }
 
 /** Whether the tutorial has ever been started, finished or skipped on this device. */

@@ -135,3 +135,16 @@ describe('countryside', () => {
     expect(new Set(first)).toEqual(new Set(['meadow', 'field', 'forest', 'road']));
   });
 });
+
+describe('day and night', () => {
+  it('starts in daylight and is darkest after two minutes', async () => {
+    const { nightAt } = await import('../src/render/renderer');
+    expect(nightAt(0)).toBe(0);
+    expect(nightAt(120)).toBe(1);
+    expect(nightAt(240)).toBe(0);
+    for (let t = 0; t < 240; t += 7) {
+      expect(nightAt(t)).toBeGreaterThanOrEqual(0);
+      expect(nightAt(t)).toBeLessThanOrEqual(1);
+    }
+  });
+});

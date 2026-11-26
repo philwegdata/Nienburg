@@ -10,6 +10,9 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  photo: { open: 'Photo mode', save: 'Save picture', back: 'Back' },
+  musicSetting: 'Quiet music',
+  dayNight: 'Day and night',
   share: {
     open: 'Share town',
     title: 'Share town',

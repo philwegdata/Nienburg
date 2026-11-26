@@ -456,3 +456,15 @@
 - Wer den Link öffnet, sieht Stadt, Jahr und Einwohnerzahl und kann sie als Sandbox öffnen und darin
   weiterbauen; die eigene Sandbox dieser Stadt wird dabei ersetzt. Kaputte Links werden höflich
   abgelehnt. Der Link verschwindet danach aus der Adresszeile.
+
+## Musik, Tag und Nacht, Fotomodus
+
+- Leise Musik, im Browser erzeugt (keine Aufnahmen): ein sanfter Grundton und eine wandernde
+  Melodie in einer Tonleiter, die zur Region passt (Europa, Maghreb, Ostasien, Anden). Wie die
+  Geräusche ist sie aus, bis man sie in den Einstellungen einschaltet; im Hintergrund-Tab schweigt
+  sie.
+- Tag und Nacht: Solange sich das Bild bewegt, vergeht alle vier Minuten ein Tag. Nachts wird es
+  dunkelblau, Fenster bewohnter Häuser, Werkstätten und Laternen an den Wegen leuchten. Abschaltbar
+  in den Einstellungen; bei reduzierter Bewegung immer Tag.
+- Fotomodus im Menü: Die ganze Bedienung und die Warnzeichen verschwinden; „Bild speichern“ lädt das
+  Bild als PNG herunter, Escape oder „Zurück“ beendet ihn.

@@ -73,17 +73,20 @@ import { BUILD_MENU, BUILDINGS, type BuildingId } from '../data/buildings';
 import { fill, plural, type Strings } from '../data/i18n';
 import { rulesFor } from '../data/rules';
 import { fitCamera, gridToWorld, pickTile, zoomAt, type Camera } from '../render/iso';
-import { buildingIcon, Scene, type Overlay } from '../render/renderer';
+import { buildingIcon, nightAt, Scene, type Overlay } from '../render/renderer';
 import { button, node } from './dom';
 import { icon, type IconName } from './icons';
 import { showHelp, showSettings, stepLabel } from './panels';
 import {
+  dayNightOn,
   motionOff,
+  musicOn,
   storeTutorialStep,
   tutorialKnown,
   tutorialStep as storedTutorialStep,
 } from './prefs';
 import { play } from './sound';
+import { playMusic, stopMusic, styleFor } from './music';
 import { worldMap } from './worldmap';
 import {
   adoptLegacySave,
@@ -314,8 +317,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     requestAnimationFrame(() => {
       dirty = false;
       const shade = rangeShade.size > 0 ? new Map([...viewShade, ...rangeShade]) : viewShade;
+      // A photo shows the town, not what it lacks.
+      const photo = document.body.classList.contains('photo');
       const overlay: Overlay = {
-        warnings,
+        warnings: photo ? new Set() : warnings,
         preview: landTile ? [landTile] : [],
         highlight: null,
         shade,
@@ -331,9 +336,26 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       // For automated tests that need to click on a particular tile.
       el.canvas.dataset.camera = `${cam.x},${cam.y},${cam.zoom}`;
       const time = calm() ? 0 : performance.now() / 1000;
+      // Day and night pass only while the picture moves, and not in photos of a puzzle.
+      if (time > 0 && dayNightOn() && !state.puzzle) overlay.night = nightAt(time);
       scene.render(ctx!, shown, cam, screen, overlay, time, city.look);
     });
   }
+
+  /** Music plays while the player wants it and the page is in view; its style follows the town. */
+  function updateMusic(): void {
+    if (musicOn() && !document.hidden) playMusic(styleFor(city.look));
+    else stopMusic();
+  }
+  // Browsers only let sound start after the player has done something.
+  const unlock = () => {
+    updateMusic();
+    window.removeEventListener('pointerdown', unlock);
+    window.removeEventListener('keydown', unlock);
+  };
+  window.addEventListener('pointerdown', unlock);
+  window.addEventListener('keydown', unlock);
+  document.addEventListener('visibilitychange', updateMusic);
 
   // Smoke, flags and water move gently; a dozen frames a second is plenty for that.
   window.setInterval(() => {
@@ -466,6 +488,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
           ? `${t.sandbox} · ${city.name[lang]}`
           : `${starText(state.stars)} ${city.name[lang]}`;
     requestDraw();
+    if (musicOn()) updateMusic();
     // Achievements: told once, kept across all games.
     const earned = newAchievements(
       state,
@@ -1549,6 +1572,44 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.report.showModal();
   }
 
+  /** Everything but the town is hidden; the picture can be saved. Escape or Back ends it. */
+  function photoMode(): void {
+    document.body.classList.add('photo');
+    setTool({ kind: 'select' });
+    selected = null;
+    const bar = node('div', undefined, 'photo-bar');
+    const leave = () => {
+      document.body.classList.remove('photo');
+      bar.remove();
+      window.removeEventListener('keydown', onKey);
+      resize();
+      refresh();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') leave();
+    };
+    bar.append(
+      button(t.photo.save, () => {
+        requestDraw();
+        requestAnimationFrame(() => {
+          el.canvas.toBlob((blob) => {
+            if (!blob) return;
+            const link = node('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${city.name[lang]}-${t.year}-${yearOf(state.turn)}.png`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+          }, 'image/png');
+        });
+      }),
+      button(t.photo.back, leave, 'primary'),
+    );
+    document.body.append(bar);
+    window.addEventListener('keydown', onKey);
+    resize();
+    requestDraw();
+  }
+
   function showGoals(): void {
     if (state.puzzle) {
       const def = PUZZLES.find((p) => p.id === state.puzzle!.id);
@@ -1618,6 +1679,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       button(t.share.open, () => {
         el.goals.close();
         showShare();
+      }),
+      button(t.photo.open, () => {
+        el.goals.close();
+        photoMode();
       }),
     );
     actions.append(
@@ -1803,7 +1868,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
           refresh();
         } else openCity(home, false);
       },
-      changed: requestDraw,
+      changed() {
+        updateMusic();
+        requestDraw();
+      },
     });
   }
 

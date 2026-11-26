@@ -17,7 +17,7 @@ import {
   type G,
 } from './draw';
 import { drawBuilding } from './buildings';
-import { screenToWorld, TILE_H, TILE_W, worldToGrid, type Camera } from './iso';
+import { gridToWorld, screenToWorld, TILE_H, TILE_W, worldToGrid, type Camera } from './iso';
 import { buildPalette, type Palette } from './palette';
 import { countryside, MARGIN, terrainAround, type Countryside } from './scenery';
 import type { Joins } from './shape';
@@ -38,6 +38,33 @@ export interface Overlay {
   shade: Map<number, string>;
   /** Ids of dug canals that carry no water. */
   dryCanals: Set<number>;
+  /** 0 by day, up to 1 in the depth of night, when windows and lanterns glow. */
+  night?: number;
+}
+
+/** How dark it is `time` seconds after opening: a full day passes in four minutes. */
+export function nightAt(time: number): number {
+  // Opening the game is morning; night falls after two minutes.
+  const sun = -Math.cos((2 * Math.PI * time) / 240);
+  return Math.max(0, Math.min(1, (sun - 0.35) / 0.5));
+}
+
+let glowSprite: HTMLCanvasElement | null = null;
+
+/** A soft warm light, painted once and stamped wherever a window or lantern glows. */
+function glow(): HTMLCanvasElement {
+  if (glowSprite) return glowSprite;
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255, 214, 140, 0.9)');
+  grad.addColorStop(0.35, 'rgba(255, 170, 80, 0.35)');
+  grad.addColorStop(1, 'rgba(255, 150, 60, 0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  glowSprite = c;
+  return c;
 }
 
 export interface Viewport {
@@ -247,6 +274,47 @@ export class Scene {
     return emitters;
   }
 
+  /** Darkens the town and lights its windows and lanterns. */
+  private paintNight(
+    ctx: CanvasRenderingContext2D,
+    state: GameState,
+    cam: Camera,
+    view: Viewport,
+    night: number,
+  ): void {
+    ctx.save();
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    ctx.fillStyle = `rgba(12, 20, 58, ${(0.58 * night).toFixed(3)})`;
+    ctx.fillRect(0, 0, view.w, view.h);
+    ctx.restore();
+    const range = this.visibleRange(state, cam, view);
+    const sprite = glow();
+    const inView = (x: number, y: number) =>
+      x >= range.x0 && x <= range.x1 && y >= range.y0 && y <= range.y1;
+    const stamp = (gx: number, gy: number, z: number, size: number) => {
+      const p = gridToWorld(gx, gy);
+      ctx.drawImage(sprite, p.x - size / 2, p.y - z - size / 2, size, size);
+    };
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.75 * night;
+    for (const b of Object.values(state.buildings)) {
+      if (!inView(b.x, b.y)) continue;
+      const kind = this.look(b.def).flat;
+      if (b.house) {
+        if (b.house.pop > 0 && !b.damaged) {
+          stamp(b.x + b.w / 2, b.y + b.h / 2, 10 + 4 * b.house.level, 34 + 10 * (b.w * b.h - 1));
+        }
+      } else if (kind === 'path') {
+        // A lantern every few tiles along the paths.
+        if ((b.x * 7 + b.y * 13) % 4 === 0) stamp(b.x + 0.5, b.y + 0.5, 8, 26);
+      } else if (kind === null && this.look(b.def).work) {
+        stamp(b.x + b.w / 2, b.y + b.h / 2, 12, 30);
+      }
+    }
+    ctx.restore();
+  }
+
   /** Tiles that can be seen, with some slack below for tall buildings. */
   private visibleRange(state: GameState, cam: Camera, view: Viewport): Range {
     const corners = [
@@ -360,6 +428,7 @@ export class Scene {
     for (const e of emitters) drawEmitter(g, e, time);
     // People are about only while the picture moves.
     if (time > 0) this.walkers.draw(g, state, time);
+    if (overlay.night && overlay.night > 0) this.paintNight(ctx, state, cam, view, overlay.night);
 
     for (const [i, color] of overlay.shade) {
       poly(g, diamond(i % state.width, Math.floor(i / state.width)), color);
