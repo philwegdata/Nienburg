@@ -372,3 +372,9 @@
   freie Plätze füllen sich zu drei Vierteln je Runde), üblich (wie bisher, zur Hälfte) oder hoch
   (130 % der Steuern, nur zu einem Viertel). Rückgängig machen geht wie beim Bauen.
 - Spielstand Version 10; alte Spielstände starten mit „üblich“.
+
+## Zunftviertel
+
+- Drei oder mehr gleiche Werkstätten (Weberei, Schmiede, Brauerei, Gerberei, Manufaktur), die
+  aneinandergrenzen, bilden ein Zunftviertel und schaffen 25 % mehr. Das zählt zusätzlich zum
+  Gildenhaus. Das Infofeld der Werkstatt sagt, ob sie dazugehört.

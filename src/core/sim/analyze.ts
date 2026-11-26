@@ -61,6 +61,8 @@ export interface Analysis {
   harvest: Record<RawGood, number>;
   /** Raw materials the workshops use this turn. */
   rawUsed: Record<RawGood, number>;
+  /** Workshops that are part of a guild quarter. */
+  quarter: Set<number>;
   /** Buildings that use raw materials, and whether they get them this turn. */
   supplied: Map<number, boolean>;
   goldYield: number;
@@ -200,6 +202,7 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     harvest: { grain: 0, wool: 0, wood: 0 },
     rawUsed: { grain: 0, wool: 0, wood: 0 },
     supplied: new Map(),
+    quarter: new Set(),
     goldYield: 0,
     tradeCapacity: 0,
     tradePrice: 0,
@@ -316,6 +319,28 @@ export function analyze(state: GameState, rules: Rules): Analysis {
   const stock = { ...(state.raw ?? { grain: 0, wool: 0, wood: 0 }) };
   for (const g of Object.keys(stock) as RawGood[]) stock[g] += analysis.harvest[g];
 
+  // Guild quarters: workshops of one kind that touch each other, at least a few of them.
+  const workshops = operating.filter(
+    ({ def }) => def.category === 'craft' && (def.produces || def.yields) && !def.trade,
+  );
+  const seen = new Set<number>();
+  for (const start of workshops) {
+    if (seen.has(start.b.id)) continue;
+    const group = [start];
+    seen.add(start.b.id);
+    for (let i = 0; i < group.length; i++) {
+      for (const other of workshops) {
+        if (seen.has(other.b.id) || other.def.id !== start.def.id) continue;
+        if (!touching(group[i]!.b, other.b)) continue;
+        seen.add(other.b.id);
+        group.push(other);
+      }
+    }
+    if (group.length >= balance.guildQuarter.size) {
+      for (const g of group) analysis.quarter.add(g.b.id);
+    }
+  }
+
   // Pass 3: everything else operating buildings do.
   for (const entry of operating) {
     const { b, def, paths } = entry;
@@ -353,6 +378,7 @@ export function analyze(state: GameState, rules: Rules): Analysis {
         if (touching(b, g.b)) boost = Math.max(boost, g.def.guildBoost ?? 0);
       }
     }
+    if (analysis.quarter.has(b.id)) boost += balance.guildQuarter.bonus;
     if (def.produces) {
       analysis.production[def.produces.good] += Math.floor(
         def.produces.amount * (1 + boost + supply),

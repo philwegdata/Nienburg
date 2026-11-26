@@ -10,6 +10,7 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  quarter: 'Part of a guild quarter: {p} % more.',
   tax: {
     title: 'Tax rate',
     rates: ['mild', 'usual', 'high'],
@@ -265,7 +266,7 @@ export const en: Strings = {
     ],
     [
       'Crafts',
-      "Weaver, smithy and brewery make goods. A market hall within reach hands them out to the better houses. Merchants in a merchants' office sell what the houses do not need and so bring gold into town. Prices change with the seasons; tap a kind of goods at the top to see them and to hold goods back.",
+      "Weaver, smithy and brewery make goods. A market hall within reach hands them out to the better houses. Merchants in a merchants' office sell what the houses do not need and so bring gold into town. Three or more workshops of one kind that touch form a guild quarter and make a quarter more. Prices change with the seasons; tap a kind of goods at the top to see them and to hold goods back.",
     ],
     [
       'Fires and events',

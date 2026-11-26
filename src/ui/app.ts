@@ -812,6 +812,13 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       } else if (idle) add('p', t.idle[idle], 'warn');
       else if (def.workers > 0 || def.services) add('p', t.working, 'good');
       if (def.trade) el.info.append(button(t.market.open, showMarket));
+      if (analysis.quarter.has(b.id)) {
+        add(
+          'p',
+          fill(t.quarter, { p: Math.round(rules.balance.guildQuarter.bonus * 100) }),
+          'good',
+        );
+      }
       const supplied = analysis.supplied.get(b.id);
       if (supplied !== undefined && def.consumes) {
         const good = t.raw[def.consumes.good];

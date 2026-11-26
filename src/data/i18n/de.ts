@@ -8,6 +8,7 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  quarter: 'Teil eines Zunftviertels: {p} % mehr.',
   tax: {
     title: 'Steuersatz',
     rates: ['mild', 'üblich', 'hoch'],
@@ -266,7 +267,7 @@ export const de = {
     ],
     [
       'Handwerk',
-      'Weberei, Schmiede und Brauerei stellen Waren her. Eine Markthalle in Reichweite verteilt sie an die besseren Häuser. Händler in einem Handelskontor verkaufen, was die Häuser nicht brauchen, und bringen so Gold in die Stadt. Die Preise wechseln mit den Jahreszeiten; ein Tipp auf eine Ware oben zeigt sie, und dort lässt sich eine Ware auch zurückhalten.',
+      'Weberei, Schmiede und Brauerei stellen Waren her. Eine Markthalle in Reichweite verteilt sie an die besseren Häuser. Händler in einem Handelskontor verkaufen, was die Häuser nicht brauchen, und bringen so Gold in die Stadt. Drei oder mehr gleiche Werkstätten, die aneinandergrenzen, bilden ein Zunftviertel und schaffen ein Viertel mehr. Die Preise wechseln mit den Jahreszeiten; ein Tipp auf eine Ware oben zeigt sie, und dort lässt sich eine Ware auch zurückhalten.',
     ],
     [
       'Brände und Ereignisse',

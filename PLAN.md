@@ -368,7 +368,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
       dafür mit Bonus und freigeschalteten Luxuswaren
 - [x] Luxuswaren (Wein, Gewürze, Seide) nur über Fernhandel; die höchsten Hausstufen wollen sie
 - [x] Steuersatz in drei Stufen (mild, üblich, hoch): mehr Gold oder schnellerer Zuzug
-- [ ] Zunftviertel: drei gleiche Werkstätten nebeneinander produzieren mehr
+- [x] Zunftviertel: drei gleiche Werkstätten nebeneinander produzieren mehr
 
 **B. Platz und Bauen (das Herz des Spiels)**
 

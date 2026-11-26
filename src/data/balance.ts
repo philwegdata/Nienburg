@@ -73,6 +73,7 @@ export const BALANCE: Balance = {
     { tax: 1, growth: 0.5 },
     { tax: 1.3, growth: 0.25 },
   ],
+  guildQuarter: { size: 3, bonus: 0.25 },
   loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },
   workerShare: 0.4,
   foodPerHead: 0.08,

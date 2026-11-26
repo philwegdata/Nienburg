@@ -360,6 +360,8 @@ export interface Balance {
    * that fills with newcomers each turn.
    */
   taxRates: [TaxRateDef, TaxRateDef, TaxRateDef];
+  /** Workshops of one kind in a touching group of at least `size` make `bonus` more. */
+  guildQuarter: { size: number; bonus: number };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
