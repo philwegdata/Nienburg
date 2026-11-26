@@ -44,5 +44,15 @@ export function rulesFor(city: CityDef): Rules {
     },
   };
   if (m.landmarkAppeal) rules.balance.landmarkAppeal = m.landmarkAppeal;
+  // Pilgrims leave gold at the places of faith.
+  if (m.shrineGold) {
+    for (const def of Object.values(buildings)) {
+      if (def.category !== 'faith') continue;
+      buildings[def.id] = {
+        ...def,
+        yields: { ...def.yields, gold: (def.yields?.gold ?? 0) + m.shrineGold },
+      };
+    }
+  }
   return rules;
 }

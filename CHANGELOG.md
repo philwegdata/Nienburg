@@ -417,3 +417,13 @@
 - „Chronik“ im Menü zeigt sie nach Jahren geordnet; „Als Text kopieren“ legt sie zum Teilen in die
   Zwischenablage. Sie hält bis zu 300 Einträge, die Gründung bleibt immer erhalten.
 - Spielstand Version 13; alte Spielstände beginnen ihre Chronik mit der Gründung.
+
+## Szenarien
+
+- Neuer Abschnitt „Szenarien“ in der Stadtauswahl: bekannte Städte mit eigenen Regeln, eigenen drei
+  Zielen und eigenem Spielstand.
+  - Stadt ohne Brunnen (Brügge): Brunnen und Zisternen sind verboten, Wasser kommt nur aus Kanälen.
+  - Inselstadt (Mont-Saint-Michel): Land lässt sich nicht kaufen; Platz gibt es auf der Mauer und
+    nach oben.
+  - Pilgerstadt (San Gimignano): Jede Kapelle und Kirche bringt 8 Gold Spenden je Runde.
+- Verbotene Gebäude bleiben im Baumenü sichtbar, aber gesperrt, mit Begründung.

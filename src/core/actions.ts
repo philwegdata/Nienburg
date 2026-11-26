@@ -138,11 +138,14 @@ export type Lock =
   | { kind: 'requires'; def: string }
   | { kind: 'unique' }
   /** A building that belongs to another town. */
-  | { kind: 'elsewhere' };
+  | { kind: 'elsewhere' }
+  /** Not allowed by the scenario. */
+  | { kind: 'banned' };
 
 export function lockOf(state: GameState, def: BuildingDef): Lock | null {
   // A puzzle offers exactly its own pieces.
   if (state.puzzle) return state.puzzle.pieces[def.id] ? null : { kind: 'elsewhere' };
+  if (state.scenario?.banned.includes(def.id)) return { kind: 'banned' };
   // In a sandbox everything can be built at once, as often as one likes.
   if (state.sandbox) return null;
   if (def.cities && !def.cities.includes(state.cityId)) return { kind: 'elsewhere' };
@@ -313,10 +316,13 @@ export type LandError =
   | 'notOutside'
   /** Not next to a gate or to land the town already has. */
   | 'notAdjacent'
+  /** The scenario allows no land to be bought. */
+  | 'noLand'
   | 'noGold';
 
 /** Whether the town could buy the tile at (x, y), money aside. */
 export function landError(state: GameState, x: number, y: number): LandError | null {
+  if (state.scenario?.noLand) return 'noLand';
   if (!inBounds(state.width, state.height, x, y)) return 'notOutside';
   if (state.terrain[indexOf(state.width, x, y)] !== 'outside') return 'notOutside';
   const next = [

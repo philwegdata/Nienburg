@@ -64,6 +64,24 @@ export interface CityModifiers {
   yields?: Record<string, number>;
   /** Fixed historic buildings make their surroundings nicer to live in. */
   landmarkAppeal?: { value: number; radius: number };
+  /** Pilgrims leave this much gold per turn at every place of faith that is open. */
+  shrineGold?: number;
+}
+
+/** A known city with rules of its own and goals of its own. */
+export interface ScenarioDef {
+  id: string;
+  /** The city whose plan it uses. */
+  city: string;
+  name: Record<Lang, string>;
+  blurb: Record<Lang, string>;
+  /** Buildings not available at all. */
+  banned?: string[];
+  /** No land can be bought outside the walls. */
+  noLand?: boolean;
+  /** Added to the city's own modifiers. */
+  modifiers?: CityModifiers;
+  goals: [Goal, Goal, Goal];
 }
 
 export type Goal =
@@ -642,6 +660,8 @@ export interface GameState {
    * `needs`. Puzzles are also sandboxes: nothing costs anything. Absent in other games.
    */
   puzzle?: { id: string; pieces: Record<string, number>; needs: Need[] };
+  /** Scenario: a city with rules of its own. Absent in other games. */
+  scenario?: { id: string; banned: string[]; noLand?: boolean };
   /** Tiles of land bought outside the walls so far. */
   landBought: number;
   /** An event in effect during the current turn. */

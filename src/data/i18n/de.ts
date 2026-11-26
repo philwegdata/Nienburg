@@ -8,6 +8,13 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  scenario: {
+    title: 'Szenarien',
+    intro: 'Bekannte Städte mit eigenen Regeln und eigenen Zielen.',
+    on: 'Grundriss: {city}',
+    noLand: 'Kein Landkauf',
+    banned: 'Nicht erlaubt: {list}',
+  },
   chronicle: {
     open: 'Chronik',
     title: 'Chronik von {city}',
@@ -195,6 +202,7 @@ export const de = {
     pop: 'Verfügbar ab {n} Einwohnern.',
     requires: 'Braucht zuerst: {name}.',
     unique: 'Steht bereits. Davon gibt es nur eines.',
+    banned: 'In diesem Szenario nicht erlaubt.',
   },
   good: { cloth: 'Tuch', tools: 'Werkzeug', beer: 'Bier' },
   raw: { grain: 'Korn', wool: 'Wolle', wood: 'Holz' },
@@ -387,6 +395,7 @@ export const de = {
   landNo: {
     notOutside: 'Hier gibt es kein Land zu kaufen.',
     notAdjacent: 'Land muss an ein Tor oder an eigenes Land grenzen.',
+    noLand: 'In diesem Szenario lässt sich kein Land kaufen.',
     noGold: 'Für dieses Feld reicht das Gold nicht.',
   },
   canalDry: 'Trocken: Der Kanal reicht nicht bis zur Mauer.',

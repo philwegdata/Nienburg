@@ -29,6 +29,8 @@ import { goodPrice } from '../core/market';
 import { deliverOrder } from '../core/orders';
 import { newPuzzle, puzzleCity, puzzleStatus, type PuzzleStatus } from '../core/puzzle';
 import { PUZZLES } from '../data/puzzles';
+import { SCENARIOS } from '../data/scenarios';
+import { newScenario, scenarioCity } from '../core/scenario';
 import { wishProgress } from '../core/wishes';
 import { WISH_NAMES } from '../data/wishes';
 import { inBounds, indexOf } from '../core/grid';
@@ -175,9 +177,19 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   if (!ctx) throw new Error('Canvas 2D is not supported');
   adoptLegacySave();
 
-  const fresh = (def: CityDef, sandbox = false) =>
-    newGame(def, Date.now(), rulesFor(def).balance, sandbox);
-  const remembered = cities.find((c) => c.id === lastCity());
+  /** Scenarios as cities of their own, next to the plain cities. */
+  const scenarios = SCENARIOS.flatMap((sc) => {
+    const base = cities.find((c) => c.id === sc.city);
+    return base ? [{ def: sc, base, city: scenarioCity(sc, base) }] : [];
+  });
+  const fresh = (def: CityDef, sandbox = false) => {
+    const sc = sandbox ? undefined : scenarios.find((s) => s.city.id === def.id);
+    if (sc) return newScenario(sc.def, sc.base, Date.now(), rulesFor(def).balance);
+    return newGame(def, Date.now(), rulesFor(def).balance, sandbox);
+  };
+  const remembered =
+    cities.find((c) => c.id === lastCity()) ??
+    scenarios.find((s) => s.city.id === lastCity())?.city;
 
   let city: CityDef = remembered ?? cities[0]!;
   /** The general rules, bent by what makes the current town special. */
@@ -767,6 +779,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     if (lock.kind === 'pop') return fill(t.lock.pop, { n: lock.value });
     if (lock.kind === 'requires') return fill(t.lock.requires, { name: nameOf(lock.def) });
     if (lock.kind === 'elsewhere') return null;
+    if (lock.kind === 'banned') return t.lock.banned;
     return t.lock.unique;
   }
 
@@ -1449,6 +1462,29 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       );
       grid.append(card);
     });
+    // Scenarios: known cities with rules of their own.
+    const special = node('div', undefined, 'cities');
+    for (const sc of scenarios) {
+      const card = node('div', undefined, 'city');
+      const rulesText: string[] = [fill(t.scenario.on, { city: sc.base.name[lang] })];
+      if (sc.def.noLand) rulesText.push(t.scenario.noLand);
+      if (sc.def.banned?.length) {
+        rulesText.push(fill(t.scenario.banned, { list: sc.def.banned.map(nameOf).join(', ') }));
+      }
+      card.append(
+        node('h3', sc.def.name[lang]),
+        node('p', sc.def.blurb[lang]),
+        node('p', rulesText.join(' · '), 'meta'),
+        node('p', starText(bestStars(sc.city.id)), 'stars'),
+        button(
+          loadGame(sc.city.id) ? t.resume : t.play,
+          () => pick(sc.city),
+          sc.city.id === city.id ? 'primary' : undefined,
+        ),
+      );
+      special.append(card);
+    }
+
     // Puzzles: small plans to fill exactly.
     const solved = solvedPuzzles();
     const puzzles = node('div', undefined, 'cities');
@@ -1478,6 +1514,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       node('h2', t.chooseCity),
       worldMap(pins, lang, { world: t.worldMap, europe: t.europe }, pick),
       grid,
+      node('h2', t.scenario.title),
+      node('p', t.scenario.intro, 'sub'),
+      special,
       node('h2', t.puzzle.title),
       node('p', t.puzzle.intro, 'sub'),
       puzzles,

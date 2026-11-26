@@ -10,6 +10,13 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  scenario: {
+    title: 'Scenarios',
+    intro: 'Known cities with rules and goals of their own.',
+    on: 'Plan: {city}',
+    noLand: 'No land to buy',
+    banned: 'Not allowed: {list}',
+  },
   chronicle: {
     open: 'Chronicle',
     title: 'Chronicle of {city}',
@@ -197,6 +204,7 @@ export const en: Strings = {
     pop: 'Available from {n} inhabitants.',
     requires: 'First needs: {name}.',
     unique: 'Already built. There can be only one.',
+    banned: 'Not allowed in this scenario.',
   },
   raw: { grain: 'Grain', wool: 'Wool', wood: 'Wood' },
   rawHarvest: 'Harvests: {n} {good} per turn, depending on the season',
@@ -386,6 +394,7 @@ export const en: Strings = {
   landNo: {
     notOutside: 'There is no land to buy here.',
     notAdjacent: 'Land must border a gate or land you already own.',
+    noLand: 'No land can be bought in this scenario.',
     noGold: 'There is not enough gold for this tile.',
   },
   canalDry: 'Dry: the canal does not reach the wall.',

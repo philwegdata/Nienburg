@@ -282,7 +282,12 @@ describe('texts for canals and land', () => {
       const t = strings(lang);
       expect(t.building.canal && t.buildingInfo.canal && t.toolLand).toBeTruthy();
       expect(t.hintLand).toContain('{n}');
-      expect(Object.keys(t.landNo).sort()).toEqual(['noGold', 'notAdjacent', 'notOutside']);
+      expect(Object.keys(t.landNo).sort()).toEqual([
+        'noGold',
+        'noLand',
+        'notAdjacent',
+        'notOutside',
+      ]);
       expect(t.hint.dryCanal).toHaveLength(2);
     }
   });
