@@ -18,6 +18,7 @@ import { newGame, parseCity } from '../core/city';
 import { goalProgress } from '../core/goals';
 import { levelForStorey, raiseCost, raiseError, raiseHouse } from '../core/storeys';
 import { goodPrice } from '../core/market';
+import { deliverOrder } from '../core/orders';
 import { newPuzzle, puzzleCity, puzzleStatus, type PuzzleStatus } from '../core/puzzle';
 import { PUZZLES } from '../data/puzzles';
 import { wishProgress } from '../core/wishes';
@@ -585,6 +586,26 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       });
       chips.push(c);
     }
+    if ((state.luxury ?? 0) > 0) {
+      const c = node('span', `${t.luxury.name} ${state.luxury}`, 'chip');
+      c.title = fill(t.luxury.info, { p: Math.round(rules.balance.luxury.taxBonus * 100) });
+      chips.push(c);
+    }
+    if (state.order) {
+      const label = `⚖ ${fill(t.order.chip, { city: cityName(state.order.from) })}`;
+      const c = node('span', label, 'chip event clickable wish');
+      c.tabIndex = 0;
+      c.setAttribute('role', 'button');
+      c.title = orderText();
+      c.addEventListener('click', showMarket);
+      c.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showMarket();
+        }
+      });
+      chips.push(c);
+    }
     // On narrow screens the title bar has no room for the date, so it leads the chips instead.
     if (state.event) chips.push(node('span', t.eventNow[state.event.kind], 'chip event'));
     el.resources.replaceChildren(node('span', date, 'chip narrow-only'), ...chips);
@@ -593,6 +614,19 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   type Add = (tag: 'h2' | 'p', text: string, cls?: string) => void;
 
   const wishName = (w: Wish) => WISH_NAMES[w.name] ?? '';
+  const cityName = (id: string) => cities.find((c) => c.id === id)?.name[lang] ?? id;
+
+  /** The open order, in words. */
+  function orderText(): string {
+    const o = state.order;
+    if (!o) return '';
+    return fill(t.order.text, {
+      city: cityName(o.from),
+      n: o.amount,
+      good: t.good[o.good],
+      done: o.delivered,
+    });
+  }
 
   /** What a resident wishes for, in words. */
   function wishText(w: Wish): string {
@@ -863,6 +897,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       line(`★ ${fill(t.report.star, { goal: goalText(city.goals[i]!) })}`, 'news');
     }
     for (const def of r.completed) line(fill(t.report.completed, { name: nameOf(def) }), 'news');
+    if ((r.luxuryUsed ?? 0) > 0) {
+      line(fill(t.luxury.report, { n: r.luxuryUsed ?? 0, gold: r.luxuryTaxes ?? 0 }));
+    }
     if (r.wishGranted) {
       const w = r.wishGranted;
       line(`♥ ${fill(t.wish.granted, { name: wishName(w), gold: w.reward })}`, 'news');
@@ -909,8 +946,22 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     };
     const placed = r.event?.at ? r.event : null;
     const fresh = r.wishNew && state.wish === r.wishNew ? r.wishNew : null;
-    if (r.hints.length > 0 || r.fire || placed || fresh) {
+    const ordered = r.orderNew && state.order === r.orderNew ? r.orderNew : null;
+    if (r.hints.length > 0 || r.fire || placed || fresh || ordered) {
       const hints = node('div', undefined, 'hints');
+      if (ordered) {
+        const text = fill(t.order.fresh, {
+          city: cityName(ordered.from),
+          n: ordered.amount,
+          good: t.good[ordered.good],
+        });
+        hints.append(
+          button(`⚖ ${text}`, () => {
+            el.report.close();
+            showMarket();
+          }),
+        );
+      }
       if (fresh) {
         const home = state.buildings[fresh.house];
         if (home) hints.append(button(`♥ ${wishText(fresh)}`, () => jump(home)));
@@ -1020,9 +1071,52 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       row.append(cell);
       table.append(row);
     }
+    el.market.append(table);
+    const o = state.order;
+    if (o) {
+      el.market.append(
+        node('h3', fill(t.order.title, { city: cityName(o.from) })),
+        node('p', orderText()),
+        node('p', fill(t.order.reward, { gold: o.gold, lux: o.luxury }), 'meta'),
+      );
+      const note = node('p', '', 'meta');
+      const send = button(t.order.deliver, () => {
+        const r = deliverOrder(state, rules);
+        if (!r.ok) {
+          note.textContent =
+            r.reason === 'noGoods'
+              ? fill(t.order.noGoods, { good: t.good[o.good] })
+              : t.order.noTradingHouse;
+          play('no');
+          return;
+        }
+        change(r.state);
+        if (r.done) {
+          play('star');
+          el.hint.classList.remove('warn');
+          el.hint.textContent = fill(t.order.done, {
+            gold: o.gold,
+            lux: o.luxury,
+            city: cityName(o.from),
+          });
+        }
+        showMarket();
+      });
+      el.market.append(send, note);
+    }
+    if ((state.luxury ?? 0) > 0) {
+      el.market.append(
+        node('p', `${t.luxury.name}: ${state.luxury}`),
+        node(
+          'p',
+          fill(t.luxury.info, { p: Math.round(rules.balance.luxury.taxBonus * 100) }),
+          'meta',
+        ),
+      );
+    }
     const actions = node('div', undefined, 'actions');
     actions.append(button(t.close, () => el.market.close(), 'primary'));
-    el.market.append(table, actions);
+    el.market.append(actions);
     if (!el.market.open) el.market.showModal();
   }
 

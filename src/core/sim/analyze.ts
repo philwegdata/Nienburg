@@ -69,6 +69,8 @@ export interface Analysis {
   tradePrice: number;
   /** Units of each kind of craft goods the houses want per turn. */
   goodsDemand: number;
+  /** Inhabitants of upper houses within reach of a market hall, who would like luxury goods. */
+  goodsPop: number;
   /** Build points the town will have next turn. */
   buildPoints: number;
   /** Factor applied to taxes. */
@@ -202,6 +204,7 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     tradeCapacity: 0,
     tradePrice: 0,
     goodsDemand: 0,
+    goodsPop: 0,
     buildPoints: balance.buildPointsPerTurn,
     taxFactor: 1,
     gates: 0,
@@ -369,6 +372,7 @@ export function analyze(state: GameState, rules: Rules): Analysis {
     }
   }
   analysis.goodsDemand = Math.ceil(goodsPop * balance.goodsPerHead);
+  analysis.goodsPop = goodsPop;
   return analysis;
 }
 

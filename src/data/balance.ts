@@ -1,6 +1,20 @@
 import type { Balance } from '../core/types';
 import { WISH_MORE, WISH_NAMES, WISH_NEAR } from './wishes';
 
+/** Towns that may send orders; every city of the game. */
+const ORDER_PARTNERS = [
+  'nienburg',
+  'carcassonne',
+  'dubrovnik',
+  'montsaintmichel',
+  'bruges',
+  'sangimignano',
+  'fes',
+  'pingyao',
+  'bhaktapur',
+  'cusco',
+];
+
 export const BALANCE: Balance = {
   start: { gold: 500, food: 30, materials: 60 },
   buildPointsPerTurn: 20,
@@ -43,6 +57,17 @@ export const BALANCE: Balance = {
     },
     drift: 0.15,
   },
+  orders: {
+    chance: 0.35,
+    quietTurns: 8,
+    partners: ORDER_PARTNERS,
+    base: 10,
+    perYear: 2,
+    max: 40,
+    premium: 1.6,
+    luxuryShare: 0.5,
+  },
+  luxury: { perHead: 0.01, taxBonus: 0.3 },
   loan: { step: 100, base: 300, perHead: 2, interest: 0.03, installment: 0.1 },
   workerShare: 0.4,
   foodPerHead: 0.08,

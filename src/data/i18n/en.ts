@@ -10,6 +10,22 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  order: {
+    chip: 'Order: {city}',
+    title: 'Order from {city}',
+    text: '{city} orders {n} {good}. Delivered: {done} of {n}.',
+    reward: 'Pay: {gold} gold and {lux} luxury goods. There is no hurry.',
+    deliver: 'Deliver',
+    noGoods: 'There is no {good} in store right now.',
+    noTradingHouse: 'The town needs a trading house to deliver.',
+    done: 'Order complete: +{gold} gold and {lux} luxury goods from {city}.',
+    fresh: 'New order: {city} orders {n} {good}.',
+  },
+  luxury: {
+    name: 'Luxury goods',
+    info: 'Wine, spices and silk from afar. Burgher and patrician houses within reach of a market hall use them and pay {p} % more taxes in return.',
+    report: 'Luxury goods: −{n}, for +{gold} gold in taxes',
+  },
   puzzle: {
     title: 'Puzzles',
     intro:

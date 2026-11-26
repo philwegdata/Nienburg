@@ -352,3 +352,16 @@
   nächsten Start öffnet sich wieder die zuletzt gespielte Stadt.
 - Für jedes Rätsel prüft ein Test eine bekannte Lösung und dass die Bauteile den Grundriss
   genau füllen.
+
+## Handelsaufträge und Luxuswaren
+
+- Steht ein Handelskontor, bestellen ab dem dritten Jahr ab und zu andere Städte der Weltkarte
+  Waren („Brügge bestellt 12 Tuch“). Es gibt immer nur einen Auftrag und nie eine Frist; die Menge
+  wächst mit den Jahren (10 plus 2 je Jahr, höchstens 40).
+- Im Markt-Fenster liefert „Liefern“ aus dem Lager, auch in Teilen. Ein erfüllter Auftrag bringt
+  sofort Gold (1,6-facher Händlerpreis) und Luxuswaren (die Hälfte der Menge).
+- Luxuswaren (Wein, Gewürze, Seide) gibt es nur so. Bürger- und Patrizierhäuser in Reichweite
+  einer Markthalle verbrauchen sie und zahlen dafür 30 % mehr Steuern. Reicht der Vorrat nicht
+  für alle, wird nichts verbraucht.
+- Entscheidung: Luxuswaren sind ein Bonus, kein Bedürfnis, damit kein Haus deshalb absteigt.
+  Aufträge ziehen eigene Zufallszahlen. Spielstand Version 9.

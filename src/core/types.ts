@@ -330,6 +330,26 @@ export interface Balance {
    * each year's market may stray from that, as a share.
    */
   market: { season: Record<Good, [number, number, number, number]>; drift: number };
+  /**
+   * Orders from other towns: chance per turn once a trading house stands, the first turn they can
+   * come, which towns order, the amount (`base` plus `perYear` for each year, up to `max`), the
+   * gold per unit as a factor on the usual price, and luxury goods per unit delivered.
+   */
+  orders: {
+    chance: number;
+    quietTurns: number;
+    partners: readonly string[];
+    base: number;
+    perYear: number;
+    max: number;
+    premium: number;
+    luxuryShare: number;
+  };
+  /**
+   * Luxury goods: what each inhabitant of the upper houses within reach of a market hall uses per
+   * turn, and the extra share of taxes those houses pay while they get it.
+   */
+  luxury: { perHead: number; taxBonus: number };
   /** Appeal radiated by every landmark tile, where a city has that. */
   landmarkAppeal?: { value: number; radius: number };
   events: {
@@ -440,6 +460,11 @@ export interface TurnReport {
   loanInterest: number;
   /** Gold paid back to the bank this turn. */
   loanPaid: number;
+  /** Luxury goods used by the finest houses, and the extra taxes they paid for it. */
+  luxuryUsed?: number;
+  luxuryTaxes?: number;
+  /** An order that came in this turn. */
+  orderNew?: TradeOrder | null;
   /** A wish fulfilled this turn, with the gold it brought. */
   wishGranted?: Wish | null;
   /** A wish spoken this turn. */
@@ -499,9 +524,20 @@ export interface PuzzleDef {
   needs: Need[];
 }
 
+/** An order from another town: `amount` of a craft good, paid for in gold and luxury goods. */
+export interface TradeOrder {
+  /** Id of the ordering city. */
+  from: string;
+  good: Good;
+  amount: number;
+  delivered: number;
+  gold: number;
+  luxury: number;
+}
+
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 8;
+  version: 9;
   cityId: string;
   width: number;
   height: number;
@@ -550,6 +586,12 @@ export interface GameState {
   wishesGranted: number;
   /** Craft goods the merchants keep in store instead of selling, waiting for a better price. */
   hold: Good[];
+  /** What another town has ordered from this one; there is never a deadline. */
+  order: TradeOrder | null;
+  /** Orders delivered so far. */
+  ordersDone: number;
+  /** Wine, spices and silk from far away, which only come in return for orders. */
+  luxury: number;
   lastReport: TurnReport | null;
 }
 

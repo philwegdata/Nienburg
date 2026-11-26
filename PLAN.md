@@ -364,9 +364,9 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
       Holz → Möbel. Landkauf bekommt dadurch einen echten Zweck
 - [x] ★ Schwankende Marktpreise je Ware und Jahreszeit (Tuch teuer im Winter, Bier im Sommer); das
       Kontor zeigt eine kleine Preiskurve, Lagern lohnt sich
-- [ ] Handelsaufträge von anderen Städten der Weltkarte („Brügge sucht 20 Tuch“), ohne Frist,
+- [x] Handelsaufträge von anderen Städten der Weltkarte („Brügge sucht 20 Tuch“), ohne Frist,
       dafür mit Bonus und freigeschalteten Luxuswaren
-- [ ] Luxuswaren (Wein, Gewürze, Seide) nur über Fernhandel; die höchsten Hausstufen wollen sie
+- [x] Luxuswaren (Wein, Gewürze, Seide) nur über Fernhandel; die höchsten Hausstufen wollen sie
 - [ ] Steuersatz in drei Stufen (mild, üblich, hoch): mehr Gold oder schnellerer Zuzug
 - [ ] Zunftviertel: drei gleiche Werkstätten nebeneinander produzieren mehr
 

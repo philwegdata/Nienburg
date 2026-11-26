@@ -8,6 +8,22 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  order: {
+    chip: 'Auftrag: {city}',
+    title: 'Auftrag aus {city}',
+    text: '{city} bestellt {n} {good}. Geliefert: {done} von {n}.',
+    reward: 'Lohn: {gold} Gold und {lux} Luxuswaren. Es eilt nicht.',
+    deliver: 'Liefern',
+    noGoods: 'Gerade ist kein {good} im Lager.',
+    noTradingHouse: 'Für Lieferungen braucht die Stadt ein Handelskontor.',
+    done: 'Auftrag erfüllt: +{gold} Gold und {lux} Luxuswaren aus {city}.',
+    fresh: 'Neuer Auftrag: {city} bestellt {n} {good}.',
+  },
+  luxury: {
+    name: 'Luxuswaren',
+    info: 'Wein, Gewürze und Seide aus der Ferne. Bürger- und Patrizierhäuser in Reichweite einer Markthalle verbrauchen sie und zahlen dafür {p} % mehr Steuern.',
+    report: 'Luxuswaren: −{n}, dafür +{gold} Gold Steuern',
+  },
   puzzle: {
     title: 'Rätsel',
     intro:

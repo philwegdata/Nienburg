@@ -1,6 +1,7 @@
 import { lockOf, settleLoan } from '../actions';
 import { goalProgress } from '../goals';
 import { goodPrice } from '../market';
+import { rollOrder } from '../orders';
 import { rollWish, wishLost, wishProgress } from '../wishes';
 import { indexOf } from '../grid';
 import { rngStep } from '../rng';
@@ -16,6 +17,7 @@ import {
   type HintKind,
   type Need,
   type Rules,
+  type TradeOrder,
   type TurnReport,
   type Wish,
 } from '../types';
@@ -328,14 +330,22 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   }
 
   // 6. Taxes, trade and upkeep. An empty treasury is topped up by the sovereign.
+  // The finest houses pay more while they get luxury goods from afar.
+  const luxuryWanted = Math.ceil(analysis.goodsPop * balance.luxury.perHead);
+  const luxuryUsed = luxuryWanted > 0 && (state.luxury ?? 0) >= luxuryWanted ? luxuryWanted : 0;
   let popAfter = 0;
   let taxes = 0;
+  let luxuryBase = 0;
   for (const b of Object.values(joined.buildings)) {
     if (!b.house) continue;
     popAfter += b.house.pop;
-    taxes += b.house.pop * housing[b.house.level - 1]!.taxPerHead;
+    const due = b.house.pop * housing[b.house.level - 1]!.taxPerHead;
+    taxes += due;
+    const fine = b.house.level >= balance.mergeLevel && analysis.covered.goods.has(b.id);
+    if (luxuryUsed > 0 && fine) luxuryBase += due;
   }
-  taxes = Math.floor(taxes * analysis.taxFactor);
+  const luxuryTaxes = Math.floor(luxuryBase * balance.luxury.taxBonus * analysis.taxFactor);
+  taxes = Math.floor(taxes * analysis.taxFactor) + luxuryTaxes;
   gold += taxes + tradeIncome - upkeep;
   const subsidy = gold < 0;
   if (subsidy) gold = 0;
@@ -357,6 +367,7 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     peakPop: Math.max(state.peakPop, popAfter),
     buildPoints: analysis.buildPoints,
     subsidies: state.subsidies + (subsidy ? 1 : 0),
+    luxury: (state.luxury ?? 0) - luxuryUsed,
     debt: loan.debt,
   };
 
@@ -389,6 +400,15 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
   next.wish = wish;
   next.wishesGranted = wishesGranted;
 
+  // Another town may send an order, if none is open.
+  let orderNew: TradeOrder | null = null;
+  next.order = state.order ?? null;
+  next.ordersDone = state.ordersDone ?? 0;
+  if (!next.order) {
+    orderNew = rollOrder(next, rules, analysis.tradePrice);
+    next.order = orderNew;
+  }
+
   // 7. New buildings to choose from, and goals reached.
   const unlocked = Object.values(rules.buildings)
     .filter((def) => {
@@ -416,6 +436,9 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     loanPaid: loan.paid,
     wishGranted,
     wishNew,
+    luxuryUsed,
+    luxuryTaxes,
+    orderNew,
     foodDelivered,
     foodWasted: foodArriving - foodDelivered,
     foodEaten,
