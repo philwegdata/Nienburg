@@ -128,6 +128,8 @@ function mergeHouses(
  * taxes and upkeep → unlocks and goals.
  */
 export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] = []): GameState {
+  // A daily challenge ends after its last turn.
+  if (state.challenge && state.turn >= state.challenge.turns) return state;
   const { balance, housing } = rules;
   const season = state.turn % 4;
   /** How hard the town is taxed, and how fast people move in because of it. */

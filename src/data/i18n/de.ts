@@ -8,6 +8,21 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  daily: {
+    title: 'Tägliche Herausforderung',
+    intro:
+      'Jeden Tag eine andere Stadt und für alle derselbe Zufall. Wie viele Einwohner schaffst du in fünf Jahren?',
+    today: 'Heute: {city}',
+    best: 'Deine besten Versuche heute: {list}',
+    none: 'Heute noch kein Versuch.',
+    menu: 'Herausforderung',
+    turn: 'Runde {n} von {m}',
+    done: 'Fünf Jahre sind um!',
+    score: '{n} Einwohner leben in deiner Stadt.',
+    record: 'Das ist dein bester Versuch heute.',
+    again: 'Neuer Versuch',
+    over: 'Die Herausforderung ist vorbei. Starte einen neuen Versuch oder wähle eine Stadt.',
+  },
   scenario: {
     title: 'Szenarien',
     intro: 'Bekannte Städte mit eigenen Regeln und eigenen Zielen.',

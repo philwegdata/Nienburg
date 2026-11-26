@@ -10,6 +10,21 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  daily: {
+    title: 'Daily challenge',
+    intro:
+      'Every day another city, with the same luck for everyone. How many people can you bring in five years?',
+    today: 'Today: {city}',
+    best: 'Your best attempts today: {list}',
+    none: 'No attempt yet today.',
+    menu: 'Challenge',
+    turn: 'Turn {n} of {m}',
+    done: 'Five years are over!',
+    score: '{n} people live in your town.',
+    record: 'That is your best attempt today.',
+    again: 'New attempt',
+    over: 'The challenge is over. Start a new attempt or choose a city.',
+  },
   scenario: {
     title: 'Scenarios',
     intro: 'Known cities with rules and goals of their own.',

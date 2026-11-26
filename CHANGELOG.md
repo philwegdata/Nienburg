@@ -427,3 +427,13 @@
     nach oben.
   - Pilgerstadt (San Gimignano): Jede Kapelle und Kirche bringt 8 Gold Spenden je Runde.
 - Verbotene Gebäude bleiben im Baumenü sichtbar, aber gesperrt, mit Begründung.
+
+## Tägliche Herausforderung
+
+- Neuer Abschnitt in der Stadtauswahl: Jeden Tag ist eine andere der zehn Städte dran, mit einem
+  festen Zufall für den Tag (gleiche Brände, Ereignisse und Wünsche bei jedem Versuch).
+- Gespielt werden 20 Runden (fünf Jahre); gezählt werden die Einwohner am Ende. Danach lässt sich
+  keine Runde mehr beenden, und ein Fenster zeigt das Ergebnis und die besten fünf Versuche des
+  Tages. Die Bestenliste liegt nur auf dem eigenen Gerät und hält die letzten zwei Wochen.
+- Entscheidung: Die Rundenzahl ist ein freiwilliges Spiel im Spiel; im normalen Spiel bleibt es
+  ohne Zeitdruck. Ein Versuch von gestern wird nicht fortgesetzt.

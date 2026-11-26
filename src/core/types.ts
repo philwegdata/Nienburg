@@ -660,6 +660,8 @@ export interface GameState {
    * `needs`. Puzzles are also sandboxes: nothing costs anything. Absent in other games.
    */
   puzzle?: { id: string; pieces: Record<string, number>; needs: Need[] };
+  /** Daily challenge: a fixed seed for the day, and how many turns there are. */
+  challenge?: { date: string; turns: number };
   /** Scenario: a city with rules of its own. Absent in other games. */
   scenario?: { id: string; banned: string[]; noLand?: boolean };
   /** Tiles of land bought outside the walls so far. */

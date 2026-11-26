@@ -48,6 +48,33 @@ export function loadGame(cityId: string, sandbox = false): GameState | null {
   return state && Boolean(state.sandbox) === sandbox ? state : null;
 }
 
+const DAILY = 'nienburg.daily';
+
+/** Best scores of each day's challenge, best first; only the last two weeks are kept. */
+function dailyTable(): Record<string, number[]> {
+  try {
+    const table = JSON.parse(read(DAILY) ?? '{}') as unknown;
+    return typeof table === 'object' && table !== null ? (table as Record<string, number[]>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function dailyScores(date: string): number[] {
+  const list = dailyTable()[date];
+  return Array.isArray(list) ? list.filter((n) => typeof n === 'number') : [];
+}
+
+export function addDailyScore(date: string, score: number): void {
+  const table = dailyTable();
+  const list = [...dailyScores(date), score].sort((a, b) => b - a).slice(0, 5);
+  const recent = Object.keys(table).sort().slice(-13);
+  const kept: Record<string, number[]> = {};
+  for (const d of recent) if (d !== date) kept[d] = table[d]!;
+  kept[date] = list;
+  write(DAILY, JSON.stringify(kept));
+}
+
 const SOLVED = 'nienburg.puzzles';
 
 /** Ids of the puzzles solved so far. */

@@ -398,7 +398,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
       hineinpassen, dass jedes Haus versorgt ist
 - [x] Szenarien mit Sonderregeln: Inselstadt ohne Landkauf, Stadt ohne Brunnen (nur Kanäle),
       Pilgerstadt
-- [ ] Tägliche Herausforderung mit festem Seed und lokaler Bestenliste
+- [x] Tägliche Herausforderung mit festem Seed und lokaler Bestenliste
 - [ ] Erfolge und ein Stadtwert über die drei Sterne hinaus
 - [ ] Städte per Link teilen (Spielstand im URL-Hash)
 

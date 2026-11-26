@@ -31,6 +31,13 @@ import { newPuzzle, puzzleCity, puzzleStatus, type PuzzleStatus } from '../core/
 import { PUZZLES } from '../data/puzzles';
 import { SCENARIOS } from '../data/scenarios';
 import { newScenario, scenarioCity } from '../core/scenario';
+import {
+  challengeCity,
+  challengeOver,
+  challengeScore,
+  dailyCity,
+  newChallenge,
+} from '../core/daily';
 import { wishProgress } from '../core/wishes';
 import { WISH_NAMES } from '../data/wishes';
 import { inBounds, indexOf } from '../core/grid';
@@ -80,6 +87,8 @@ import {
   bestStars,
   lastCity,
   lastWasSandbox,
+  addDailyScore,
+  dailyScores,
   loadGame,
   markPuzzleSolved,
   saveGame,
@@ -182,14 +191,23 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     const base = cities.find((c) => c.id === sc.city);
     return base ? [{ def: sc, base, city: scenarioCity(sc, base) }] : [];
   });
+  /** Today's date as YYYY-MM-DD, in the player's own time zone. */
+  const today = () => {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+  const dailyBase = () => dailyCity(cities, today());
   const fresh = (def: CityDef, sandbox = false) => {
+    if (def.id === 'daily') return newChallenge(dailyBase(), today(), rulesFor(def).balance);
     const sc = sandbox ? undefined : scenarios.find((s) => s.city.id === def.id);
     if (sc) return newScenario(sc.def, sc.base, Date.now(), rulesFor(def).balance);
     return newGame(def, Date.now(), rulesFor(def).balance, sandbox);
   };
   const remembered =
     cities.find((c) => c.id === lastCity()) ??
-    scenarios.find((s) => s.city.id === lastCity())?.city;
+    scenarios.find((s) => s.city.id === lastCity())?.city ??
+    (lastCity() === 'daily' ? challengeCity(dailyBase()) : undefined);
 
   let city: CityDef = remembered ?? cities[0]!;
   /** The general rules, bent by what makes the current town special. */
@@ -197,6 +215,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   // Pick up where the player left off, in the normal game or in the sandbox.
   const resumeSandbox = remembered !== undefined && lastWasSandbox();
   let state: GameState = loadGame(city.id, resumeSandbox) ?? fresh(city, resumeSandbox);
+  // Yesterday's challenge is not continued.
+  if (state.challenge && state.challenge.date !== today()) state = fresh(city);
   /** States from earlier in this turn, for undo. */
   let history: GameState[] = [];
   let analysis: Analysis = analyze(state, rules);
@@ -412,6 +432,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       for (const [id, reason] of analysis.idle) if (reason !== 'construction') warnings.add(id);
     }
     el.end.hidden = puzzle !== null;
+    el.end.disabled = challengeOver(state);
     shown = state;
     if (puzzle) {
       const lacking = puzzle.lacking;
@@ -433,9 +454,11 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.undo.disabled = history.length === 0;
     el.menu.textContent = puzzle
       ? `${puzzle.solved ? '★' : '☆'} ${t.puzzle.title} · ${city.name[lang]}`
-      : state.sandbox
-        ? `${t.sandbox} · ${city.name[lang]}`
-        : `${starText(state.stars)} ${city.name[lang]}`;
+      : state.challenge
+        ? `${t.daily.menu} · ${city.name[lang]}`
+        : state.sandbox
+          ? `${t.sandbox} · ${city.name[lang]}`
+          : `${starText(state.stars)} ${city.name[lang]}`;
     requestDraw();
     if (puzzle?.solved && !wasSolved && state.puzzle) {
       markPuzzleSolved(state.puzzle.id);
@@ -466,15 +489,67 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   }
 
   function finishTurn(): void {
+    if (challengeOver(state)) return;
     state = endTurn(state, rules, city.goals);
     history = [];
     clearPreview();
     saveGame(state);
     refresh();
+    if (challengeOver(state) && state.challenge) {
+      addDailyScore(state.challenge.date, challengeScore(state));
+      play('star');
+      showChallengeDone();
+      return;
+    }
     if (state.lastReport) {
       play(state.lastReport.newStars.length > 0 ? 'star' : 'turn');
       showReport(state.lastReport);
     }
+  }
+
+  function openChallenge(restart = false): void {
+    const def = challengeCity(dailyBase());
+    const saved = restart ? null : loadGame(def.id);
+    city = def;
+    rules = rulesFor(def);
+    state = saved && saved.challenge?.date === today() ? saved : fresh(def);
+    tutorial = null;
+    history = [];
+    selected = null;
+    puzzle = null;
+    saveGame(state);
+    setTool({ kind: 'select' });
+    cam = fitCamera(state.width, state.height, screen.w, screen.h);
+    showGroup(group);
+    refresh();
+  }
+
+  function showChallengeDone(): void {
+    const date = state.challenge!.date;
+    const score = challengeScore(state);
+    const best = dailyScores(date);
+    const actions = node('div', undefined, 'actions');
+    actions.append(
+      button(t.cities, () => {
+        el.report.close();
+        showCities();
+      }),
+      button(
+        t.daily.again,
+        () => {
+          el.report.close();
+          openChallenge(true);
+        },
+        'primary',
+      ),
+    );
+    el.report.replaceChildren(
+      node('h2', `★ ${t.daily.done}`),
+      node('p', fill(t.daily.score, { n: score })),
+    );
+    if (best[0] === score) el.report.append(node('p', t.daily.record, 'good'));
+    el.report.append(node('p', fill(t.daily.best, { list: best.join(' · ') }), 'meta'), actions);
+    el.report.showModal();
   }
 
   function openCity(def: CityDef, restart: boolean, sandbox = false): void {
@@ -637,6 +712,12 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         }
       });
       chips.push(c);
+    }
+    if (state.challenge) {
+      const n = Math.min(state.turn + 1, state.challenge.turns);
+      chips.unshift(
+        node('span', fill(t.daily.turn, { n, m: state.challenge.turns }), 'chip event'),
+      );
     }
     if (state.festival) {
       const name = t.festival.name[state.festival];
@@ -1462,6 +1543,34 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       );
       grid.append(card);
     });
+    // Today's challenge.
+    const daily = node('div', undefined, 'cities');
+    {
+      const base = dailyBase();
+      const best = dailyScores(today());
+      const saved = loadGame('daily');
+      const going = saved?.challenge?.date === today() && !challengeOver(saved);
+      const card = node('div', undefined, 'city');
+      card.append(
+        node('h3', fill(t.daily.today, { city: base.name[lang] })),
+        node('p', t.daily.intro),
+        node(
+          'p',
+          best.length ? fill(t.daily.best, { list: best.join(' · ') }) : t.daily.none,
+          'meta',
+        ),
+        button(
+          going ? t.resume : t.play,
+          () => {
+            el.cities.close();
+            openChallenge(!going);
+          },
+          state.challenge ? 'primary' : undefined,
+        ),
+      );
+      daily.append(card);
+    }
+
     // Scenarios: known cities with rules of their own.
     const special = node('div', undefined, 'cities');
     for (const sc of scenarios) {
@@ -1514,6 +1623,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       node('h2', t.chooseCity),
       worldMap(pins, lang, { world: t.worldMap, europe: t.europe }, pick),
       grid,
+      node('h2', t.daily.title),
+      daily,
       node('h2', t.scenario.title),
       node('p', t.scenario.intro, 'sub'),
       special,
