@@ -8,6 +8,13 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  toolMove: 'Verschieben',
+  hintMove: 'Tippe auf ein Gebäude, um es aufzunehmen. Wege und Kanäle baust du einfach neu.',
+  moveWhere: 'Wohin mit {name}? Tippe auf den neuen Platz. Kosten: {gold} Gold.',
+  moveNo: {
+    notMovable: 'Wege und Kanäle lassen sich nicht verschieben; baue sie einfach neu.',
+    blocked: 'Dort passt es nicht hin.',
+  },
   toolRaze: 'Mauer abtragen',
   hintRaze:
     'Tippe auf ein Stück der alten Mauer, um es abzutragen: {gold} Gold, und {materials} Material kommen zurück.',

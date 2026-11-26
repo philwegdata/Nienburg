@@ -364,6 +364,8 @@ export interface Balance {
   taxRates: [TaxRateDef, TaxRateDef, TaxRateDef];
   /** Workshops of one kind in a touching group of at least `size` make `bonus` more. */
   guildQuarter: { size: number; bonus: number };
+  /** Share of a building's cost charged for moving it. */
+  moveShare: number;
   /** Taking down a tile of the old wall: gold it costs, and materials won from the stones. */
   razing: { gold: number; materials: number };
   /** Appeal radiated by every landmark tile, where a city has that. */

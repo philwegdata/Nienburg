@@ -5,6 +5,8 @@ import {
   landError,
   landPrice,
   setHold,
+  moveBuilding,
+  moveCost,
   razeWall,
   hasOuterWall,
   setTaxRate,
@@ -83,6 +85,7 @@ type Tool =
   | { kind: 'demolish' }
   | { kind: 'repair' }
   | { kind: 'raise' }
+  | { kind: 'move' }
   | { kind: 'raze' }
   | { kind: 'land' }
   | { kind: 'build'; def: BuildingId };
@@ -239,6 +242,9 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   };
   /** The tile the land tool points at, and whether it can be bought. */
   let landTile: { x: number; y: number; ok: boolean } | null = null;
+  /** The building picked up with the move tool, and where it would go. */
+  let moving: number | null = null;
+  let movePreview: { x: number; y: number; ok: boolean }[] = [];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const calm = () => motionOff() || reducedMotion.matches;
   /** Tile marker moved with the arrow keys, and where a keyboard-drawn row starts. */
@@ -272,6 +278,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
         dryCanals: analysis.dryCanals,
       };
       if (plan) overlay.preview = plan.tiles;
+      else if (movePreview.length > 0) overlay.preview = movePreview;
       else if (demolition) overlay.preview = demolition.map((p) => ({ ...p, ok: false }));
       if (cursor) overlay.highlight = cursor;
       else if (tool.kind === 'select') overlay.highlight = selected;
@@ -876,7 +883,17 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     else if (tool.kind === 'demolish') el.hint.textContent = t.hintDemolish;
     else if (tool.kind === 'repair') el.hint.textContent = t.hintRepair;
     else if (tool.kind === 'raise') el.hint.textContent = t.hintRaise;
-    else if (tool.kind === 'raze') {
+    else if (tool.kind === 'move') {
+      const b = moving !== null ? state.buildings[moving] : undefined;
+      const def = b && rules.buildings[b.def];
+      el.hint.textContent =
+        b && def
+          ? fill(t.moveWhere, {
+              name: nameOf(b.def),
+              gold: state.sandbox ? 0 : moveCost(def, rules.balance.moveShare),
+            })
+          : t.hintMove;
+    } else if (tool.kind === 'raze') {
       el.hint.textContent = fill(t.hintRaze, rules.balance.razing);
     } else if (tool.kind === 'land') {
       el.hint.textContent = fill(t.hintLand, {
@@ -1479,6 +1496,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     hover = null;
     anchor = null;
     landTile = null;
+    moving = null;
+    movePreview = [];
     plan = null;
     demolition = null;
     rangeShade = new Map();
@@ -1520,11 +1539,14 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     }
     el.tabs.append(node('span', undefined, 'sep'));
     toolButton(t.toolLand, { kind: 'land' }, el.tabs);
+    toolButton(t.toolMove, { kind: 'move' }, el.tabs);
     toolButton(t.toolRaise, { kind: 'raise' }, el.tabs);
     toolButton(t.toolRepair, { kind: 'repair' }, el.tabs);
     toolButton(t.toolRaze, { kind: 'raze' }, el.tabs);
     razeButton = toolButtons[toolButtons.length - 1]!.node;
-    townOnly.push(...toolButtons.slice(-4).map((b) => b.node));
+    // Moving pieces about is handy in a puzzle too; the rest is for towns only.
+    const forTowns = ['land', 'raise', 'repair', 'raze'];
+    townOnly.push(...toolButtons.filter((b) => forTowns.includes(b.tool.kind)).map((b) => b.node));
     toolButton(t.toolDemolish, { kind: 'demolish' }, el.tabs);
 
     for (const id of BUILD_MENU) {
@@ -1591,6 +1613,18 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       demolition = planDemolish(state, from, to);
     } else if (tool.kind === 'land') {
       landTile = { x: to.x, y: to.y, ok: landError(state, to.x, to.y) === null };
+    } else if (tool.kind === 'move' && moving !== null) {
+      const b = state.buildings[moving];
+      const def = b && rules.buildings[b.def];
+      movePreview = [];
+      if (def) {
+        const share = rules.balance.moveShare;
+        const ok = moveBuilding(state, rules.buildings, share, moving, to.x, to.y, rot).ok;
+        const { w, h } = rot === 1 ? { w: def.size.h, h: def.size.w } : def.size;
+        for (let dy = 0; dy < h; dy++) {
+          for (let dx = 0; dx < w; dx++) movePreview.push({ x: to.x + dx, y: to.y + dy, ok });
+        }
+      }
     }
     updateHint();
   }
@@ -1599,6 +1633,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     plan = null;
     demolition = null;
     landTile = null;
+    movePreview = [];
     rangeShade = new Map();
     updateHint();
   }
@@ -1618,6 +1653,35 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       const result = repair(state, rules.buildings, rules.balance.repairShare, at.x, at.y);
       if (result.ok) change(result.state);
       else shortOf = result.reason;
+    } else if (tool.kind === 'move') {
+      movePreview = [];
+      if (moving === null) {
+        const b = buildingAt(state, at.x, at.y);
+        const def = b && rules.buildings[b.def];
+        if (!b || !def) return null;
+        if (def.category === 'path' || def.canal) {
+          note = t.moveNo.notMovable;
+          play('no');
+          return null;
+        }
+        moving = b.id;
+        rot = b.rot;
+        rotateButton.hidden = def.size.w === def.size.h;
+        play('build');
+        return null;
+      }
+      const share = rules.balance.moveShare;
+      const result = moveBuilding(state, rules.buildings, share, moving, at.x, at.y, rot);
+      if (result.ok) {
+        moving = null;
+        rotateButton.hidden = true;
+        change(result.state);
+      } else if (result.reason === 'noGold') shortOf = 'noGold';
+      else {
+        note = t.moveNo.blocked;
+        play('no');
+        return null;
+      }
     } else if (tool.kind === 'raze') {
       const result = razeWall(state, rules.buildings, rules.balance.razing, at.x, at.y);
       if (result.ok) change(result.state);
@@ -1739,7 +1803,7 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       } else {
         const at = pickTile(cam, pos.x, pos.y);
         const shortOf = commit(at);
-        if (e.pointerType === 'mouse' && !['repair', 'raise', 'raze'].includes(tool.kind)) {
+        if (e.pointerType === 'mouse' && !['repair', 'raise', 'raze', 'move'].includes(tool.kind)) {
           hover = at;
           refreshPreview(hover, hover);
         } else {

@@ -10,6 +10,13 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  toolMove: 'Move',
+  hintMove: 'Tap a building to pick it up. Paths and canals are simply built anew.',
+  moveWhere: 'Where should {name} go? Tap the new place. Cost: {gold} gold.',
+  moveNo: {
+    notMovable: 'Paths and canals cannot be moved; simply build them anew.',
+    blocked: 'It does not fit there.',
+  },
   toolRaze: 'Take down wall',
   hintRaze:
     'Tap a stretch of the old wall to take it down: {gold} gold, and {materials} materials come back.',

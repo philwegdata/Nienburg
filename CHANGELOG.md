@@ -390,3 +390,10 @@
 - Wo die alte Mauer stand, gilt weiter als innen: Dort entstehen Häuser, keine Felder.
 - Entscheidung: Eine eigene Prachtstraße gibt es nicht; das neue Bauland lässt sich mit Straßen
   und Plätzen frei gestalten. Spielstand Version 11.
+
+## Gebäude verschieben
+
+- Neues Werkzeug „Verschieben“: Ein Tipp nimmt ein Gebäude auf, ein zweiter setzt es am neuen Platz
+  ab (größere Gebäude lassen sich dabei drehen). Bewohner, Stockwerke, Baufortschritt und alles
+  andere ziehen mit. Kosten: ein Viertel des Baupreises; in Sandbox und Rätseln kostenlos.
+- Wege und Kanäle werden nicht verschoben, sondern einfach neu gebaut.

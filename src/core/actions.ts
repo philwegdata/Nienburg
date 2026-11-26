@@ -513,3 +513,51 @@ export function razeWall(
     },
   };
 }
+
+/** What moving a building costs: a share of what it cost to build. */
+export function moveCost(def: BuildingDef, share: number): number {
+  return Math.ceil(def.cost * share);
+}
+
+export type MoveError = PlaceError | 'nothing' | 'notMovable';
+export type MoveResult = { ok: true; state: GameState } | { ok: false; reason: MoveError };
+
+/**
+ * Picks building `id` up and sets it down with its top-left tile at (x, y), keeping everything
+ * about it: its inhabitants, floors, building progress and damage. Paths and canals are not moved;
+ * they are simply built anew.
+ */
+export function moveBuilding(
+  state: GameState,
+  defs: Defs,
+  share: number,
+  id: number,
+  x: number,
+  y: number,
+  rot: Rotation = 0,
+): MoveResult {
+  const b = state.buildings[id];
+  if (!b) return { ok: false, reason: 'nothing' };
+  const def = defs[b.def];
+  if (!def || def.category === 'path' || def.canal) return { ok: false, reason: 'notMovable' };
+  const lifted = removeBuilding(state, b);
+  const check = canPlace(lifted, defs, def, x, y, rot);
+  if (!check.ok) return check;
+  const cost = state.sandbox || state.puzzle ? 0 : moveCost(def, share);
+  if (state.gold < cost) return { ok: false, reason: 'noGold' };
+  const { w, h } = rotatedSize(def, rot);
+  const occupancy = lifted.occupancy.slice();
+  for (const t of check.tiles) occupancy[indexOf(state.width, t.x, t.y)] = id;
+  const moved: Building = { ...b, x, y, w, h, rot };
+  delete moved.inTower;
+  if (def.onWall && state.terrain[indexOf(state.width, x, y)] === 'tower') moved.inTower = true;
+  return {
+    ok: true,
+    state: {
+      ...lifted,
+      occupancy,
+      gold: state.gold - cost,
+      buildings: { ...lifted.buildings, [id]: moved },
+    },
+  };
+}
