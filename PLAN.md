@@ -400,7 +400,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
       Pilgerstadt
 - [x] Tägliche Herausforderung mit festem Seed und lokaler Bestenliste
 - [x] Erfolge und ein Stadtwert über die drei Sterne hinaus
-- [ ] Städte per Link teilen (Spielstand im URL-Hash)
+- [x] Städte per Link teilen (Spielstand im URL-Hash)
 
 **E. Atmosphäre**
 

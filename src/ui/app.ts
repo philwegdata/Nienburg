@@ -29,6 +29,8 @@ import { goodPrice } from '../core/market';
 import { deliverOrder } from '../core/orders';
 import { newPuzzle, puzzleCity, puzzleStatus, type PuzzleStatus } from '../core/puzzle';
 import { PUZZLES } from '../data/puzzles';
+import { packTown, unpackTown, type SharedTown } from '../core/share';
+import { decodeShare, encodeShare } from './share';
 import { ACHIEVEMENTS, newAchievements, townValue } from '../core/achievements';
 import { SCENARIOS } from '../data/scenarios';
 import { newScenario, scenarioCity } from '../core/scenario';
@@ -1466,6 +1468,87 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.achievements.showModal();
   }
 
+  /** The plan of a city as the game first lays it out. */
+  const planOf = (def: CityDef) => parseCity(def).terrain;
+
+  function showShare(): void {
+    const box = node('input');
+    box.readOnly = true;
+    box.className = 'share-link';
+    const note = node('span', '', 'meta');
+    const actions = node('div', undefined, 'actions');
+    const copy = button(t.share.copy, () => {
+      void navigator.clipboard?.writeText(box.value).then(
+        () => (note.textContent = t.share.copied),
+        () => box.select(),
+      );
+    });
+    actions.append(note);
+    if (typeof navigator.share === 'function') {
+      actions.append(
+        button(t.share.send, () => {
+          void navigator.share({ title: city.name[lang], url: box.value }).catch(() => undefined);
+        }),
+      );
+    }
+    actions.append(
+      copy,
+      button(t.close, () => el.festival.close(), 'primary'),
+    );
+    el.festival.replaceChildren(
+      node('h2', t.share.title),
+      node('p', t.share.intro, 'sub'),
+      box,
+      actions,
+    );
+    el.festival.showModal();
+    const base = `${location.origin}${location.pathname}`;
+    void encodeShare(packTown(state, planOf(city))).then((code) => {
+      box.value = `${base}#town=${code}`;
+      box.select();
+    });
+  }
+
+  /** A link with a town in it: offer to open that town as a sandbox. */
+  async function receiveShared(code: string): Promise<void> {
+    window.history.replaceState(null, '', location.pathname + location.search);
+    const shared = (await decodeShare(code)) as SharedTown | null;
+    const id = shared?.s?.cityId;
+    const def = cities.find((c) => c.id === id) ?? scenarios.find((s) => s.city.id === id)?.city;
+    const town = shared && def ? unpackTown(shared, planOf(def), [def.id]) : null;
+    const actions = node('div', undefined, 'actions');
+    if (!town || !def) {
+      actions.append(button(t.close, () => el.report.close(), 'primary'));
+      el.report.replaceChildren(node('h2', t.share.received), node('p', t.share.broken), actions);
+      el.report.showModal();
+      return;
+    }
+    const people = Object.values(town.buildings).reduce((n, b) => n + (b.house?.pop ?? 0), 0);
+    actions.append(
+      button(t.close, () => el.report.close()),
+      button(
+        t.share.view,
+        () => {
+          el.report.close();
+          const visit: GameState = { ...town, sandbox: true };
+          delete visit.challenge;
+          saveGame(visit);
+          openCity(def, false, true);
+        },
+        'primary',
+      ),
+    );
+    el.report.replaceChildren(
+      node('h2', t.share.received),
+      node(
+        'p',
+        fill(t.share.receivedText, { city: def.name[lang], year: yearOf(town.turn), n: people }),
+      ),
+      actions,
+    );
+    el.report.showModal();
+  }
+
   function showGoals(): void {
     if (state.puzzle) {
       const def = PUZZLES.find((p) => p.id === state.puzzle!.id);
@@ -1531,6 +1614,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       button(t.achievements.open, () => {
         el.goals.close();
         showAchievements();
+      }),
+      button(t.share.open, () => {
+        el.goals.close();
+        showShare();
       }),
     );
     actions.append(
@@ -2296,6 +2383,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
   setTool({ kind: 'select' });
   resize(true);
   refresh();
-  // First visit: let the player pick a town.
-  if (!remembered) showCities();
+  // A link with a town in it comes first; otherwise, on a first visit, let the player pick a town.
+  const shared = /^#town=(.+)$/.exec(location.hash);
+  if (shared) void receiveShared(shared[1]!);
+  else if (!remembered) showCities();
 }

@@ -447,3 +447,12 @@
   dem für alle gelösten Rätsel.
 - Der Stadtwert im Menü zählt Bewohner nach Hausstufe, die Gebäude, erfüllte Wünsche, Lieferungen
   und Feste: ein Maß für die Pracht der Stadt über die drei Sterne hinaus.
+
+## Städte per Link teilen
+
+- „Stadt teilen“ im Menü erzeugt einen Link, der die ganze Stadt enthält (kopieren oder auf dem
+  Handy direkt teilen). Gepackt wird nur, was sich nicht aus dem Grundriss ergibt, und das
+  komprimiert; eine mittlere Stadt passt in gut tausend Zeichen.
+- Wer den Link öffnet, sieht Stadt, Jahr und Einwohnerzahl und kann sie als Sandbox öffnen und darin
+  weiterbauen; die eigene Sandbox dieser Stadt wird dabei ersetzt. Kaputte Links werden höflich
+  abgelehnt. Der Link verschwindet danach aus der Adresszeile.

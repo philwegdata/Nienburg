@@ -8,6 +8,20 @@ export const de = {
   endTurn: 'Runde beenden',
   toolRepair: 'Reparieren',
   toolRaise: 'Aufstocken',
+  share: {
+    open: 'Stadt teilen',
+    title: 'Stadt teilen',
+    intro:
+      'Dieser Link enthält deine ganze Stadt. Wer ihn öffnet, kann sie als Sandbox ansehen und darin weiterbauen.',
+    copy: 'Link kopieren',
+    copied: 'Kopiert.',
+    send: 'Teilen …',
+    received: 'Eine geteilte Stadt',
+    receivedText:
+      '{city}, {year}. Jahr, {n} Einwohner. Sie öffnet sich als Sandbox; deine bisherige Sandbox dieser Stadt wird dabei ersetzt.',
+    view: 'Ansehen',
+    broken: 'Dieser Link enthält keine Stadt, die sich öffnen lässt.',
+  },
   achievements: {
     open: 'Erfolge',
     title: 'Erfolge',

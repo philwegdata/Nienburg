@@ -10,6 +10,20 @@ export const en: Strings = {
   endTurn: 'End turn',
   toolRepair: 'Repair',
   toolRaise: 'Add a floor',
+  share: {
+    open: 'Share town',
+    title: 'Share town',
+    intro:
+      'This link holds your whole town. Whoever opens it can look at it as a sandbox and build on.',
+    copy: 'Copy link',
+    copied: 'Copied.',
+    send: 'Share …',
+    received: 'A shared town',
+    receivedText:
+      '{city}, year {year}, {n} people. It opens as a sandbox; your own sandbox of this city is replaced.',
+    view: 'Look at it',
+    broken: 'This link holds no town that can be opened.',
+  },
   achievements: {
     open: 'Achievements',
     title: 'Achievements',
