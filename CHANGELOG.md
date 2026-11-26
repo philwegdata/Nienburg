@@ -408,3 +408,12 @@
   +2 Wohnlage für jedes Haus, beim Erntedank 50 Nahrung von den Bauern und beim Wintermarkt ein
   Fünftel mehr Steuern.
 - In der Sandbox kostenlos. Spielstand Version 12.
+
+## Stadtchronik
+
+- Jede Stadt führt eine Chronik, die sich selbst schreibt: Gründung, erreichte Ziele, vollendete
+  Großbauten, die erste Hausstufe ihrer Art, Einwohnerrekorde (50 bis 2000), Feste, erfüllte
+  Wünsche, Lieferungen, Brände, besondere Ereignisse und das erste Stück abgetragener Mauer.
+- „Chronik“ im Menü zeigt sie nach Jahren geordnet; „Als Text kopieren“ legt sie zum Teilen in die
+  Zwischenablage. Sie hält bis zu 300 Einträge, die Gründung bleibt immer erhalten.
+- Spielstand Version 13; alte Spielstände beginnen ihre Chronik mit der Gründung.

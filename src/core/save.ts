@@ -1,7 +1,7 @@
 import type { GameState } from './types';
 
 /** Version of the save format written by this build. */
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 interface SaveFile {
   saveVersion: number;
@@ -48,6 +48,8 @@ const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
   10: (old) => ({ ...(old as object), version: 11, razed: [] }),
   // 11 → 12: festivals.
   11: (old) => ({ ...(old as object), version: 12, festival: null, festivals: 0 }),
+  // 12 → 13: the town's chronicle, begun at the founding.
+  12: (old) => ({ ...(old as object), version: 13, chronicle: [{ turn: 0, kind: 'founded' }] }),
 };
 
 export function serialize(state: GameState): string {

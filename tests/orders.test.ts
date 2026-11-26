@@ -105,7 +105,7 @@ describe('orders from other towns', () => {
     delete old.ordersDone;
     delete old.luxury;
     const back = deserialize(JSON.stringify({ saveVersion: 8, state: old }), ['test']);
-    expect(back).toMatchObject({ version: 12, order: null, ordersDone: 0, luxury: 0 });
+    expect(back).toMatchObject({ version: 13, order: null, ordersDone: 0, luxury: 0 });
   });
 });
 

@@ -388,7 +388,7 @@ Herausforderung entsteht durch knappen Platz und kluge Planung, nicht durch Stra
       Brunnen bei der Weberei“); erfüllte Wünsche bringen Gold, Ansehen oder neue Gebäude
 - [x] Feste selbst ausrichten: Erntedank, Wintermarkt, Johannisfeuer; kosten Vorräte, bringen
       Zuzug und Ansehen
-- [ ] Stadtchronik: ein Buch, das sich selbst schreibt (Gründung, erste Kathedrale, große Feste),
+- [x] Stadtchronik: ein Buch, das sich selbst schreibt (Gründung, erste Kathedrale, große Feste),
       zum Nachlesen und Teilen
 - [ ] Berühmte Reisende besuchen die Stadt, wenn sie bestimmte Gebäude hat
 

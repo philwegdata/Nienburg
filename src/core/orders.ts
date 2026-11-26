@@ -1,3 +1,4 @@
+import { write } from './chronicle';
 import { rngStep } from './rng';
 import { GOODS, type GameState, type Rules, type TradeOrder } from './types';
 
@@ -57,11 +58,12 @@ export function deliverOrder(state: GameState, rules: Rules): DeliverResult {
   if (delivered < order.amount) {
     return { ok: true, done: false, state: { ...state, goods, order: { ...order, delivered } } };
   }
+  const told = write(state, [{ turn: state.turn, kind: 'order', from: order.from }]);
   return {
     ok: true,
     done: true,
     state: {
-      ...state,
+      ...told,
       goods,
       order: null,
       ordersDone: (state.ordersDone ?? 0) + 1,

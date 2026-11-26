@@ -52,6 +52,7 @@ import {
   type Point,
   type Rotation,
   type ServiceKind,
+  type ChronicleEntry,
   type PuzzleDef,
   type TurnReport,
   type Wish,
@@ -144,6 +145,7 @@ export interface Elements {
   bank: HTMLDialogElement;
   market: HTMLDialogElement;
   festival: HTMLDialogElement;
+  chronicle: HTMLDialogElement;
   tutorial: HTMLElement;
 }
 
@@ -1258,6 +1260,77 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.festival.showModal();
   }
 
+  /** One line of the chronicle, in words. */
+  function chronicleLine(e: ChronicleEntry): string {
+    const c = t.chronicle;
+    switch (e.kind) {
+      case 'founded':
+        return fill(c.founded, { city: city.name[lang] });
+      case 'star': {
+        const goal = city.goals[e.n];
+        return fill(c.star, { goal: goal ? goalText(goal) : '' });
+      }
+      case 'completed':
+        return fill(c.completed, { name: nameOf(e.def) });
+      case 'level':
+        return fill(c.level, { level: t.houseLevel[e.n - 1] ?? '' });
+      case 'population':
+        return fill(c.population, { n: e.n });
+      case 'festival':
+        return fill(c.festival, { festival: t.festival.name[e.festival] });
+      case 'wish':
+        return fill(c.wish, { who: WISH_NAMES[e.name] ?? '' });
+      case 'order':
+        return fill(c.order, { from: cityName(e.from) });
+      case 'fire':
+        return fill(c.fire, { name: nameOf(e.def) });
+      case 'event':
+        return c.event[e.event];
+      case 'wall':
+        return c.wall;
+    }
+  }
+
+  function showChronicle(): void {
+    const entries = state.chronicle ?? [];
+    const title = fill(t.chronicle.title, { city: city.name[lang] });
+    const book = node('div', undefined, 'chronicle');
+    let year = -1;
+    let list: HTMLElement | null = null;
+    const lines: string[] = [title, ''];
+    for (const e of entries) {
+      const y = yearOf(e.turn);
+      if (y !== year || !list) {
+        year = y;
+        book.append(node('h3', `${t.year} ${y}`));
+        list = node('ul');
+        book.append(list);
+      }
+      const season = t.season[seasonOf(e.turn)];
+      const text = chronicleLine(e);
+      const item = node('li');
+      item.append(node('span', `${season}: `, 'meta'), node('span', text));
+      list.append(item);
+      lines.push(`${t.year} ${y}, ${season}: ${text}`);
+    }
+    const note = node('span', '', 'meta');
+    const actions = node('div', undefined, 'actions');
+    actions.append(
+      note,
+      button(t.chronicle.copy, () => {
+        void navigator.clipboard?.writeText(lines.join('\n')).then(
+          () => (note.textContent = t.chronicle.copied),
+          () => undefined,
+        );
+      }),
+      button(t.close, () => el.chronicle.close(), 'primary'),
+    );
+    el.chronicle.replaceChildren(node('h2', title), book, actions);
+    el.chronicle.showModal();
+    // The newest entries are at the bottom.
+    book.scrollTop = book.scrollHeight;
+  }
+
   function showGoals(): void {
     if (state.puzzle) {
       const def = PUZZLES.find((p) => p.id === state.puzzle!.id);
@@ -1310,6 +1383,10 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
       button(t.festival.open, () => {
         el.goals.close();
         showFestival();
+      }),
+      button(t.chronicle.open, () => {
+        el.goals.close();
+        showChronicle();
       }),
     );
     actions.append(
@@ -1902,7 +1979,8 @@ export function startApp(el: Elements, cities: readonly CityDef[], t: Strings, l
     el.help.open ||
     el.bank.open ||
     el.market.open ||
-    el.festival.open;
+    el.festival.open ||
+    el.chronicle.open;
 
   // ---------- keyboard on the map ----------
 

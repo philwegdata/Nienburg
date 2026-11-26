@@ -570,6 +570,26 @@ export interface TradeOrder {
 
 export type TaxRate = 0 | 1 | 2;
 
+/** Something worth writing down in the town's chronicle. */
+export type ChronicleEntry =
+  | { turn: number; kind: 'founded' }
+  /** Goal `n` (0-based) reached. */
+  | { turn: number; kind: 'star'; n: number }
+  /** A great building finished. */
+  | { turn: number; kind: 'completed'; def: string }
+  /** The first house of level `n`. */
+  | { turn: number; kind: 'level'; n: number }
+  /** The town passed `n` inhabitants for the first time. */
+  | { turn: number; kind: 'population'; n: number }
+  | { turn: number; kind: 'festival'; festival: FestivalKind }
+  /** Resident number `name` had a wish come true. */
+  | { turn: number; kind: 'wish'; name: number }
+  | { turn: number; kind: 'order'; from: string }
+  | { turn: number; kind: 'fire'; def: string }
+  | { turn: number; kind: 'event'; event: EventKind }
+  /** The first stretch of the old wall came down. */
+  | { turn: number; kind: 'wall' };
+
 /** One festival for each season, from spring to winter. */
 export type FestivalKind = 'mayday' | 'midsummer' | 'harvest' | 'wintermarket';
 export const FESTIVALS: readonly FestivalKind[] = [
@@ -587,7 +607,7 @@ export interface FestivalDef {
 
 /** The complete, serialisable game. No class instances, no functions. */
 export interface GameState {
-  version: 12;
+  version: 13;
   cityId: string;
   width: number;
   height: number;
@@ -650,6 +670,8 @@ export interface GameState {
   festival: FestivalKind | null;
   /** Festivals held so far. */
   festivals: number;
+  /** The town's chronicle: what happened when, oldest first. */
+  chronicle: ChronicleEntry[];
   lastReport: TurnReport | null;
 }
 

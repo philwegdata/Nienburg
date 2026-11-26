@@ -1,3 +1,4 @@
+import { write } from './chronicle';
 import { footprint, inBounds, indexOf } from './grid';
 import {
   FESTIVALS,
@@ -510,6 +511,11 @@ export function razeWall(
       ...state,
       terrain,
       razed: [...(state.razed ?? []), i],
+      // The first stone to fall is worth remembering.
+      chronicle:
+        (state.razed ?? []).length === 0
+          ? write(state, [{ turn: state.turn, kind: 'wall' }]).chronicle
+          : state.chronicle,
       gold: state.gold - (state.sandbox ? 0 : costs.gold),
       materials: state.materials + costs.materials,
     },

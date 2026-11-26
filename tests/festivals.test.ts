@@ -104,7 +104,7 @@ describe('festivals', () => {
     delete old.festival;
     delete old.festivals;
     const back = deserialize(JSON.stringify({ saveVersion: 11, state: old }), ['test']);
-    expect(back).toMatchObject({ version: 12, festival: null, festivals: 0 });
+    expect(back).toMatchObject({ version: 13, festival: null, festivals: 0 });
   });
 
   it('has texts in both languages', () => {

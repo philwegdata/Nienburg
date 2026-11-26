@@ -1,5 +1,6 @@
 import { lockOf, settleLoan } from '../actions';
 import { goalProgress } from '../goals';
+import { turnEntries, write } from '../chronicle';
 import { goodPrice } from '../market';
 import { rollOrder } from '../orders';
 import { rollWish, wishLost, wishProgress } from '../wishes';
@@ -480,7 +481,13 @@ export function endTurn(state: GameState, rules: Rules, goals: readonly Goal[] =
     hints: hints.list(),
   };
 
-  return { ...next, stars, lastReport: report };
+  const done: GameState = { ...next, stars, lastReport: report };
+  // Great buildings: built over several turns, or one of a kind.
+  const great = (def: string) => {
+    const d = rules.buildings[def];
+    return !!d && (!!d.construction || !!d.unique);
+  };
+  return write(done, turnEntries(state, done, report, great));
 }
 
 /** What ending the turn right now would report. */
